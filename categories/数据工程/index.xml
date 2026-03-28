@@ -1,0 +1,53 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>数据工程 on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/categories/%E6%95%B0%E6%8D%AE%E5%B7%A5%E7%A8%8B/</link><description>Recent content in 数据工程 on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 26 Mar 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/categories/%E6%95%B0%E6%8D%AE%E5%B7%A5%E7%A8%8B/" rel="self" type="application/rss+xml"/><item><title>别做需求，做能力</title><link>https://zeqiang.fun/cn/2026/03/ai-data-modeling-mindset/</link><pubDate>Thu, 26 Mar 2026 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2026/03/ai-data-modeling-mindset/</guid><description><![CDATA[
+        <blockquote>
+<p>真正难的，从来不只是技术，而是人要不要换一种脑子。</p>
+</blockquote>
+<hr>
+<p>前几天，一场面试进行到后半段。屏幕那头的人停了几秒，问了一句：</p>
+<p><strong>&ldquo;你觉得，用 AI 辅助数据建模，最大的困难点是什么？&rdquo;</strong></p>
+<p>我愣住了。</p>
+<p>脑子里先闪过一串技术关键词，但它们都是&quot;怎么做&quot;的答案，不是&quot;为什么本质上会难&quot;的答案。</p>
+<p>真正的答案，在我脑子里还没有成型。直到我想起了小程老师。</p>
+<hr>
+<p>小程老师是我在阿里时的后端同事。年纪不大，但写代码极有章法，开会言简意赅，从不抢话。</p>
+<p>他有一个习惯我一直记得：每次接到需求，都会先问一句——</p>
+<p><strong>&ldquo;以后还会不会有类似的？&rdquo;</strong></p>
+<p>如果答案是&quot;会&quot;，他后面的动作就完全不一样了：把实现抽成可复用的服务，写一份内部文档说明能力边界和接入方式，在周会上同步一遍让其他人知道这个轮子已经有了。</p>
+<p>那时候我不理解。需求做完、验收通过、结项收工，不就够了？</p>
+<p>半年后我被点醒了。</p>
+<p>另一条业务线来了个类似需求，大家估时至少两周。小程老师看了一眼，说了句很轻的话：&ldquo;用之前那套接一下，半天差不多。&rdquo;</p>
+<p>那天下午，部署日志一条条变绿。原本要排期、协调、开发、联调的一整套流程，被他之前沉淀下来的能力，压缩成了半天。</p>
+<p>站在那一刻，我突然明白了一件事：</p>
+<blockquote>
+<p><strong>需求解决的是今天，能力购买的是明天。</strong></p>
+</blockquote>
+<hr>
+<p>这件事后来改变了我的工作方式。</p>
+<p>最近我开始用 Cursor 和 Claude 辅助做数据建模。第一次上手，花了整整两天。真正耗时间的不是建了几张表，而是把 DWD / DWS / ADS 的分层逻辑一层层梳理清楚——备菜、炒菜、上菜，每一层该干什么、不该干什么，把最容易踩坑的地方掰开揉碎，写成一份可执行的规范。</p>
+<p>如果只为交差，几段 SQL 也能跑，报表也未必不能看。</p>
+<p>但我越来越清楚：先跑起来再说的做法，上线就是终点。而如果多走一步，这一次的投入就能变成下一次的起点。</p>
+<p>于是我做了和小程老师一样的选择：把方法论整理成模板，把常见错误写成 Checklist，最后封装成一个 OpenClaw Skill。</p>
+<p>这个 Skill 不是什么宏大的产品，更像是一个数据工程师在长期实战里磨出来的一组原子能力。比如产品经理说一句&quot;帮我看看这周销售为什么掉了&quot;，背后可能需要多周期聚合、维度交叉、口径校验三个能力协同工作——这些手法，就是我沉淀在里面的东西。</p>
+<p>国内大厂的数据同学几乎天天在用这些手法。但放到全球开源社区里，真正系统、完整、可直接参考的文档，反而没有想象中那么多。</p>
+<blockquote>
+<p><strong>真正的复利，不是把一件事做得更快，而是让同一份能力被反复调用。</strong></p>
+</blockquote>
+<hr>
+<p>在 Agent 时代，这件事有了更大的意义。</p>
+<p>你完全可以想象这样一条链路：产品经理说了一句&quot;帮我看看这周销售为什么掉了&quot;。某个 Agent 调用你的多周期聚合能力，另一个调用你的维度交叉能力，再一个调用你的口径校验能力，最后拼出一份可读、可追溯、可解释的分析结论。</p>
+<p>在这个过程中，用户也许根本不知道这些能力是谁写的。但那并不重要——只要你的能力被调用，价值就已经发生了。</p>
+<p>AI 让写代码、写 SQL 的边际成本迅速下降。&ldquo;会做&quot;这件事本身，正在变得不稀缺。真正开始变贵的，是你能不能从一个具体问题里，抽象出一个别人以后还能继续用的解法。</p>
+<p>与其把自己活成被需求追着跑的消防员，不如把自己练成一座稳定供电的变电站。</p>
+<hr>
+<p>所以，如果现在让我重新回答那道面试题——</p>
+<p>最大的困难不是 AI 能不能写 SQL，而是人愿不愿意把&quot;完成需求&quot;的脑子，换成&quot;创造能力&quot;的脑子。</p>
+<p>小程老师很早就换了。我正在换。</p>
+<blockquote>
+<p><strong>不要做需求的奴隶，要做能力的投资者。</strong></p>
+</blockquote>
+<hr>
+<p><em>延伸阅读：<a href="/cn/2026/03/why-capability-wins/">做能力的人，为什么会赢</a> —— 从复杂系统的视角，解释这件事为什么在结构上成立。</em></p>
+<p><em>作者：Franklin｜数据工程师，正在摸索 Agent 时代的原子能力沉淀</em><br>
+<em>Skill：<a href="https://clawhub.com/skills/dwd-dws-ads-warehouse-patterns">DWD/DWS/ADS Data Warehouse Patterns</a></em></p>
+
+        ]]></description></item></channel></rss>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>认知思维导图 · 政治经济历史</title>
+  <style>
+    :root {
+      --bg: #FAF9F7; --bg-card: #FFFFFF; --bg-section: #F7F5F2;
+      --bg-code: #F3F0EB; --bg-hero-card: #FFFDFB;
+      --text: #1B1B1E; --text-secondary: #5F6368; --text-tertiary: #9AA0A6;
+      --border: #E5E2DD; --border-light: #EEEAE5;
+      --accent: #C8956C; --accent-bg: #FBF5EF;
+      --green: #2E7D32; --green-bg: #E8F5E9;
+      --red: #C62828; --red-bg: #FFEBEE;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      --font-serif: Georgia, 'Noto Serif SC', serif;
+      --font-mono: 'SF Mono', 'Fira Code', monospace;
+      --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+      --max-w: 880px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--font-sans); background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px; }
+    .nav { position: sticky; top: 0; z-index: 100; background: rgba(250, 249, 247, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-light); transition: box-shadow 0.3s var(--ease); }
+    .nav.scrolled { box-shadow: var(--shadow-sm); }
+    .nav-inner { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .nav-title { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; letter-spacing: -0.01em; }
+    .nav-pills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    .nav-pills::-webkit-scrollbar { display: none; }
+    .nav-pill { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); background: transparent; font-size: 11px; font-weight: 500; color: var(--text-tertiary); cursor: pointer; transition: all 0.25s var(--ease); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .nav-pill:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+    .nav-pill.active { color: #fff; }
+    .hero { max-width: var(--max-w); margin: 0 auto; padding: 80px 24px 64px; text-align: center; }
+    .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 100px; background: var(--accent-bg); font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 32px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #E6A817; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .hero-title { font-size: clamp(28px, 5vw, 40px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 40px; color: var(--text); }
+    .core-question-card { max-width: 760px; margin: 0 auto 32px; padding: 44px 48px; background: var(--bg-hero-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+    .core-question { font-family: var(--font-serif); font-size: clamp(20px, 3.5vw, 26px); line-height: 1.6; color: var(--text); margin-bottom: 16px; font-weight: 400; word-break: keep-all; }
+    .core-question-en { font-size: 14px; color: var(--text-tertiary); font-style: italic; line-height: 1.6; }
+    .hero-meta { font-size: 13px; color: var(--text-tertiary); }
+    .chautauqua { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 72px; }
+    .chautauqua-inner { max-width: 600px; margin: 0 auto; padding: 36px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); text-align: center; }
+    .chautauqua-symbol { font-size: 14px; color: var(--accent); margin-bottom: 20px; letter-spacing: 12px; user-select: none; }
+    .chautauqua-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; letter-spacing: 0.04em; }
+    .chautauqua-en { font-size: 12px; color: var(--text-tertiary); font-style: italic; margin-bottom: 20px; letter-spacing: 0.02em; }
+    .chautauqua-desc { font-family: var(--font-serif); font-size: 14px; line-height: 2; color: var(--text-secondary); text-align: left; max-width: 480px; margin: 0 auto; word-break: keep-all; }
+    .chautauqua-source { font-size: 12px; color: var(--text-tertiary); margin-top: 16px; font-style: italic; }
+    .branches-section { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 80px; }
+    .section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 32px; }
+    .branches-list { position: relative; padding-left: 36px; }
+    .branches-list::before { content: ''; position: absolute; left: 9px; top: 20px; bottom: 20px; width: 2px; background: var(--border); border-radius: 1px; }
+    .branch { position: relative; margin-bottom: 8px; }
+    .branch::before { content: ''; position: absolute; left: -27px; top: 22px; width: 10px; height: 10px; border-radius: 50%; background: var(--branch-color, var(--text-tertiary)); z-index: 1; transition: transform 0.25s var(--ease); }
+    .branch:hover::before { transform: scale(1.3); }
+    .branch-header { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); cursor: pointer; transition: all 0.25s var(--ease); text-align: left; font: inherit; color: inherit; }
+    .branch-header:hover { border-color: var(--border); box-shadow: var(--shadow-sm); }
+    .branch.open .branch-header { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+    .branch-icon { font-size: 18px; flex-shrink: 0; }
+    .branch-label { flex: 1; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+    .branch-tag { font-size: 12px; padding: 3px 10px; border-radius: 100px; font-weight: 500; flex-shrink: 0; }
+    .branch-tag.pending { background: var(--bg-section); color: var(--text-tertiary); }
+    .branch-tag.active { color: #fff; }
+    .branch-chevron { font-size: 18px; color: var(--text-tertiary); transition: transform 0.35s var(--ease); flex-shrink: 0; line-height: 1; }
+    .branch.open .branch-chevron { transform: rotate(90deg); }
+    .branch.pending .branch-header { opacity: 0.6; cursor: default; }
+    .branch.pending .branch-header:hover { border-color: var(--border-light); box-shadow: none; }
+    .branch.pending .branch-chevron { display: none; }
+    .branch-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s var(--ease); }
+    .branch.open .branch-content { grid-template-rows: 1fr; }
+    .branch-content-inner { overflow: hidden; }
+    .nodes-wrapper { padding: 12px 0 8px; background: var(--bg-card); border: 1px solid var(--border-light); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
+    .node-card { position: relative; margin: 0 12px 8px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); transition: all 0.25s var(--ease); background: var(--bg-card); }
+    .node-card:last-child { margin-bottom: 4px; }
+    .node-card:hover { border-color: var(--border); }
+    .node-card.open { border-color: var(--border); box-shadow: var(--shadow-sm); }
+    .node-header { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; cursor: pointer; transition: background 0.2s; }
+    .node-header:hover { background: var(--bg-section); }
+    .node-id { font-size: 13px; font-weight: 700; color: var(--text-tertiary); background: var(--bg-section); padding: 2px 8px; border-radius: 4px; flex-shrink: 0; margin-top: 1px; font-family: var(--font-mono); }
+    .node-title-group { flex: 1; min-width: 0; }
+    .node-title { font-size: 15px; font-weight: 600; line-height: 1.4; }
+    .node-subtitle { font-size: 13px; color: var(--text-tertiary); margin-top: 2px; }
+    .node-question-preview { font-size: 13px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5; }
+    .node-chevron { color: var(--text-tertiary); transition: transform 0.35s var(--ease); flex-shrink: 0; margin-top: 2px; font-size: 14px; }
+    .node-card.open .node-chevron { transform: rotate(90deg); }
+    .node-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s var(--ease); }
+    .node-card.open .node-content { grid-template-rows: 1fr; }
+    .node-content-inner { overflow: hidden; }
+    .node-detail { padding: 0 18px 20px; border-top: 1px solid var(--border-light); }
+    .question-banner { padding: 16px 20px; background: var(--accent-bg); border-radius: var(--radius-sm); margin: 16px 0; font-size: 14px; color: #8B6914; line-height: 1.6; }
+    .question-banner strong { font-weight: 600; color: #7A5C10; }
+    .definition { padding: 16px 20px; background: var(--bg-section); border-left: 3px solid var(--border); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 0 0 20px; font-size: 14px; line-height: 1.7; color: var(--text-secondary); }
+    .content-section { margin-bottom: 24px; }
+    .content-section:last-child { margin-bottom: 0; }
+    .section-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .section-title::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden; }
+    .data-table th { background: var(--bg-section); padding: 10px 14px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; border-bottom: 1px solid var(--border-light); }
+    .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-light); color: var(--text); line-height: 1.5; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(0,0,0,0.01); }
+    .content-list { list-style: none; padding: 0; }
+    .content-list li { position: relative; padding: 6px 0 6px 20px; font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
+    .content-list li::before { content: ''; position: absolute; left: 4px; top: 14px; width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+    ol.content-list { counter-reset: item; }
+    ol.content-list li::before { display: none; }
+    ol.content-list li { counter-increment: item; padding-left: 28px; }
+    ol.content-list li::after { content: counter(item); position: absolute; left: 0; top: 6px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-section); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
+    .diagram-block { background: var(--bg-code); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 20px 24px; font-family: var(--font-mono); font-size: 13px; line-height: 1.8; overflow-x: auto; white-space: pre; color: var(--text-secondary); }
+    .quote-block { padding: 16px 20px; background: var(--bg-section); border-radius: var(--radius-sm); position: relative; margin: 8px 0; }
+    .quote-block::before { content: '\201C'; position: absolute; top: 8px; left: 12px; font-size: 32px; color: var(--border); font-family: var(--font-serif); line-height: 1; }
+    .quote-text { font-size: 14px; font-style: italic; line-height: 1.7; color: var(--text-secondary); padding-left: 24px; }
+    .quote-attr { font-size: 12px; color: var(--text-tertiary); margin-top: 8px; padding-left: 24px; font-style: normal; }
+    .eval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+    .eval-card { padding: 14px 16px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.6; }
+    .eval-card.pro { background: var(--green-bg); color: var(--green); }
+    .eval-card.con { background: var(--red-bg); color: var(--red); }
+    .eval-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; opacity: 0.7; }
+    .references { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light); }
+    .references-title { font-size: 12px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .ref-item { font-size: 13px; color: var(--text-secondary); padding: 4px 0; line-height: 1.5; }
+    .narrative-subtitle { font-size: 14px; font-weight: 600; color: var(--text); margin: 16px 0 8px; }
+    .narrative-subtitle:first-child { margin-top: 0; }
+    .narrative-text { font-size: 14px; line-height: 1.7; color: var(--text-secondary); margin: 8px 0; }
+    .timeline-section { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 80px; }
+    .timeline-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden; }
+    .timeline-table th { background: var(--bg-section); padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; border-bottom: 1px solid var(--border-light); }
+    .timeline-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); }
+    .timeline-table tr:last-child td { border-bottom: none; }
+    .timeline-table .date-cell { font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); white-space: nowrap; }
+    .site-footer { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 120px; text-align: center; }
+    .footer-quote { font-family: var(--font-serif); font-size: clamp(18px, 3vw, 24px); color: var(--text); line-height: 1.6; margin-bottom: 16px; }
+    .footer-sub { font-size: 14px; color: var(--text-tertiary); line-height: 1.6; }
+    .footer-divider { width: 48px; height: 2px; background: var(--border); margin: 0 auto 32px; border-radius: 1px; }
+    .footer-source { margin-top: 32px; font-size: 12px; color: var(--text-tertiary); }
+    .footer-source a { color: var(--accent); text-decoration: none; }
+    .footer-source a:hover { text-decoration: underline; }
+    .animate-in { opacity: 0; transform: translateY(16px); transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); }
+    .animate-in.visible { opacity: 1; transform: translateY(0); }
+    .stagger-1 { transition-delay: 0.05s; } .stagger-2 { transition-delay: 0.1s; } .stagger-3 { transition-delay: 0.15s; }
+    .stagger-4 { transition-delay: 0.2s; } .stagger-5 { transition-delay: 0.25s; } .stagger-6 { transition-delay: 0.3s; } .stagger-7 { transition-delay: 0.35s; }
+    @media (max-width: 640px) {
+      .hero { padding: 56px 16px 48px; } .core-question-card { padding: 28px 24px; max-width: 100%; }
+      .chautauqua { padding: 0 16px 56px; } .chautauqua-inner { padding: 28px 0; } .chautauqua-desc { max-width: 100%; }
+      .branches-section, .timeline-section { padding-left: 16px; padding-right: 16px; }
+      .branches-list { padding-left: 28px; } .branches-list::before { left: 7px; }
+      .branch::before { left: -21px; width: 8px; height: 8px; }
+      .branch-header { padding: 12px 14px; gap: 10px; } .branch-label { font-size: 14px; }
+      .eval-grid { grid-template-columns: 1fr; } .nav-pills { display: none; }
+      .node-header { padding: 14px 14px; } .node-detail { padding: 0 14px 16px; }
+      .data-table { font-size: 12px; } .data-table th, .data-table td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const MINDMAP_DATA = {
+  meta: {
+    title: '认知思维导图 · 政治经济历史',
+    author: '方泽强',
+    startDate: '2026-03-09',
+    status: '发展中',
+    statusDetail: '1个核心节点 + 9个扩展节点 + 跨分支连接',
+    coreQuestion: '政治经济制度如何塑造人类文明的进程与分配正义？',
+    coreQuestionEn: 'How do political-economic institutions shape the course of civilization and the justice of distribution?',
+    buildMethod: '通过对谈逐步扩展',
+    chautauqua: {
+      title: '一场数字时代的肖陶扩',
+      en: 'A Digital Chautauqua',
+      description: '「肖陶扩」源自罗伯特·波西格的《禅与摩托车维修艺术》——在旅途中展开的哲学探索。19 世纪末的美国，肖陶扩运动将知识带出学院围墙，通过巡回演讲与对话启迪大众。这张认知思维导图延续了同样的精神：每一次对谈都是一段思想旅程，逐步编织关于政治、经济与历史的认知网络。',
+      source: '罗伯特·波西格《禅与摩托车维修艺术》, 1974'
+    }
+  },
+  branches: [
+    { id: 'branch-1', number: '一', icon: '🏛️', title: '古典文明与早期制度', status: 'pending', color: '#9E8E7E', nodes: [] },
+    { id: 'branch-2', number: '二', icon: '⚔️', title: '帝国、战争与资源争夺', status: 'pending', color: '#8E6B5B', nodes: [] },
+    { id: 'branch-3', number: '三', icon: '💰', title: '资本主义的起源与演变', status: 'pending', color: '#7B6B8E', nodes: [] },
+    { id: 'branch-4', number: '四', icon: '🌍', title: '全球化与殖民经济', status: 'pending', color: '#5B7B8E', nodes: [] },
+    {
+      id: 'branch-5', number: '五', icon: '🏭', title: '工业革命与技术变革', status: 'active', color: '#B8860B',
+      nodes: [
+        {
+          id: '5.1', title: '工农剪刀差', subtitle: 'The Price Scissors',
+          question: '后发国家如何在没有殖民地的条件下完成工业化原始积累？',
+          definition: '国家通过行政手段压低农产品价格、抬高工业品价格，将农业剩余强制转移到工业部门的制度安排。',
+          sections: [
+            {
+              title: '历史案例', type: 'table',
+              content: {
+                headers: ['国家', '时期', '形式', '提取规模', '后果'],
+                rows: [
+                  ['苏联', '1928–1953', '集体化 + 义务交售制', '占工业投资 40%+', '乌克兰大饥荒 (1932-33)，农业崩溃'],
+                  ['中国', '1953–2006', '统购统销 + 人民公社', '6000–8000 亿元 (1952-86)', '完整工业体系，但城乡二元固化'],
+                  ['日韩台', '1960s–80s', '压低粮价 + 进口替代', '隐性城市偏向政策', '出口导向成功，农民牺牲']
+                ]
+              }
+            },
+            {
+              title: '运作机制（三支柱）', type: 'diagram',
+              content: '价格控制 ──┬──► 压低农产品收购价\n           │\n制度锁定 ──┼──► 集体化/户籍制防止农民退出\n           │\n产业垄断 ──┘──► 国营工业垄断定价权'
+            },
+            {
+              title: '理论支撑', type: 'list',
+              content: [
+                '普列奥布拉任斯基（1924）：「社会主义原始积累论」',
+                '张培刚（1949）：「农业国工业化」——农业应贡献剩余，但不能通过剥夺',
+                '阿马蒂亚·森：剪刀差是「可行能力」的剥夺（定价权、交易权、迁徙权）'
+              ]
+            }
+          ],
+          evaluation: {
+            pros: ['国家视角：快速工业化、避免对外依赖（自主性）'],
+            cons: ['分配正义视角：对农民的系统性剥削、城乡差距固化、人权代价']
+          },
+          references: []
+        },
+        {
+          id: '5.2', title: '技术革命的长波周期', subtitle: '佩雷斯框架',
+          question: '大模型掀起的 AI 热潮是否属于第六次技术革命的导入期？',
+          sections: [
+            {
+              title: '佩雷斯核心框架', type: 'diagram',
+              content: '技术突破 → 金融资本涌入 → 泡沫/狂热 → 崩溃/调整 → 制度重组 → 生产资本主导 → 黄金年代\n     │                                                        │\n     └── 导入期（Installation, 20-30年）──┬── 展开期（Deployment, 20-30年）\n                                          │\n                                    转折点（Turning Point）\n                                    社会契约重新谈判'
+            },
+            {
+              title: '五次技术革命历史回顾', type: 'table',
+              content: {
+                headers: ['次', '时期', '核心产业', '基础设施', '当前状态'],
+                rows: [
+                  ['1', '1771', '棉纺织、铁、水力', '运河、水力工厂', '已成熟'],
+                  ['2', '1829', '蒸汽机、铁路、钢铁', '铁路网、煤炭', '已成熟'],
+                  ['3', '1875', '钢铁、重型工程、电气', '钢铁船舶、电报', '已成熟'],
+                  ['4', '1908', '石油、汽车、大规模生产', '公路网、电网', '已成熟'],
+                  ['5', '1971', 'ICT、互联网', '数字网络、光纤', '已成熟/衰退'],
+                  ['6？', '2022？', 'AI 与智能革命', '算力中心、边缘 AI', '导入期？']
+                ]
+              }
+            },
+            {
+              title: '当前 AI 大模型所处阶段：导入期（Installation）', type: 'table',
+              content: {
+                headers: ['导入期特征', '当前 AI 领域证据'],
+                rows: [
+                  ['金融资本主导', '2023 年 AI 投资占全球 VC 30%+；OpenAI 估值 800 亿美元'],
+                  ['技术不确定性', '大模型 vs 小模型？商业模式不清晰'],
+                  ['基础设施建设中', '算力短缺、电力约束；GPU 成为新"石油"'],
+                  ['制度滞后', '监管框架碎片化；版权、隐私未解决'],
+                  ['旧范式抵抗', '传统软件公司被迫全面 AI 化']
+                ]
+              }
+            },
+            {
+              title: '接下来的历史剧本', type: 'narrative',
+              content: [
+                { type: 'subtitle', text: '阶段 3：狂热/崩溃（2025–2027）' },
+                { type: 'list', items: ['泡沫破裂：部分高估值 AI 公司倒闭', '重大事故：AI 造成安全/社会危机', '监管危机：公众要求政府介入'] },
+                { type: 'subtitle', text: '阶段 4：协同期（2028–2040+）' },
+                { type: 'list', items: ['生产资本主导：制造业、政府、实体产业全面 AI 化', '制度成熟：AI 监管框架、UBI 试点', '生产力爆发：全要素生产率（TFP）显著提升'] }
+              ]
+            }
+          ],
+          references: []
+        },
+        {
+          id: '5.3', title: '运河热与铁路热的微观视角',
+          question: '当技术革命席卷社会时，普通投资者、建设者、旁观者经历了什么？',
+          sections: [
+            {
+              title: '运河热（Canal Mania，1790s–1810s）', type: 'narrative',
+              content: [
+                { type: 'subtitle', text: '投资者：从理性到狂热' },
+                { type: 'text', text: '早期（1790s）：公爵、银行家谨慎投资，股息稳定（5-10%）。狂热期（1790s 末–1810s）：全民投机，小市民、农民都在买。崩溃（1810s）：股票暴跌。' },
+                { type: 'quote', text: '我把织机卖了买运河股票，现在织机和股票都没了。', attribution: '一个织工的日记（1811 年）' },
+                { type: 'subtitle', text: '建设者（Navvies）的生活' },
+                { type: 'list', items: ['人群：爱尔兰逃荒农民、失地农民、退伍士兵', '条件：每天 12–14 小时手工挖掘，塌方、溺水、热病'] },
+                { type: 'quote', text: '我们在挖一条叫「联合大运河」的东西。这里很潮湿，很多人得了热病。但我每周能寄 1 英镑回家，够孩子们吃饱。', attribution: '一个爱尔兰工人的家书（1802 年）' }
+              ]
+            },
+            {
+              title: '铁路热（Railway Mania，1840s）', type: 'narrative',
+              content: [
+                { type: 'subtitle', text: '投资者：全民疯狂' },
+                { type: 'list', items: ['1845 年议会通过 2,700 英里新铁路计划', '律师、医生、教师、仆人都在买股票', '崩溃（1847–1849）：银行倒闭，股票暴跌 80-90%'] },
+                { type: 'quote', text: '我今天把积蓄全部买了「大北铁路」的股票。校长说我不理智，但他说的时候自己也买了。', attribution: '一个小学教师的日记（1845 年）' },
+                { type: 'subtitle', text: '建设者：更危险的「铁路工人」' },
+                { type: 'list', items: ['规模：1840 年代 25 万铁路工人（占总劳动力 2%）', '危险：隧道粉尘、高空坠落、炸药事故'] },
+                { type: 'quote', text: '我们在挖一条穿过山丘的隧道。里面很黑，只有蜡烛。上周有 3 个人被塌方埋了，我们只挖出了 2 个。', attribution: '一个铁路工人的证词（1846 年）' }
+              ]
+            },
+            {
+              title: '对当下的启示：AI 热潮中的「普通人」', type: 'table',
+              content: {
+                headers: ['历史角色', '今天对应', '风险'],
+                rows: [
+                  ['运河/铁路股票投资者', 'AI 概念股投资者、加密货币投机者', '泡沫破裂，财富蒸发'],
+                  ['Navvies（建设者）', 'AI 标注员、数据中心建设者', '工作伤害、职业替代'],
+                  ['沿线居民', '被 AI 改变行业的从业者', '生计被颠覆，技能过时']
+                ]
+              }
+            },
+            {
+              title: '关键问题', type: 'text',
+              content: '泡沫破裂时，谁会像那个寡妇一样破产？'
+            }
+          ],
+          references: []
+        },
+        {
+          id: '5.4', title: '技术的本质', subtitle: '布莱恩·阿瑟的「组合进化」视角',
+          question: '技术到底是什么？它是如何产生和进化的？',
+          sections: [
+            {
+              title: '核心认知短语', type: 'table',
+              content: {
+                headers: ['认知短语', '核心含义', '个人应用'],
+                rows: [
+                  ['技术是"组合进化"的产物', '新技术 = 旧技术的新组合', '创新时寻找跨领域技术组合'],
+                  ['经济是技术的表达形式', '技术结构决定经济结构', '关注技术变革对职业/投资的重塑'],
+                  ['收益递增导致"赢者通吃"', '早期小优势通过正反馈被放大', '在新技术导入期尽早建立生态位'],
+                  ['技术以"域"的形式聚集', '相关技术形成互相支持的集群', '选择技术域的交汇点']
+                ]
+              }
+            },
+            {
+              title: '关键事实', type: 'list',
+              content: [
+                '喷气发动机 = 燃气轮机 + 压缩机 + 涡轮 + 尾喷管',
+                '晶体管 → 集成电路 → 微处理器 → PC → 互联网',
+                'Windows、互联网协议呈现收益递增'
+              ]
+            },
+            {
+              title: '对个人决策的指导', type: 'list',
+              content: [
+                '技能发展：追求跨领域组合能力（T 型 / π 型）',
+                '创业/创新：寻找已有技术的「新组合」应用场景',
+                '职业选择：选择技术域的交汇点（如 AI + 医疗）'
+              ]
+            }
+          ],
+          references: [{ author: 'W. Brian Arthur', year: 2009, title: 'The Nature of Technology: What It Is and How It Evolves' }]
+        },
+        {
+          id: '5.5', title: '技术锁定与路径依赖',
+          question: '为什么次优技术可能胜出？历史如何被「锁定」？',
+          sections: [
+            {
+              title: '核心认知短语', type: 'table',
+              content: {
+                headers: ['认知短语', '核心含义', '个人应用'],
+                rows: [
+                  ['历史是路径依赖的', '早期偶然选择可能锁定长期轨迹', '早期决策权重极高'],
+                  ['转换成本是锁定的护城河', '即使更好替代也难以取代', '评估新技术时看转换成本'],
+                  ['锁定可能是理性的', '市场并非总是失灵', '不要盲目追求"更好"技术'],
+                  ['三种锁定机制', '学习效应 + 网络效应 + 协调效应', '设计产品/职业时建立这三种效应']
+                ]
+              }
+            },
+            {
+              title: '经典案例', type: 'table',
+              content: {
+                headers: ['案例', '所谓"锁定"', '关键事实'],
+                rows: [
+                  ['QWERTY 键盘', 'Dvorak 更高效，但 QWERTY 锁定', '1873 年为解决卡键设计；Dvorak 优势被夸大'],
+                  ['VHS vs Betamax', '画质更好的 Beta 失败', 'VHS 通过开放授权、更长录制时间获胜'],
+                  ['Windows 操作系统', '微软通过网络效应锁定', '应用软件生态形成锁定']
+                ]
+              }
+            }
+          ],
+          references: [
+            { author: 'Paul David', year: 1985, title: 'Clio and the Economics of QWERTY' },
+            { author: 'W. Brian Arthur', year: 1989, title: 'Competing Technologies, Increasing Returns, and Lock-In by Historical Events' },
+            { author: 'Liebowitz & Margolis', year: 1990, title: 'The Fable of the Keys' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'branch-6', number: '六', icon: '📊', title: '现代宏观经济与政治周期', status: 'active', color: '#2E8B7A',
+      nodes: [
+        {
+          id: '6.1', title: '《置身事内》——中国政府与经济发展',
+          question: '理解中国经济，必须理解政府如何「置身事内」。',
+          sections: [
+            {
+              title: '核心框架：地方政府公司化', type: 'diagram',
+              content: '传统视角：政府 = 提供公共服务 + 纠正市场失灵\n\n置身事内视角：政府 = 深度参与经济 + 直接推动发展\n                        ↓\n                  通过「招商引资」竞争\n                        ↓\n                  地方政府公司化（GDP 锦标赛）'
+            },
+            {
+              title: '关键制度演变（四部曲）', type: 'table',
+              content: {
+                headers: ['时期', '核心机制', '提取方式', '结果'],
+                rows: [
+                  ['1994 前', '财政包干', '地方保留多', '中央弱、地方强'],
+                  ['1994', '分税制改革', '中央拿税、地方拿地', '中央集权，土地财政兴起'],
+                  ['1998–2020', '土地财政 + 城投债', '征地–出让–基建循环', '城市化快、债务累积'],
+                  ['2020 后', '双循环 + 房住不炒', '旧模式难持续', '转型中']
+                ]
+              }
+            },
+            {
+              title: '土地财政逻辑', type: 'narrative',
+              content: [
+                { type: 'text', text: '低价征地（农村）→ 高价出让（城市）→ 差价用于基建' },
+                { type: 'text', text: '本质是农村剩余的城市化提取（剪刀差的现代形式）。' }
+              ]
+            },
+            {
+              title: '结构性失衡', type: 'list',
+              content: [
+                '城乡失衡：户籍制度维持「重物轻人」的城市化',
+                '债务结构：居民（房贷）+ 企业（国企）+ 政府（隐性）三重债务',
+                '内外失衡：高储蓄、高投资、高出口 → 低消费'
+              ]
+            }
+          ],
+          references: [{ author: '兰小欢', year: 2021, title: '置身事内：中国政府与经济发展' }]
+        }
+      ]
+    },
+    {
+      id: 'branch-7', number: '七', icon: '⚖️', title: '分配正义与伦理维度', status: 'active', color: '#6B5B8E',
+      nodes: [
+        {
+          id: '7.1', title: '演化思维的三重奏',
+          question: '《规模》、佩雷斯与复杂系统如何指导宏观判断与个人决策？',
+          sections: [
+            {
+              title: '三重理论的交汇', type: 'text',
+              content: '《规模》（West）的缩放法则 + 佩雷斯的周期理论 + 演化思维 = 「没有最优，只有适应；没有均衡，只有演化」'
+            },
+            {
+              title: '《规模》的核心发现', type: 'table',
+              content: {
+                headers: ['系统', '规模翻倍时', '数学关系', '启示'],
+                rows: [
+                  ['生物', '代谢率只增加 75%', '亚线性（< 1）', '效率提升'],
+                  ['城市', '创新/犯罪增加 115%', '超线性（> 1）', '正反馈'],
+                  ['公司', '利润增长放缓', '超 → 亚 → 崩溃', '警惕规模陷阱']
+                ]
+              }
+            },
+            {
+              title: '杠铃策略（Barbell Strategy）', type: 'diagram',
+              content: '资产配置：\n├─ 90% 极度安全（现金、国债、黄金）\n│     → 确保生存底线\n│\n└─ 10% 高风险高回报（期权、加密货币、早期项目）\n      → 有限损失，无限 upside\n\n避免：60% 股票 + 40% 债券的「中等风险」组合'
+            }
+          ],
+          references: [{ author: 'Geoffrey West', year: 2017, title: 'Scale: The Universal Laws of Growth, Innovation, Sustainability, and the Pace of Life' }]
+        },
+        {
+          id: '7.2', title: '塔勒布三部曲——不确定性、黑天鹅与反脆弱',
+          question: '如何在不可预测的世界中配置资产、设计人生？',
+          sections: [
+            {
+              title: '五大核心事实', type: 'orderedList',
+              content: [
+                '世界是非线性的：小原因可能引发大结果（蝴蝶效应）',
+                '极端事件主导历史：尾部事件塑造世界',
+                '预测是徒劳的：复杂系统的未来不可预测',
+                '生存优于优化：先确保不被淘汰',
+                '选择权 > 知识：有选择做或不做的权利'
+              ]
+            },
+            {
+              title: '脆弱性光谱', type: 'diagram',
+              content: '脆弱（Fragile）    强韧（Robust）    反脆弱（Antifragile）\n    │                  │                  │\n    ▼                  ▼                  ▼\n 冲击带来损失       冲击无损          冲击带来收益\n    │                  │                  │\n 玻璃杯            塑料杯             肌肉/进化\n    │                  │                  │\n 高杠杆投资        现金储备           杠铃策略'
+            },
+            {
+              title: '建立「选择权」（Optionality）', type: 'table',
+              content: {
+                headers: ['类型', '例子'],
+                rows: [
+                  ['财务期权', '持有现金等待机会'],
+                  ['时间期权', '延迟决策，等待更多信息'],
+                  ['知识期权', '学习多种可迁移技能'],
+                  ['职业期权', '副业收入 + 低成本生活']
+                ]
+              }
+            },
+            {
+              title: '核心原则', type: 'quote',
+              content: { text: '不要试图预测黑天鹅，要构建一个黑天鹅来临时不仅存活、还能受益的系统。', attribution: 'Nassim Nicholas Taleb' }
+            }
+          ],
+          references: [
+            { author: 'Nassim N. Taleb', year: 2007, title: 'The Black Swan' },
+            { author: 'Nassim N. Taleb', year: 2012, title: 'Antifragile: Things That Gain from Disorder' }
+          ]
+        }
+      ]
+    }
+  ],
+  timeline: [
+    { date: '2026-03-09', topic: '初始节点创建', nodeId: '核心起始节点' },
+    { date: '2026-03-09', topic: '工农剪刀差', nodeId: '5.1' },
+    { date: '2026-03-09', topic: '《置身事内》', nodeId: '6.1' },
+    { date: '2026-03-09', topic: '技术革命长波周期', nodeId: '5.2' },
+    { date: '2026-03-09', topic: '运河热与铁路热', nodeId: '5.3' },
+    { date: '2026-03-10', topic: '演化思维的三重奏', nodeId: '7.1' },
+    { date: '2026-03-10', topic: '塔勒布三部曲', nodeId: '7.2' },
+    { date: '2026-03-26', topic: '《技术的本质》', nodeId: '5.4' },
+    { date: '2026-03-26', topic: '技术锁定与路径依赖', nodeId: '5.5' }
+  ],
+  quote: '知识不是堆积，而是编织。',
+  quoteSub: '从那个核心问题开始，一步步编织政治经济历史的认知网络。',
+  sourceUrl: 'https://zeqiang.fun/cn/2026/03/political-economic-history-mindmap/'
+};
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function renderApp() {
+  const { meta, branches, timeline, quote, quoteSub, sourceUrl } = MINDMAP_DATA;
+  document.getElementById('app').innerHTML = `
+    ${renderNav(meta, branches)}
+    ${renderHero(meta)}
+    ${renderChautauqua(meta.chautauqua)}
+    ${renderBranches(branches)}
+    ${renderTimeline(timeline)}
+    ${renderFooter(quote, quoteSub, sourceUrl)}
+  `;
+  initInteractions();
+  initScrollObserver();
+  initNavScroll();
+}
+
+function renderNav(meta, branches) {
+  const pills = branches.map(b =>
+    `<button class="nav-pill ${b.status === 'active' ? 'active' : ''}"
+            style="${b.status === 'active' ? `background:${b.color};border-color:${b.color}` : ''}"
+            onclick="scrollToBranch('${b.id}')"
+            title="分支${b.number}：${esc(b.title)}">${b.number}</button>`
+  ).join('');
+  return `
+    <nav class="nav" id="main-nav">
+      <div class="nav-inner">
+        <span class="nav-title">${esc(meta.title)}</span>
+        <div class="nav-pills">${pills}</div>
+      </div>
+    </nav>`;
+}
+
+function renderHero(meta) {
+  return `
+    <header class="hero">
+      <div class="status-badge animate-in">
+        <span class="status-dot"></span>
+        ${esc(meta.status)} · ${esc(meta.statusDetail)}
+      </div>
+      <h1 class="hero-title animate-in">${esc(meta.title)}</h1>
+      <div class="core-question-card animate-in">
+        <p class="core-question">${esc(meta.coreQuestion)}</p>
+        <p class="core-question-en">${esc(meta.coreQuestionEn)}</p>
+      </div>
+      <p class="hero-meta animate-in">${esc(meta.buildMethod)} · 起始于 ${esc(meta.startDate)}</p>
+    </header>`;
+}
+
+function renderChautauqua(ch) {
+  if (!ch) return '';
+  return `
+    <section class="chautauqua">
+      <div class="chautauqua-inner animate-in">
+        <div class="chautauqua-symbol">· · ·</div>
+        <p class="chautauqua-title">${esc(ch.title)}</p>
+        <p class="chautauqua-en">${esc(ch.en)}</p>
+        <p class="chautauqua-desc">${esc(ch.description)}</p>
+        <p class="chautauqua-source">— ${esc(ch.source)}</p>
+      </div>
+    </section>`;
+}
+
+function renderBranches(branches) {
+  const items = branches.map((b, i) => renderBranch(b, i)).join('');
+  return `
+    <section class="branches-section">
+      <p class="section-label animate-in">知识分支</p>
+      <div class="branches-list">${items}</div>
+    </section>`;
+}
+
+function renderBranch(b, index) {
+  const isPending = b.status === 'pending';
+  const nodeCount = b.nodes.length;
+  const tagClass = isPending ? 'pending' : 'active';
+  const tagText = isPending ? '待对谈填充' : `${nodeCount} 个节点`;
+  const tagStyle = !isPending ? `background:${b.color}` : '';
+  const nodesHtml = b.nodes.map(n => renderNode(n, b.color)).join('');
+
+  return `
+    <div class="branch ${isPending ? 'pending' : ''} animate-in stagger-${index + 1}"
+         id="${b.id}" style="--branch-color:${b.color}">
+      <button class="branch-header" ${isPending ? 'disabled' : ''}>
+        <span class="branch-icon">${b.icon}</span>
+        <span class="branch-label">分支${b.number}：${esc(b.title)}</span>
+        <span class="branch-tag ${tagClass}" style="${tagStyle}">${tagText}</span>
+        <span class="branch-chevron">›</span>
+      </button>
+      <div class="branch-content">
+        <div class="branch-content-inner">
+          <div class="nodes-wrapper">${nodesHtml}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderNode(node, branchColor) {
+  const subtitle = node.subtitle ? `<p class="node-subtitle">${esc(node.subtitle)}</p>` : '';
+  const questionPreview = node.question ? `<p class="node-question-preview">${esc(node.question)}</p>` : '';
+
+  let detailHtml = '';
+  if (node.question) {
+    detailHtml += `<div class="question-banner"><strong>核心问题：</strong>${esc(node.question)}</div>`;
+  }
+  if (node.definition) {
+    detailHtml += `<div class="definition">${esc(node.definition)}</div>`;
+  }
+  if (node.sections) {
+    detailHtml += node.sections.map(s => renderSection(s)).join('');
+  }
+  if (node.evaluation) {
+    detailHtml += renderEvaluation(node.evaluation);
+  }
+  if (node.references && node.references.length > 0) {
+    detailHtml += renderReferences(node.references);
+  }
+
+  return `
+    <div class="node-card">
+      <div class="node-header">
+        <span class="node-id">${esc(node.id)}</span>
+        <div class="node-title-group">
+          <p class="node-title">${esc(node.title)}</p>
+          ${subtitle}
+          ${questionPreview}
+        </div>
+        <span class="node-chevron">›</span>
+      </div>
+      <div class="node-content">
+        <div class="node-content-inner">
+          <div class="node-detail">${detailHtml}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderSection(section) {
+  let inner = '';
+  switch (section.type) {
+    case 'table':
+      inner = renderTable(section.content);
+      break;
+    case 'list':
+      inner = renderList(section.content, false);
+      break;
+    case 'orderedList':
+      inner = renderList(section.content, true);
+      break;
+    case 'text':
+      inner = `<p class="narrative-text">${esc(section.content)}</p>`;
+      break;
+    case 'diagram':
+      inner = `<pre class="diagram-block">${esc(section.content)}</pre>`;
+      break;
+    case 'quote':
+      inner = renderQuote(section.content);
+      break;
+    case 'narrative':
+      inner = renderNarrative(section.content);
+      break;
+    default:
+      inner = `<p>${esc(String(section.content))}</p>`;
+  }
+  return `
+    <div class="content-section">
+      <p class="section-title">${esc(section.title)}</p>
+      ${inner}
+    </div>`;
+}
+
+function renderTable(data) {
+  const ths = data.headers.map(h => `<th>${esc(h)}</th>`).join('');
+  const rows = data.rows.map(row =>
+    `<tr>${row.map(cell => `<td>${esc(cell)}</td>`).join('')}</tr>`
+  ).join('');
+  return `<table class="data-table"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderList(items, ordered) {
+  const tag = ordered ? 'ol' : 'ul';
+  const lis = items.map(item => `<li>${esc(item)}</li>`).join('');
+  return `<${tag} class="content-list">${lis}</${tag}>`;
+}
+
+function renderQuote(data) {
+  const attr = data.attribution ? `<p class="quote-attr">— ${esc(data.attribution)}</p>` : '';
+  return `<div class="quote-block"><p class="quote-text">${esc(data.text)}</p>${attr}</div>`;
+}
+
+function renderNarrative(blocks) {
+  return blocks.map(block => {
+    switch (block.type) {
+      case 'subtitle':
+        return `<p class="narrative-subtitle">${esc(block.text)}</p>`;
+      case 'text':
+        return `<p class="narrative-text">${esc(block.text)}</p>`;
+      case 'quote':
+        return renderQuote({ text: block.text, attribution: block.attribution });
+      case 'list':
+        return renderList(block.items, false);
+      default:
+        return '';
+    }
+  }).join('');
+}
+
+function renderEvaluation(ev) {
+  const pros = ev.pros.map(p => `<div>${esc(p)}</div>`).join('');
+  const cons = ev.cons.map(c => `<div>${esc(c)}</div>`).join('');
+  return `
+    <div class="content-section">
+      <p class="section-title">评价维度</p>
+      <div class="eval-grid">
+        <div class="eval-card pro"><p class="eval-label">✓ 正面</p>${pros}</div>
+        <div class="eval-card con"><p class="eval-label">✗ 反面</p>${cons}</div>
+      </div>
+    </div>`;
+}
+
+function renderReferences(refs) {
+  const items = refs.map(r =>
+    `<p class="ref-item">${esc(r.author)} (${r.year}). <em>${esc(r.title)}</em></p>`
+  ).join('');
+  return `<div class="references"><p class="references-title">参考文献</p>${items}</div>`;
+}
+
+function renderTimeline(timeline) {
+  const rows = timeline.map(t =>
+    `<tr><td class="date-cell">${esc(t.date)}</td><td>${esc(t.topic)}</td><td style="color:var(--text-tertiary);font-family:var(--font-mono);font-size:12px">${esc(t.nodeId)}</td></tr>`
+  ).join('');
+  return `
+    <section class="timeline-section">
+      <p class="section-label animate-in">对谈记录</p>
+      <table class="timeline-table animate-in">
+        <thead><tr><th>日期</th><th>主题</th><th>节点</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </section>`;
+}
+
+function renderFooter(quote, sub, url) {
+  return `
+    <footer class="site-footer">
+      <div class="footer-divider"></div>
+      <p class="footer-quote animate-in">「${esc(quote)}」</p>
+      <p class="footer-sub animate-in">${esc(sub)}</p>
+      <p class="footer-source animate-in">
+        本思维导图持续更新中，通过对谈逐步扩展 ·
+        <a href="${esc(url)}" target="_blank" rel="noopener">原文链接</a>
+      </p>
+    </footer>`;
+}
+
+function initInteractions() {
+  document.addEventListener('click', (e) => {
+    const branchBtn = e.target.closest('.branch:not(.pending) .branch-header');
+    if (branchBtn) {
+      branchBtn.closest('.branch').classList.toggle('open');
+      return;
+    }
+    const nodeBtn = e.target.closest('.node-header');
+    if (nodeBtn) {
+      nodeBtn.closest('.node-card').classList.toggle('open');
+      return;
+    }
+  });
+}
+
+function scrollToBranch(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    const y = el.getBoundingClientRect().top + window.scrollY - 72;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+    setTimeout(() => {
+      if (!el.classList.contains('open') && !el.classList.contains('pending')) {
+        el.classList.add('open');
+      }
+    }, 400);
+  }
+}
+
+function initScrollObserver() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
+  document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+}
+
+function initNavScroll() {
+  const nav = document.getElementById('main-nav');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        nav.classList.toggle('scrolled', window.scrollY > 16);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', renderApp);
+</script>
+
+</body>
+</html>

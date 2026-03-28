@@ -1,0 +1,99 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>NLP on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/categories/nlp/</link><description>Recent content in NLP on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 14 Aug 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/categories/nlp/" rel="self" type="application/rss+xml"/><item><title>结合JavaScript批量获取网站内容</title><link>https://zeqiang.fun/cn/2019/08/use-js-obtain-html-content/</link><pubDate>Wed, 14 Aug 2019 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2019/08/use-js-obtain-html-content/</guid><description><![CDATA[
+        <p>写在前面：该方法用于解决“爬虫操作繁琐与手动复制太累”的情况</p>
+<p>思路：</p>
+<ol>
+<li>
+<p>将目标网页当前页<strong>另存为</strong>本地文件</p>
+</li>
+<li>
+<p>先分析要提取内容所在<strong>标签</strong>或<strong>类名</strong></p>
+</li>
+<li>
+<p>在网页的低端<strong>插入容器</strong>用以显示要抓取的内容</p>
+</li>
+<li>
+<p>在网页<strong>源代码</strong>的插入JS代码命令</p>
+</li>
+<li>
+<p>该段JS使得目标内容在容器中显示</p>
+</li>
+<li>
+<p>复制目标内容至txt文件进行预处理</p>
+<hr>
+</li>
+</ol>
+<h2 id="1-将目标网页当前页另存为本地文件">1. 将目标网页当前页另存为本地文件</h2>
+<p>在chrome打开目标网页，右键另存为到桌面，可以看到有 xxx.html 与 xxx_file（文件夹），将 xxx.html 用文本编辑器打开（推荐使用sublime）</p>
+<h2 id="2-先分析要提取内容所在标签或类名">2. 先分析要提取内容所在<strong>标签</strong>或类名</h2>
+<p>可以 <code>cmd+F</code>或者<code>ctrl+F</code>查找目标内容，如笔者想要查找以下内容</p>
+<pre><code class="language-html">&lt;div class=&quot;item-box&quot;&gt;
+    &lt;div style=&quot;cursor: pointer&quot; class=&quot;collo_cn_content&quot;&gt;
+        A看电视和电影 B 不和别人交流 C 影响交流能力
+        ...
+        特定化：特别是现在大家可以手机看电影等
+     &lt;/div&gt;
+     &lt;div id=&quot;collapse758&quot; class=&quot;collapse&quot;&gt;
+        翻译：不要回答！不要回答！不要回答！
+        词汇：depict,de facto,simutaneous
+        ...
+        you got it!
+     &lt;/div&gt;
+     ...
+&lt;/div&gt;   
+</code></pre>
+<p>观察此时中文内容所在容器的<strong>id或类名</strong>，比如此时的<code>class=&quot;item-box&quot;</code>，<code>class=&quot;collo_cn_content&quot;</code>和<code>class=&quot;collapse&quot;</code>，进一步分析可得<code>item-box</code>包含了<code>collo_cn_content</code>和<code>collapse</code>两个类下的目标内容，故之后选用此类名作定位<strong>关键词</strong>，记住这个<strong>item-box</strong></p>
+<h2 id="3-在网页的低端插入容器用以显示要抓取的内容">3. 在网页的低端<strong>插入容器</strong>用以显示要抓取的内容</h2>
+<p>在网页源代码的主题段底端（存放位置顺随心意就行，笔者这里以底端为例）</p>
+<p>如一下代码的<strong>后四行</strong>，在主题部分的末尾添加容器，用以待会存放显示目标内容</p>
+<pre><code class="language-html">&lt;div class=&quot;footer-wrapper&quot;&gt;
+    &lt;div class=&quot;footer-content-wrapper&quot;&gt;
+        &lt;div class=&quot;icp&quot;&gt;
+            闽ICP备xxxxx号
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;div id=&quot;cn_content&quot;&gt;
+    在这里显示目标内容 !
+    show targeted contents there !
+&lt;/div&gt;
+</code></pre>
+<h2 id="4-在网页源代码的插入js代码命令">4. 在网页<strong>源代码</strong>的插入JS代码命令</h2>
+<p>插入如下命令</p>
+<pre><code class="language-javascript">&lt;script type=&quot;text/javascript&quot;&gt;
+    var content = document.getElementById(&quot;cn_content&quot;);
+    var ch = document.getElementsByClassName(&quot;item-box&quot;);
+    for(var i=0;i&lt;ch.length;i++){
+        content.innerText += &quot;\n&quot; + ch[i].innerText;
+    }
+&lt;/script&gt;
+</code></pre>
+<p><code>content</code>存放所定位到的所有目标内容，将<code>content</code>定位到如下之前写好的容器里</p>
+<pre><code class="language-javascript">&lt;div id=&quot;cn_content&quot;&gt;
+ 在这里显示目标内容 !
+ show targeted contents there !
+&lt;/div&gt;
+</code></pre>
+<h2 id="5-该段js使得目标内容在容器中显示">5. 该段JS使得目标内容在容器中显示</h2>
+<p>完成如上操作后，即可打开已经修改过的网页</p>
+<p><strong>注意!</strong> 如果数据量大如3w+，需要等待页面响应或者优化js代码，如缩小定位范围来减少浏览器查找时间）</p>
+<p>经过调试后目标内容显示成功，可直接在页面上选中<strong>复制进 txt 文件</strong>中</p>
+<h2 id="6-实用python对txt文件进行预处理">6. 实用python对txt文件进行预处理</h2>
+<p>数据预处理这里笔者以<strong>删除空白行</strong>为例</p>
+<pre><code class="language-python">def clearBlankLine():
+    file1 = open('/Users/xxx.txt', 'r', encoding='utf-8') 
+    # 要去掉空行的文件 
+    file2 = open('/Users/xxx_processed.txt', 'w', encoding='utf-8') 
+    # 生成没有空行的文件
+    try:
+        for line in file1.readlines():
+            if line == '\n':
+                line = line.strip(&quot;\n&quot;)
+            file2.write(line)
+    finally:
+        file1.close()
+        file2.close()
+
+if __name__ == '__main__':
+    clearBlankLine()
+</code></pre>
+<p>处理完文件中的空白行后根据需要进行进一步数据处理，如分词等让目标内容能更好的为我们所用！</p>
+        ]]></description></item></channel></rss>

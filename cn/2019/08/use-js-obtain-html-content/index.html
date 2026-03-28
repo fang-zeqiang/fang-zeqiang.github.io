@@ -1,0 +1,79 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>结合JavaScript批量获取网站内容 - Zeqiang Fang | 方泽强</title><meta name=referrer content="no-referrer"><meta property="og:title" content="结合JavaScript批量获取网站内容 - Zeqiang Fang | 方泽强"><meta name=description property="og:description" content="写在前面：该方法用于解决“爬虫操作繁琐与手动复制太累”的情况"><meta property="og:type" content="article"><meta property="og:site_name" content="Zeqiang Fang | 方泽强"><meta property="og:url" content="https://zeqiang.fun/cn/2019/08/use-js-obtain-html-content/"><meta name=author property="article:author" content="方泽强,张欢"><meta name=date property="article:published_time" content="2019-08-14" scheme=YYYY-MM-DD><meta name=date property="article:modified_time" content="2019-08-14" scheme=YYYY-MM-DD><meta name=keywords property="article:tag" content="JavaScript,数据预处理,Python,自然语言处理"><meta name=theme-color content="#0d0d0d"><link rel=icon type=image/png sizes=16x16 href=/images/web/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=/images/web/favicon-32x32.png><link rel=icon type=image/png sizes=48x48 href=/images/web/favicon-48x48.png><link rel=icon type=image/png sizes=62x62 href=/images/web/favicon-62x62.png><link rel=icon type=image/png sizes=192x192 href=/images/web/favicon-192x192.png><link rel=apple-touch-icon size=192x192 href=/images/web/icon-192x192.png><link rel=manifest href=/manifest.json><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://zeqiang.fun/cn"},"name":"结合JavaScript批量获取网站内容","headline":"结合JavaScript批量获取网站内容","description":"\u003cp\u003e写在前面：该方法用于解决“爬虫操作繁琐与手动复制太累”的情况\u003c/p\u003e","genre":["NLP","前端"],"datePublished":"2019-08-14","dateModified":"2019-08-14","wordCount":"1022","keywords":["JavaScript","数据预处理","Python","自然语言处理"],"image":[],"author":{"@type":"Person","name":"方泽强,张欢"},"publisher":{"@type":"Organization","name":"方泽强,张欢","logo":{"@type":"ImageObject","url":"https://zeqiang.fun/images/web/publisher-logo.png"}},"url":"https://zeqiang.fun/cn/2019/08/use-js-obtain-html-content/"}</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js></script><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/6.5.95/css/materialdesignicons.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-.min.css><script async src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js></script><link rel=stylesheet type=text/css href=/css/fonts.css><link rel=stylesheet type=text/css href=/css/style.css><link rel=stylesheet type=text/css href=/css/light.css><link rel=stylesheet type=text/css href=/css/dark.css id=dark-mode-style disabled><link rel=stylesheet type=text/css href=/css/icons.css><link rel=stylesheet type=text/css href=/css/print.css></head><body class=cn><header class=masthead><div class=logo></div><p class=slogan>优雅永不过时</p><nav class=menu><ul><li><a href=/>首页</a></li><li><a href=/cn/>博客</a></li><li><a href=/categories/>分类</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/about/>关于</a></li><li><a href=/cn/resume/>简历</a></li><li><a href=/cn/friendlink/>友情链接</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/index.xml target=_blank type=application/rss+xml title="RSS feed">订阅</a></li><li><a href=https://github.com/fang-zeqiang/fang-zeqiang.github.io/blob/master/LICENSE target=_blank title="Attribution-NonCommercial-ShareAlike 4.0 International">版权</a></li><li class="light-dark-mode no-border-bottom"><a id=light-dark-mode-action><span id=light-dark-mode-icon class="mdi mdi-weather-night"></span></a></li></ul></nav><script src=/js/toggle-theme.js></script></header><article class=main><header class=title><h1>结合JavaScript批量获取网站内容</h1><h3>方泽强,张欢 /
+2019-08-14</h3><h3 class=post-meta><strong>分类: </strong><a href=/categories/nlp>NLP</a>, <a href=/categories/%E5%89%8D%E7%AB%AF>前端</a>
+/
+<strong>标签: </strong><span>JavaScript</span>, <span>数据预处理</span>, <span>Python</span>, <span>自然语言处理</span>
+/
+<strong>字数: </strong>1022</h3><hr></header><p>写在前面：该方法用于解决“爬虫操作繁琐与手动复制太累”的情况</p><p>思路：</p><ol><li><p>将目标网页当前页<strong>另存为</strong>本地文件</p></li><li><p>先分析要提取内容所在<strong>标签</strong>或<strong>类名</strong></p></li><li><p>在网页的低端<strong>插入容器</strong>用以显示要抓取的内容</p></li><li><p>在网页<strong>源代码</strong>的插入JS代码命令</p></li><li><p>该段JS使得目标内容在容器中显示</p></li><li><p>复制目标内容至txt文件进行预处理</p><hr></li></ol><h2 id=1-将目标网页当前页另存为本地文件>1. 将目标网页当前页另存为本地文件</h2><p>在chrome打开目标网页，右键另存为到桌面，可以看到有 xxx.html 与 xxx_file（文件夹），将 xxx.html 用文本编辑器打开（推荐使用sublime）</p><h2 id=2-先分析要提取内容所在标签或类名>2. 先分析要提取内容所在<strong>标签</strong>或类名</h2><p>可以 <code>cmd+F</code>或者<code>ctrl+F</code>查找目标内容，如笔者想要查找以下内容</p><pre><code class=language-html>&lt;div class=&quot;item-box&quot;&gt;
+    &lt;div style=&quot;cursor: pointer&quot; class=&quot;collo_cn_content&quot;&gt;
+        A看电视和电影 B 不和别人交流 C 影响交流能力
+        ...
+        特定化：特别是现在大家可以手机看电影等
+     &lt;/div&gt;
+     &lt;div id=&quot;collapse758&quot; class=&quot;collapse&quot;&gt;
+        翻译：不要回答！不要回答！不要回答！
+        词汇：depict,de facto,simutaneous
+        ...
+        you got it!
+     &lt;/div&gt;
+     ...
+&lt;/div&gt;   
+</code></pre><p>观察此时中文内容所在容器的<strong>id或类名</strong>，比如此时的<code>class="item-box"</code>，<code>class="collo_cn_content"</code>和<code>class="collapse"</code>，进一步分析可得<code>item-box</code>包含了<code>collo_cn_content</code>和<code>collapse</code>两个类下的目标内容，故之后选用此类名作定位<strong>关键词</strong>，记住这个<strong>item-box</strong></p><h2 id=3-在网页的低端插入容器用以显示要抓取的内容>3. 在网页的低端<strong>插入容器</strong>用以显示要抓取的内容</h2><p>在网页源代码的主题段底端（存放位置顺随心意就行，笔者这里以底端为例）</p><p>如一下代码的<strong>后四行</strong>，在主题部分的末尾添加容器，用以待会存放显示目标内容</p><pre><code class=language-html>&lt;div class=&quot;footer-wrapper&quot;&gt;
+    &lt;div class=&quot;footer-content-wrapper&quot;&gt;
+        &lt;div class=&quot;icp&quot;&gt;
+            闽ICP备xxxxx号
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;div id=&quot;cn_content&quot;&gt;
+    在这里显示目标内容 !
+    show targeted contents there !
+&lt;/div&gt;
+</code></pre><h2 id=4-在网页源代码的插入js代码命令>4. 在网页<strong>源代码</strong>的插入JS代码命令</h2><p>插入如下命令</p><pre><code class=language-javascript>&lt;script type=&quot;text/javascript&quot;&gt;
+    var content = document.getElementById(&quot;cn_content&quot;);
+    var ch = document.getElementsByClassName(&quot;item-box&quot;);
+    for(var i=0;i&lt;ch.length;i++){
+        content.innerText += &quot;\n&quot; + ch[i].innerText;
+    }
+&lt;/script&gt;
+</code></pre><p><code>content</code>存放所定位到的所有目标内容，将<code>content</code>定位到如下之前写好的容器里</p><pre><code class=language-javascript>&lt;div id=&quot;cn_content&quot;&gt;
+ 在这里显示目标内容 !
+ show targeted contents there !
+&lt;/div&gt;
+</code></pre><h2 id=5-该段js使得目标内容在容器中显示>5. 该段JS使得目标内容在容器中显示</h2><p>完成如上操作后，即可打开已经修改过的网页</p><p><strong>注意!</strong> 如果数据量大如3w+，需要等待页面响应或者优化js代码，如缩小定位范围来减少浏览器查找时间）</p><p>经过调试后目标内容显示成功，可直接在页面上选中<strong>复制进 txt 文件</strong>中</p><h2 id=6-实用python对txt文件进行预处理>6. 实用python对txt文件进行预处理</h2><p>数据预处理这里笔者以<strong>删除空白行</strong>为例</p><pre><code class=language-python>def clearBlankLine():
+    file1 = open('/Users/xxx.txt', 'r', encoding='utf-8') 
+    # 要去掉空行的文件 
+    file2 = open('/Users/xxx_processed.txt', 'w', encoding='utf-8') 
+    # 生成没有空行的文件
+    try:
+        for line in file1.readlines():
+            if line == '\n':
+                line = line.strip(&quot;\n&quot;)
+            file2.write(line)
+    finally:
+        file1.close()
+        file2.close()
+
+if __name__ == '__main__':
+    clearBlankLine()
+</code></pre><p>处理完文件中的空白行后根据需要进行进一步数据处理，如分词等让目标内容能更好的为我们所用！</p><link rel=stylesheet href=/css/donate.css><div class=donate><div class=donate-header></div><div class=donate-slug id=donate-slug>use-js-obtain-html-content</div><button class=donate-button>赞 赏</button><div class=donate-footer>「真诚赞赏，手留余香」</div></div><div class=donate-modal-wrapper><div class=donate-modal><div class=donate-box><div class=donate-box-content><div class=donate-box-content-inner><div class=donate-box-header>「真诚赞赏，手留余香」</div><div class=donate-box-body><div class=donate-box-money><button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-2 data-v=2 data-unchecked="￥ 2" data-checked="2 元">￥ 2</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-5 data-v=5 data-unchecked="￥ 5" data-checked="5 元">￥ 5</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-10 data-v=10 data-unchecked="￥ 10" data-checked="10 元">￥ 10</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-50 data-v=50 data-unchecked="￥ 50" data-checked="50 元">￥ 50</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-100 data-v=100 data-unchecked="￥ 100" data-checked="100 元">￥ 100</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-custom data-v=custom data-unchecked=任意金额 data-checked=任意金额>任意金额</button></div><div class=donate-box-pay><img class=donate-box-pay-qrcode id=donate-box-pay-qrcode src></div></div><div class=donate-box-footer><div class="donate-box-pay-method donate-box-pay-method-checked" data-v=wechat-pay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-wechat-pay src></div><div class=donate-box-pay-method data-v=alipay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-alipay src></div></div></div></div></div><button type=button class=donate-box-close-button>
+<svg class="donate-box-close-button-icon" fill="#fff" viewBox="0 0 24 24" width="24" height="24"><path d="M13.486 12l5.208-5.207a1.048 1.048.0 00-.006-1.483 1.046 1.046.0 00-1.482-.005L12 10.514 6.793 5.305A1.048 1.048.0 005.31 5.31a1.046 1.046.0 00-.005 1.483L10.514 12l-5.208 5.207a1.048 1.048.0 00.006 1.483 1.046 1.046.0 001.482.005L12 13.486l5.207 5.208a1.048 1.048.0 001.483-.006 1.046 1.046.0 00.005-1.482L13.486 12z" fill-rule="evenodd"/></svg></button></div></div><script type=text/javascript src=/js/donate.js></script></script><footer><nav class=post-nav><span class=nav-prev></span>
+<span class=nav-next><a href=/cn/2020/01/text-data-mining-google-job/>基于文本挖掘分析谷歌招聘信息项目</a> &rarr;</span></nav><script type=text/javascrisstoppt>
+document.addEventListener('keyup', function(e) {
+  if (e.target.nodeName.toUpperCase() != 'BODY') return;
+  var url = false;
+  if (e.which == 37) {  // Left arrow
+    
+  } else if (e.which == 39) {  // Right arrow
+    
+    url = '/cn/2020/01/text-data-mining-google-job/';
+    
+  }
+  if (url) window.location = url;
+});
+</script><ins class=adsbygoogle style=display:block;text-align:center data-ad-layout=in-article data-ad-format=fluid data-ad-client=ca-pub-2608165017777396 data-ad-slot=1261604535></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({})</script><section class=comments><div id=disqus_thread></div><script>var disqus_config=function(){this.page.url="https://zeqiang.fun"+location.pathname};(function(){if(a=function(){var e=!0;try{e=window.self!==window.top}catch{}return e},a())return;var n,s,o,i,a,r="//zeqiangfun.disqus.com/embed.js",e=document,t=e.createElement("script");if(t.src=r,t.async=!0,t.setAttribute("data-timestamp",+new Date),n=e.getElementById("disqus_thread"),s=!1,o=function(o){if(s)return;(e.head||e.body).appendChild(t),s=!0,o&&n.scrollIntoView()},t.onerror=function(){if(sessionStorage.getItem("failure-note"))return;n.innerText="Sorry, but you cannot make comments because Disqus failed to load for some reason. It is known to be blocked in China. If you are sure it is not blocked in your region, please refresh the page. 中国大陆地区读者需要翻墙才能发表评论。",sessionStorage.setItem("failure-note",!0)},location.hash.match(/^#comment-[0-9]+$/))return o(!0);i=function(){if(s)return;var e=n.getBoundingClientRect();e.top<window.innerHeight&&e.bottom>=0&&o()},window.addEventListener("load",i),e.addEventListener("scroll",i)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></section><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/show-language/prism-show-language.min.js></script><script>(function(){if(!self.Prism)return;Prism.languages.dos=Prism.languages.powershell,Prism.languages.gremlin=Prism.languages.groovy;var e={r:"R",python:"Python",xml:"XML",html:"HTML",yaml:"YAML",latex:"LaTeX",tex:"TeX",powershell:"PowerShell",javascript:"JavaScript",dos:"DOS",qml:"QML",json:"JSON",bash:"Bash",text:"Text",txt:"Text",sparql:"SPARQL",gremlin:"Gremlin",cypher:"Cypher",ngql:"nGQL",shell:"Shell",sql:"SQL",apacheconf:"Apache Configuration"};Prism.hooks.add("before-highlight",function(t){var n=e[t.language]||t.language;t.element.setAttribute("data-language",n)})})()</script><script async src=/js/fix-toc.js></script><script async src=/js/center-img.js></script><script async src=/js/right-quote.js></script><script async src=/js/fix-footnote.js></script><script async src=/js/external-link.js></script><script async src=/js/alt-title.js></script><script src=/js/no-highlight.js></script><script src=/js/math-code.js></script><script>window.MathJax={loader:{load:["[tex]/boldsymbol"]},tex:{tags:"all",inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"]],processEscapes:!0,processEnvironments:!0,packages:{"[+]":["boldsymbol"]}}}</script><script type=text/javascript id=MathJax-script async src=//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js crossorigin></script><script async src=/js/load-typekit.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js></script><script src=//cdn.jsdelivr.net/npm/vanilla-back-to-top@latest/dist/vanilla-back-to-top.min.js></script><script>addBackToTop({diameter:48})</script><hr><div class="copyright no-border-bottom"><div class=copyright-author-year><span>&copy; 2019-2022 Zeqiang Fang</span></div><div class=copyright-links><a href=https://github.com/fang-zeqiang rel=noreferrer target=_blank>Github</a>
+<span>· </span><a href=https://orcid.org/0000-0002-9556-7821 rel=noreferrer target=_blank>ORCID</a>
+<span>· </span><span>I am Franklin</span></div></div></footer></article></body></html>

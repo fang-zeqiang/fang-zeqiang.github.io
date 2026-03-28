@@ -1,0 +1,164 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>技术栈 on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/categories/%E6%8A%80%E6%9C%AF%E6%A0%88/</link><description>Recent content in 技术栈 on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 25 Mar 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/categories/%E6%8A%80%E6%9C%AF%E6%A0%88/" rel="self" type="application/rss+xml"/><item><title>如何优雅地统计代码提交行数</title><link>https://zeqiang.fun/cn/2023/03/code-commit-statistic/</link><pubDate>Sat, 25 Mar 2023 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2023/03/code-commit-statistic/</guid><description><![CDATA[
+        <h1 id="背景">背景</h1>
+<p>组织数字化离不开人事物，人推动事产生物，如何帮忙看清人做了哪些事情，产生了哪些物是数字化中重要的课题；今天这里要介绍的就是如何帮助组织看清技术人员在做研发工作时产出了多少代码</p>
+<h1 id="挑战">挑战</h1>
+<p>许多代码平台也许就自带代码统计结果，比如github, gitlab等在产品层面就带有这种统计结果提示，有点类似word里提醒你写了多少字符；但有的平台就没有这种功能，比如大数据处理平台dataphin，在接入数据源的时候本身只有提交日志数据，含有版本号，提交文本，并没有直接有效准确的代码行数统计结果，这里就需要我们做相应的统计计算和数据处理，来将研发人员在这一平台的行为进行度量计算</p>
+<h1 id="对策-方案">对策&amp;方案</h1>
+<h2 id="数据准备">数据准备</h2>
+<p>如何把新老版本处理为一行中的两列，为列运算做前序准备呢？</p>
+<pre><code class="language-sql">with dataphin_table as (
+    select   job_id
+            ,work_no
+            ,ver_num
+            ,context
+            ,row_number() over(partition by job_id, work_no order by  ver_num desc) as ver_ord
+)
+select py3_udf(t2.context,t1.context) as code_diff_num
+from dataphin_table as t1
+left join daaphin_table as t2
+on t1.job_id = t2.job_id
+and t1.work_no = t2.work_no
+and t1.ver_ord = t2.ver_ord - 1
+</code></pre>
+<h2 id="统计功能">统计功能</h2>
+<p>如何进行6中细分口径的代码行数统计呢？</p>
+<p>这里采用differ方法进行不同点打标的方法，再通过统计打标数来统计行数</p>
+<pre><code class="language-python">import difflib as dl
+d = dl.Differ() 
+</code></pre>
+<p>以下分为三个模块进行详细展开，分别是空值与注释，修改与新增，以及删除</p>
+<h3 id="空值-注释">空值&amp;注释</h3>
+<p>首先为了保证统计的准确性，我们需要构造过滤空行和注释的方法（如下），比较简单主要是常规的数据处理方法，先使用<code>strip()</code>去除首尾空格，再通过空格去分离代码行，最后针对每个分离过的代码行进行注释行的打标与过滤</p>
+<pre><code class="language-python">import re
+def remove_empty_and_comment_lines(sql_code):
+    &quot;&quot;&quot;
+    从SQL代码中删除空行和注释行，返回非空行的列表
+    &quot;&quot;&quot;
+    non_empty_lines = []
+    lines = sql_code.strip().splitlines()
+    for line in lines:
+        line = re.sub(r&quot;--.*&quot;, &quot;&quot;, line).strip() # 使用正则表达式删除注释
+        if line:
+            non_empty_lines.append(line)
+    return non_empty_lines
+</code></pre>
+<p>那么如何统计出空值&amp;注释，让这两个指标也纳入量化范围，看清空值和注释在代码中的占比呢？首先来看看空值的统计吧，这个比较简单（如下）</p>
+<pre><code class="language-python">class sql_code_blk_line(object):
+    def evaluate(self, arg0):
+        empty_cnt = 0
+        # 消除前后空行，使得空行变得真空
+        text_arr = [x for x in arg0.strip().splitlines(keepends=False) if not x.isspace()]
+        for i in text_arr:
+            if not i.strip():
+                empty_cnt += 1
+        return empty_cnt
+</code></pre>
+<p>再来看看注释统计的办法，这里的使用场景以SQL为例子，SQL语句中一般都是以<code>--</code>开头来进行注释，我们就可以采用<code>startswith()</code>方法进行注释行的判断</p>
+<pre><code class="language-python">class sql_code_cmt_line(object):
+    def evaluate(self, arg0):
+        cmt_cnt = 0
+        # 消除前后空行，使得空行变得真空
+        text_arr = arg0.strip().splitlines(keepends=False)
+        for i in text_arr:
+            if i.strip().startswith('--'):
+                cmt_cnt += 1
+        return cmt_cnt
+</code></pre>
+<h3 id="新增-修改">新增&amp;修改</h3>
+<p>如何统计代码实际新增与修改数量呢？这里将<code>Differ</code>实例化移动到初始化函数中，以避免在每次调用 <code>evaluate</code>函数时都重新实例化；并且使用<code>sum</code> 函数和生成器表达式来计算新增行数，让语句更为简洁</p>
+<pre><code class="language-python">class SqlCodeDiff:
+    def __init__(self):
+        self.differ = difflib.Differ()  # Differ 实例化前置
+
+    def evaluate(self, sql_code1, sql_code2):
+        &quot;&quot;&quot;
+        比较两个 SQL 代码字符串，并计算其中新增和修改的代码行数。
+        &quot;&quot;&quot;
+        lines1 = remove_empty_and_comment_lines(sql_code1)
+        lines2 = remove_empty_and_comment_lines(sql_code2)
+
+        diff = list(self.differ.compare(lines1, lines2))
+        added_lines = sum(1 for line in diff if line.startswith(&quot;+&quot;))  # 计算新增行数
+
+        return added_lines
+</code></pre>
+<p>那么如何单独统计代码实际新增数量呢？这里抽象出来新增行数的计算逻辑，使用常规的<code>for</code>循环遍历<code>diff</code>结果，并对每一行判断其是否为新增行，以统计新增行数</p>
+<pre><code class="language-python">class SqlCodeAdd:
+    def __init__(self):
+        self.differ = difflib.Differ()
+
+    def evaluate(self, sql_code1, sql_code2):
+        &quot;&quot;&quot;
+        比较两个 SQL 代码字符串，并计算其中新增的代码行数。
+        &quot;&quot;&quot;
+        lines1 = remove_empty_and_comment_lines(sql_code1)
+        lines2 = remove_empty_and_comment_lines(sql_code2)
+
+        diff = list(self.differ.compare(lines1, lines2))
+        added_lines = count_added_lines(diff)
+
+        return added_lines
+
+def count_added_lines(diff):
+    &quot;&quot;&quot;
+    统计 diff 结果中新增的代码行数。
+    &quot;&quot;&quot;
+    added_lines = 0
+    for line in diff:
+        if line.startswith(&quot;+&quot;):
+            added_lines += 1
+    return added_lines
+</code></pre>
+<p>那么又要如何单独统计代码实际修改行数呢？这里涉及到一个Python优化点迭代思维，尽量避免在循环中使用列表索引，比如<code>range(1, n)</code>这样的写法然后通过<code>result[i]</code> 访问列表中的元素，在性能和可解释性上都没那么完美。不妨（如下）使用 Python 内置的 <code>zip</code>函数将两个列表打包成一个可迭代对象，然后在循环中使用这个可迭代对象进行遍历，可以大大降低计算复杂度。</p>
+<p>并且考虑到Python3本身（布尔表达式的短路特性）出于性能和可读性考量尽量使用<code>result[i][0]=='?' and result[i-1][0]=='+'</code> 而非 <code>(result[i][0]=='?') &amp; (result[i-1][0]=='+')</code> 来避免不必要的位运算</p>
+<pre><code class="language-python">class sql_code_mdf(object):
+    def evaluate(self, arg0, arg1):
+        v1 = flt_empty_comment_line(arg0)
+        v2 = flt_empty_comment_line(arg1)
+        result = list(d.compare(v1, v2))
+
+        modify_cnt = 0  # 用于计算修改行数
+        n = len(result)
+
+        if n &gt; 1:  # 大于1行的代码才进入细分判定
+            for cur, prev in zip(result[1:], result):
+                # 统计修改行
+                if cur.startswith('?') and prev.startswith('+'):
+                    modify_cnt += 1
+
+        return modify_cnt
+</code></pre>
+<h3 id="删除">删除</h3>
+<p>如何统计代码删除行数呢？如下代码中，我们不需要检查最后一行是否为删除行，因为每一行的情况都会被考虑进去。通过记录前一个字符，我们可以在代码更短的情况下实现逐行扫描并逐行统计删除行数。</p>
+<pre><code class="language-python">class sql_code_del(object):
+    def evaluate(self, arg0, arg1):
+
+        v1 = flt_empty_comment_line(arg0)
+        v2 = flt_empty_comment_line(arg1)
+        result = list(d.compare(v1,v2))
+        
+        del_cnt = 0 # 用于计算代码行数
+        prev_char = '' # 记录前一个字符
+        
+        for i, line in enumerate(result):
+            if line.startswith('-'):
+                if prev_char != '-':
+                    del_cnt += 1
+            elif line.startswith('?'):
+                if prev_char == '-':
+                    del_cnt += 1
+            prev_char = line[0]
+            
+        return del_cnt
+</code></pre>
+<h1 id="总结">总结</h1>
+<p>通过高度抽象的面向对象方法可以将统计的最小原子功能进行封装并重用，并尽可能地利用Python本身的特性和库来优化算法的效率，可以避免因为多次实例化和位运算带来的计算浪费</p>
+<p>本次的代码行统计场景中，我们其实用到了以下Python的特性和库：</p>
+<ol>
+<li>使用Python的内置方法<code>strip()</code>来去除字符串前后的空格，从而避免重复的空格处理操作。</li>
+<li>使用Python的内置方法<code>splitlines()</code> (这是一个很好的分而治之前序动作，来将字符串按行分隔成一个列表，从而避免了重复的字符串分隔操作）</li>
+<li>使用Python的内置库<code>difflib</code>来对比两个字符串的差异，从而实现新增&amp;修改&amp;删除代码行数的统计</li>
+<li>使用Python的内置库<code>re</code>来对代码行进行正则匹配，从而实现对代码行中注释的统计，通过修改正则表达式的规则，我们可以规模化的覆盖其他种代码的注释场景而不仅仅是SQL，可以是C++，JAVA或其他</li>
+</ol>
+
+        ]]></description></item></channel></rss>

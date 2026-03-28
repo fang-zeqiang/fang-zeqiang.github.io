@@ -1,0 +1,22 @@
+{
+  "short_name": "Zeqiang Fang | 方泽强",
+  "name": "Zeqiang Fang's Personal Website | 方泽强的个人网站",
+  "description": "Zeqiang Fang's Personal Website | 方泽强的个人网站",
+  "icons": [
+    {
+      "src": "/images/web/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/images/web/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/?source=pwa",
+  "background_color": "#fdfdfd",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#0d0d0d"
+}

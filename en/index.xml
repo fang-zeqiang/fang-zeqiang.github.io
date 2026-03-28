@@ -1,0 +1,209 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>English Blogs on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/en/</link><description>Recent content in English Blogs on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 04 Dec 2017 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/en/" rel="self" type="application/rss+xml"/><item><title>Best Practice With Hugo Shortcodes Function</title><link>https://zeqiang.fun/en/2022/10/20221023-the-best-practice-with-short-code/</link><pubDate>Sun, 23 Oct 2022 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/en/2022/10/20221023-the-best-practice-with-short-code/</guid><description><![CDATA[
+        <h1 id="why-i-write-this">Why I write this</h1>
+<p>It&rsquo;s my ideal way to write some data visualisation work in the blog instead of jupyter generated html files. It seems that EChatrs is one of the best tools in interactive experience. Under this circumstance, I search several methods online. The easiest solution can be accessed in the <a href="https://alili.tech/archive/r5ibcpo557h/">Alili&rsquo;s post</a></p>
+<h1 id="methods">Methods</h1>
+<ol>
+<li>Locate the shortcodes File (below)</li>
+</ol>
+<pre><code>-- /layouts
+|-- /_default
+|-- /partials
+|-- /shortcodes
+|-- 404.html
+</code></pre>
+<ol>
+<li>Create custom html file in <code>shortcodes</code> folder, such as <code>echarts.html</code></li>
+<li>Generate new post and start practice shortcode</li>
+</ol>
+<h2 id="case">CASE</h2>
+<h3 id="case-1-bar-chart">CASE 1: BAR CHART</h3>
+
+
+<div id="echarts400" style="width: 100%;height: 400px;margin: 0 auto"></div>
+<script src="https://cdn.bootcss.com/echarts/3.8.0/echarts.common.min.js"></script>
+<script type="text/javascript">
+    
+    var myChart = echarts.init(document.getElementById('echarts400'));
+    
+    var option = JSON.parse("\n{\"title\":{\"text\":\"for example\"},\"tooltip\":{},\"legend\":{\"data\":[\"销量\"]},\"xAxis\":{\"data\":[\"衬衫\",\"羊毛衫\",\"雪纺衫\",\"裤子\",\"高跟鞋\",\"袜子\"]},\"yAxis\":{},\"series\":[{\"name\":\"销量\",\"type\":\"bar\",\"data\": [5, 20, 36, 10, 10, 20]}]}\n");
+    
+    myChart.setOption(option);
+</script>
+<h3 id="case-2-line-chart">CASE 2: LINE CHART</h3>
+
+
+<div id="echarts500" style="width: 100%;height: 500px;margin: 0 auto"></div>
+<script src="https://cdn.bootcss.com/echarts/3.8.0/echarts.common.min.js"></script>
+<script type="text/javascript">
+    
+    var myChart = echarts.init(document.getElementById('echarts500'));
+    
+    var option = JSON.parse("\n{\n  \"title\": {\n    \"text\": \"Summary Line Chart\",\n    \"top\": \"2%\",\n    \"left\": \"center\"\n  },\n  \"tooltip\": {\n    \"trigger\": \"axis\"\n  },\n  \"legend\": {\n    \"data\": [\"Email Marketing\", \"Affiliate Advertising\", \"Video Advertising\", \"Direct View\", \"Search Engine\"],\n    \"top\": \"10%\"\n  },\n  \"grid\": {\n    \"left\": \"5%\",\n    \"right\": \"5%\",\n    \"bottom\": \"5%\",\n    \"top\": \"20%\",\n    \"containLabel\": true\n  },\n  \"toolbox\": {\n    \"feature\": {\n      \"saveAsImage\": {\n        \"title\": \"Save as Image\"\n      }\n    }\n  },\n  \"xAxis\": {\n    \"type\": \"category\",\n    \"boundaryGap\": false,\n    \"data\": [\"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\", \"Saturday\", \"Sunday\"]\n  },\n  \"yAxis\": {\n    \"type\": \"value\"\n  },\n  \"series\": [\n    {\n      \"name\": \"Email Marketing\",\n      \"type\": \"line\",\n      \"stack\": \"Total\",\n      \"data\": [120, 132, 101, 134, 90, 230, 210]\n    },\n    {\n      \"name\": \"Affiliate Advertising\",\n      \"type\": \"line\",\n      \"stack\": \"Total\",\n      \"data\": [220, 182, 191, 234, 290, 330, 310]\n    },\n    {\n      \"name\": \"Video Advertising\",\n      \"type\": \"line\",\n      \"stack\": \"Total\",\n      \"data\": [150, 232, 201, 154, 190, 330, 410]\n    },\n    {\n      \"name\": \"Direct View\",\n      \"type\": \"line\",\n      \"stack\": \"Total\",\n      \"data\": [320, 332, 301, 334, 390, 330, 320]\n    },\n    {\n      \"name\": \"Search Engine\",\n      \"type\": \"line\",\n      \"stack\": \"Total\",\n      \"data\": [820, 932, 901, 934, 1290, 1330, 1320]\n    }\n  ]\n}\n");
+    
+    myChart.setOption(option);
+</script>
+<!-- ### CASE 2: MAP
+
+
+<div id="echarts500" style="width: 100%;height: 500px;margin: 0 auto"></div>
+<script src="https://cdn.bootcss.com/echarts/3.8.0/echarts.common.min.js"></script>
+<script type="text/javascript">
+    
+    var myChart = echarts.init(document.getElementById('echarts500'));
+    
+    var option = JSON.parse("\n{\"title\":[{\"text\":\"\\u804c\\u8d23\",\"left\":\"auto\",\"top\":\"auto\",\"textStyle\":{\"fontSize\":18},\"subtextStyle\":{\"fontSize\":12}}],\"toolbox\":{\"show\":true,\"orient\":\"vertical\",\"left\":\"95%\",\"top\":\"center\",\"feature\":{\"saveAsImage\":{\"show\":true,\"title\":\"save as image\"},\"restore\":{\"show\":true,\"title\":\"restore\"},\"dataView\":{\"show\":true,\"title\":\"data view\"}}},\"series_id\":6922245,\"tooltip\":{\"trigger\":\"item\",\"triggerOn\":\"mousemove|click\",\"axisPointer\":{\"type\":\"line\"},\"formatter\":custom_formatter,\"textStyle\":{\"fontSize\":14},\"backgroundColor\":\"rgba(50,50,50,0.7)\",\"borderColor\":\"#333\",\"borderWidth\":0},\"series\":[{\"type\":\"scatter\",\"symbol\":\"circle\",\"symbolSize\":10,\"data\":[[1414,805,\"team\"],[1251,591,\"product\"],[1231,610,\"business\"],[1168,634,\"google\"],[1087,481,\"partner\"],[926,392,\"customer\"],[774,551,\"develop\"],[754,487,\"work\"],[601,292,\"technical\"],[588,434,\"manage\"],[558,416,\"strategy\"],[501,305,\"solution\"],[492,304,\"process\"],[489,327,\"support\"],[477,381,\"provide\"],[473,358,\"drive\"],[458,302,\"sale\"],[440,311,\"project\"],[433,350,\"management\"],[431,218,\"cloud\"],[424,363,\"opportunity\"],[415,212,\"client\"],[404,308,\"lead\"],[394,245,\"design\"],[383,336,\"including\"],[383,274,\"strategic\"],[383,285,\"new\"],[374,247,\"marketing\"],[373,293,\"identify\"],[370,324,\"build\"]],\"label\":{\"normal\":{\"show\":false,\"position\":\"top\",\"textStyle\":{\"fontSize\":12}},\"emphasis\":{\"show\":true,\"textStyle\":{\"fontSize\":12}}},\"markPoint\":{\"data\":[]},\"markLine\":{\"data\":[]},\"seriesId\":6922245}],\"legend\":[{\"data\":[\"\"],\"selectedMode\":\"multiple\",\"show\":true,\"left\":\"center\",\"top\":\"top\",\"orient\":\"horizontal\",\"textStyle\":{\"fontSize\":12}}],\"animation\":true,\"xAxis\":[{\"show\":true,\"nameLocation\":\"middle\",\"nameGap\":25,\"nameTextStyle\":{\"fontSize\":14},\"axisTick\":{\"alignWithLabel\":false},\"inverse\":false,\"boundaryGap\":true,\"type\":\"value\",\"splitLine\":{\"show\":true},\"axisLine\":{\"lineStyle\":{\"width\":1}},\"axisLabel\":{\"interval\":\"auto\",\"rotate\":0,\"margin\":8,\"textStyle\":{\"fontSize\":12}},\"data\":[1414,1251,1231,1168,1087,926,774,754,601,588,558,501,492,489,477,473,458,440,433,431,424,415,404,394,383,383,383,374,373,370]}],\"yAxis\":[{\"show\":true,\"nameLocation\":\"middle\",\"nameGap\":25,\"nameTextStyle\":{\"fontSize\":14},\"axisTick\":{\"alignWithLabel\":false},\"inverse\":false,\"boundaryGap\":true,\"type\":\"value\",\"splitLine\":{\"show\":true},\"axisLine\":{\"lineStyle\":{\"width\":1}},\"axisLabel\":{\"interval\":\"auto\",\"formatter\":\"{value} \",\"rotate\":0,\"margin\":8,\"textStyle\":{\"fontSize\":12}}}],\"color\":[\"#c23531\",\"#2f4554\",\"#61a0a8\",\"#d48265\",\"#749f83\",\"#ca8622\",\"#bda29a\",\"#6e7074\",\"#546570\",\"#c4ccd3\",\"#f05b72\",\"#ef5b9c\",\"#f47920\",\"#905a3d\",\"#fab27b\",\"#2a5caa\",\"#444693\",\"#726930\",\"#b2d235\",\"#6d8346\",\"#ac6767\",\"#1d953f\",\"#6950a1\",\"#918597\",\"#f6f5ec\"],\"visualMap\":{\"type\":\"continuous\",\"min\":0,\"max\":1000,\"text\":[\"high\",\"low\"],\"textStyle\":{},\"inRange\":{\"symbolSize\":[5,20]},\"calculable\":true,\"splitNumber\":5,\"dimension\":0,\"orient\":\"horizontal\",\"left\":\"left\",\"top\":\"bottom\",\"showLabel\":true}}\n");
+    
+    myChart.setOption(option);
+</script>
+-->
+<hr>
+
+        ]]></description></item><item><title>Personal Understanding From '7 Habits of Highly Effective People'</title><link>https://zeqiang.fun/en/2022/06/7-habits-highly-effective-people/</link><pubDate>Sat, 04 Jun 2022 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/en/2022/06/7-habits-highly-effective-people/</guid><description><![CDATA[
+        <p>After reading 7 Habits of Highly Effective People (Covey), I construct a personal insight to understand this book. Combining other insights from <a href="https://www.bilibili.com/video/BV15J411E7iw?from=search&amp;seid=5112755811130855766">Gloria Gao</a>, I rewrote the notes.</p>
+<p>“Inside-out appoarch”</p>
+<p>Working on our inside part of ourselves</p>
+<h1 id="overview-of-habits">Overview of Habits</h1>
+<p>1-3 Private Victories Self-mastery, the essence of our character growth</p>
+<p>4-6 Public Victories Cooperation and communication with others</p>
+<p>7 A continuous improvement that embodies all of the previous 6 habits</p>
+<h1 id="habit-1-be-proactive">Habit 1 Be Proactive</h1>
+<p>We need to take accountability of our own actions.</p>
+<h2 id="problem-recognisation">Problem Recognisation</h2>
+<ol>
+<li>
+<p>Direct control ourself’s behaviour</p>
+</li>
+<li>
+<p>Indiect control other people behaviour</p>
+</li>
+<li>
+<p>No control do nothing about like our past
+Focus on the problem with our circle of influence!</p>
+</li>
+</ol>
+<p>Work on our weakness! -&gt; Liberating!</p>
+<h1 id="habit-2-begin-with-the-end-in-mind">Habit 2 Begin with the End in Mind</h1>
+<p>“A personal mission statement focuses on what you want to be (character), and to do, (contributions and achievements), and on the values or principles upon which being and doing are based.” — Stephen Covey</p>
+<p>Personal Mission Statement: - character - contributions and achievements - principles</p>
+<p>Changeless principles within us help to handle with constantly changing world! Stay true who we are</p>
+<p>“Principle-centered”</p>
+<p>Write down “Role of our life”</p>
+<p>Take me for example</p>
+<table>
+  <thead>
+      <tr>
+          <th style="text-align: left">Roles</th>
+          <th style="text-align: left">Goals</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">Student</td>
+          <td style="text-align: left">Study hard</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Intern</td>
+          <td style="text-align: left">Work life balance</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Friend</td>
+          <td style="text-align: left">Expand circle and maintance the relationship</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Spouse</td>
+          <td style="text-align: left">keep understand and improve our own experience</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Individual</td>
+          <td style="text-align: left">Shape a growing mind</td>
+      </tr>
+  </tbody>
+</table>
+<h1 id="habit-3-put-first-things-first">Habit 3: Put First Things First</h1>
+<p>Time Management Martix</p>
+<table>
+  <thead>
+      <tr>
+          <th style="text-align: left"></th>
+          <th style="text-align: left">Urgent</th>
+          <th style="text-align: left">Not Urgent</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">Important</td>
+          <td style="text-align: left">Quadrant 1: Crises,Deadline</td>
+          <td style="text-align: left">Quadrant 2: Long term planning</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Not important</td>
+          <td style="text-align: left">Quadrant 3</td>
+          <td style="text-align: left">Quadrant 4</td>
+      </tr>
+  </tbody>
+</table>
+<p>In tradtional way, Quadrant 1 &amp; 3(Urgent) are the most frequently taught to us!</p>
+<p>Important but not urgent part, I need to work seriously these years (such as job skills)</p>
+<p>Methodology:</p>
+<ul>
+<li>Long-term Organising
+<ul>
+<li>Mission Statement -&gt; Roles -&gt; Goals</li>
+</ul>
+</li>
+<li>Weekly Organising
+<ul>
+<li>Roles -&gt; Goals -&gt; Plans (Schedule &amp; Delegate)</li>
+</ul>
+</li>
+<li>Daily Plan might not be flexible!</li>
+</ul>
+<h1 id="habit-4-think-win-win">Habit 4: Think win-win</h1>
+<p>Six Paradigms of Human Interactions</p>
+<ul>
+<li>Win/Win</li>
+<li>Win/Lose</li>
+<li>Lose/Win</li>
+<li>Lose/Lose</li>
+<li>Win</li>
+<li>Win/Win or No Deal</li>
+</ul>
+<p>Our Character</p>
+<ol>
+<li>Integrity 正直</li>
+<li>Maturity 成熟</li>
+<li>Abundance Mentality (there is plenty out there and there is enough for everyone)</li>
+</ol>
+<h1 id="habit-5-seek-first-to-understand-then-to-be-understood">Habit 5: Seek first to understand, then to be understood</h1>
+<p>Empathetic Listening:</p>
+<ol>
+<li>Micmic Content</li>
+</ol>
+<p>repeat exactly what other people said</p>
+<ol start="2">
+<li>Rephrase</li>
+</ol>
+<p>make sure we understand that correctly</p>
+<ol start="3">
+<li>
+<p>Reflect feeling</p>
+</li>
+<li>
+<p>Rephrase the content + Reflect feeling</p>
+</li>
+</ol>
+<h1 id="habit-6-synergize">Habit 6 Synergize</h1>
+<p>The key to synergize is to value our differences. It is not beneficial to have people agree with you all the time. You need to have people to give you constructive criticism to help you grow.</p>
+<h1 id="habit-7-sharpen-the-saw-growth">Habit 7 Sharpen the Saw; Growth</h1>
+<p>4 Dimensions</p>
+<ul>
+<li>Physical (Habit 1)</li>
+<li>Spiritual (Habit 2)</li>
+<li>Mental (Habit 3)</li>
+<li>Social/Emontional (Habit 4-6)</li>
+</ul>
+<p>Mind of the growth</p>
+<h1 id="reference">Reference</h1>
+<p>7 Habits of Highly Effective People — Stephen Covey</p>
+
+        ]]></description></item></channel></rss>

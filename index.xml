@@ -1,0 +1,328 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Homepage | 主页 on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/</link><description>Recent content in Homepage | 主页 on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 04 Dec 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/" rel="self" type="application/rss+xml"/><item><title>友情链接</title><link>https://zeqiang.fun/cn/friendlink/</link><pubDate>Fri, 04 Dec 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/friendlink/</guid><description><![CDATA[
+        <h1 id="我的应用">我的应用</h1>
+<ul>
+<li><a href="/house-quest/">🎮 House Quest</a> — 家务成就系统，把家务变成游戏</li>
+</ul>
+<h1 id="我的知识库">我的知识库</h1>
+<ul>
+<li><a href="/mindmap/">🧠 认知思维导图</a> — 政治经济历史认知网络，通过对谈逐步扩展</li>
+</ul>
+<h1 id="大学同窗">大学同窗</h1>
+<ul>
+<li><a href="https://www.delaunay.cn/">不羁之欢</a> #老Java</li>
+<li><a href="http://hhizz.cn/">托马斯的奇妙屋</a> #前端大佬 #移动端</li>
+<li>奚宇星</li>
+<li><a href="https://blog.csdn.net/chao_ji_cai">赵晓雪</a> #Java</li>
+<li><a href="http://na2rian.com/">刘永杰</a></li>
+<li><a href="https://ouyuo.github.io/">孙卓</a></li>
+<li><a href="https://shadoowz97.github.io/">张影</a> #信息学</li>
+</ul>
+<h1 id="硕士同窗">硕士同窗</h1>
+<ul>
+<li>周正梓 #城市分析 #UCL</li>
+<li><a href="https://www.introspector.ink/">杨家烨</a> #慕尼黑工业TUM</li>
+<li><a href="https://maxnathan.medium.com/">Max Nathan</a> #Geo #Economics #Master Supervisor</li>
+</ul>
+<h1 id="大佬捕捉器">大佬捕捉器</h1>
+<ul>
+<li><a href="https://yihui.org/">Xieyi Hui</a> #统计 #UseR</li>
+<li><a href="https://yufree.cn/">于淼</a> #数据科学</li>
+<li><a href="https://alili.tech/">Alili</a> #前端</li>
+<li><a href="http://flowingdata.com/">Nathan Yau</a> #可视化</li>
+<li><a href="https://johnnydaszhu.wixsite.com/home">麒桦的摄影志</a> #摄影</li>
+<li><a href="http://www.pengzhihui.xyz/">稚晖君</a> #AI架构师</li>
+<li><a href="http://simingchen.me/">陈思明</a> #数据可视化 #复旦教授</li>
+<li><a href="https://workbyparra.com/about">Parra</a> #艺术家</li>
+</ul>
+<h1 id="个人网站">个人网站</h1>
+<ul>
+<li><a href="https://zeqiang.fun/Digital-Viz-City-Transformations/Website/">骑行在多伦多</a> #Group mini project</li>
+<li><a href="https://zeqiang.fun/London_EV_charging_infrastrcture_spatial_analysis/book/index.html">伦敦充电桩空间分析</a> #R #bookdown #Rmarkdown</li>
+<li><a href="https://github.com/fang-zeqiang/CASA0013_Final_Assessment/blob/main/Assessment%233_Data-Led_Executive_Briefing.md">Airbnb疫情前后指标分析</a> #Python #Analytics</li>
+<li><a href="https://zeqiang.fun/Project_Abeona/demoSite/index.html">如何预防事故：英国交通事故研究可视化</a> #JavaScript #Node.js</li>
+<li><a href="https://zeqiang.fun/2013_AWS_Honeypot_Attacks_Visualisation/">2013年亚马逊服务器受攻击者信息可视化</a> #Mapbox #JavaScript</li>
+<li><a href="https://github.com/fang-zeqiang/CASA0006_DSSS/blob/main/Toronto-Bike-Theft-Cluster.ipynb">多伦多自行车盗窃特征分析</a> #Python #Data Science</li>
+<li><a href="https://zeqiang.fun/CLMAP/">KCL骇客马拉松</a> #R #ECharts</li>
+<li><a href="https://zeqiang.fun/CASA0012-Dissertation/bookdown/html/">CASA毕业设计</a> #DB-SCAN</li>
+<li><a href="https://www.aicareer.info/">面向STEM的AI职业规划平台</a></li>
+<li><a href="https://aicareer.coding.net/">团队毕业设计开发平台</a></li>
+<li><a href="https://dev.tencent.com/u/cupcake/">腾讯开发者平台（原Coding）</a></li>
+</ul>
+<h1 id="awesome-data-visualization">Awesome Data Visualization</h1>
+<ul>
+<li><a href="https://flowingdata.com/2015/01/20/how-americans-get-to-work">flowing data</a></li>
+<li><a href="https://casa-ucl.github.io/casa0003_group15.github.io/">How life has changed after COVID-19 pandemic</a></li>
+</ul>
+<p>注意：如果无法访问以上网站请将https改为http访问</p>
+<h1 id="内容管理系统范例">内容管理系统范例</h1>
+<ul>
+<li><a href="http://acm.njfu.edu.cn/">南林竞赛平台</a></li>
+<li><a href="http://cosx.org/">统计之都</a></li>
+</ul>
+<h1 id="人工智能demo">人工智能Demo</h1>
+<ul>
+<li><a href="https://openai.com/blog/emergent-tool-use/">捉迷藏</a> #多智体 #强化学习</li>
+<li><a href="https://openai.com/blog/neural-mmo/">沙盘模拟</a> #多智体 #PyTorch #Linux</li>
+<li><a href="https://magi.com/">magi</a> #实体抽取</li>
+</ul>
+
+        ]]></description></item><item><title>简历</title><link>https://zeqiang.fun/cn/resume/</link><pubDate>Fri, 04 Dec 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/resume/</guid><description><![CDATA[
+        <h1 id="方泽强">方泽强</h1>
+<h2 id="联系方式">联系方式</h2>
+<p>Email: <a href="mailto:zeqiang.fang@foxmail.com">zeqiang.fang@foxmail.com</a>; 个人主页: zeqiang.fun; 现居浙江杭州</p>
+<h2 id="教育经历">教育经历</h2>
+<ul>
+<li>
+<p>2020-2021 伦敦大学学院 /CASA高级空间分析中心 /空间数据科学与可视化</p>
+</li>
+<li>
+<p>2016-2020 南京财经大学 /信息工程学院 /软件工程</p>
+</li>
+<li>
+<p>2017-2020 南京财经大学 /金融学院 /金融学</p>
+</li>
+<li>
+<p>2018-2018 加州大学伯克利分校 /Haas哈斯商学院 /投资学</p>
+</li>
+</ul>
+<h2 id="研究兴趣">研究兴趣</h2>
+<ul>
+<li>
+<p>时空数据挖掘方向</p>
+</li>
+<li>
+<p>数据可视化方向</p>
+</li>
+<li>
+<p>区块链智能合约安全性能验证</p>
+</li>
+</ul>
+<h2 id="工作经历">工作经历</h2>
+<p><strong>22.03-至今</strong> <strong>阿里巴巴（中国）有限公司</strong> <em>数据研发工程师</em></p>
+<p>推动组织数字化事业</p>
+<h2 id="实习经历">实习经历</h2>
+<p><strong>21.07-21.09</strong> <strong>阿里巴巴（中国）有限公司</strong> <em>数据研发岗</em></p>
+<p>玩转多维度数据统计，熟练掌握OneData方法论，数据建模与数据处理能力齐飞，从采集，数据管道架设，质量保障与治理到数据服务产品搭建全闭环；锻炼了架构思维和工具化能力</p>
+<p><strong>21.04-21.06</strong> <strong>腾讯科技(深圳)有限公司</strong> <em>技术运营岗</em></p>
+<p>业务上跟进数据中心的规划建设，并提高机房的资源利用率；技术上在EXCEL运营各种数据的基础上，加入Python自动化提高效能形成稳定SOP</p>
+<p><strong>20.11-21.03</strong> <strong>网易有道信息技术（北京）有限公司</strong> <em>数据运营岗</em></p>
+<p>熟练应用EXCEL做各种数据处理和报表生成，进行销售数据中台业务梳理，跟进包括营销玩法，渠道审核，激活指标等系统业务需求，和中国渠道商们深度合作，对智能硬件的市场秩序维护运营</p>
+<p><strong>19.07-19.09</strong> <strong>南京晟道科技有限公司</strong> <em>数据分析岗</em></p>
+<p>根据金融知识标注财经新闻中企业的舆情，进行情绪打分；承接苏宁AI文案项目，对大数据文本进行规模化处理</p>
+<p><strong>18.12-19.02</strong> <strong>厦门建发集团有限公司</strong> <em>产品开发岗</em></p>
+<p>在工业4.0的服装生产方向做方案，画PPT，还设计了期货交易产品交互页面</p>
+<h2 id="项目实践">项目实践</h2>
+<p><strong>2020.11-2021.01 伦敦新能源汽车充电桩空间密度分析</strong></p>
+<ul>
+<li>
+<p>数据预处理: 完成近12000个数据记录中，使用R语言工具包对应伦敦行政32个区域邮编自动标注，筛选出2019年到2020年的共1058个有效数据记录</p>
+</li>
+<li>
+<p>地图制作：使用R的tmap工具完成2020年与2019年的伦敦地区的按行政区域的空间密度分析，按颜色深浅区分密度大小，输出两个有对比意义的二维地图。</p>
+</li>
+<li>
+<p>空间计量：使用全局莫兰指数和局部莫兰指数研究伦敦充电桩密度的空间自相关，先绘制空间权重可视化地图，最后使用leaflet输出按32个行政区域的局部莫兰指数可视化交互地图并使用自相关指标Gi-score进行空间相关性评估</p>
+</li>
+</ul>
+<p><strong>2019 面向STEM的职业规划平台</strong></p>
+<p>拟省级优秀毕业设计；平台流量监控数据分析后台开发；职业规划推荐程序设计；平台产品需求分析</p>
+<p><strong>2019 基于文本挖掘分析公司招聘信息</strong></p>
+<p>基于Python的4个属性的词频统计；5种数据可视化方案呈现；3个维度聚类分析；地理热点图编程绘制</p>
+<p><strong>2019 基于Python数据呈现工具开发</strong></p>
+<p>基于Qt图形界面开发；Python后端实现嵌入Echarts</p>
+<p><strong>2018 网红店运营模式白皮书</strong></p>
+<p>Python爬虫3千条数据；Weka机器学习实现4个维度聚类</p>
+<p><strong>2018 “格林童话”护肤产品开发方案</strong></p>
+<p>获全国二等奖及一万元奖学金，主办方为Amore Pacifics</p>
+<p><strong>2018 Annalys年报分析报告(海外商学院项目)</strong></p>
+<p>SPSS数据呈现；JavaScript数据抓取；经学院考核满分通过</p>
+<p><strong>2019 区块链智能合约的安全性验证</strong></p>
+<p>智能合约Solidity代码实现；6个合约UML业务建模；获得江苏省级立项与10000元人民币赞助</p>
+<h2 id="技术栈">技术栈</h2>
+<p>Office 精通</p>
+<p>Python 熟练</p>
+<p>Axure RP 熟练</p>
+<p>SQL 熟练</p>
+<p>Linux 熟练</p>
+<p>C#.NET 普通</p>
+<p>J2EE 普通</p>
+
+        ]]></description></item><item><title>Resume</title><link>https://zeqiang.fun/en/resume/</link><pubDate>Wed, 04 Dec 2019 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/en/resume/</guid><description><![CDATA[
+        <p><!-- disable capitalize the first letter --></p>
+<h2 id="zeqiang-fang-franklin">Zeqiang Fang (Franklin)</h2>
+<h2 id="research-interest"><span class="mdi mdi-bullseye-arrow"></span> Research Interest</h2>
+<ul>
+<li>Data Mining</li>
+<li>Data Visualisation &amp; Storytelling</li>
+</ul>
+<h2 id="education"><span class="mdi mdi-school-outline"></span> Education</h2>
+<ul>
+<li>2020 ~ 2021 <strong>UCL</strong>, CASA, Spatial Data Science and Visualization</li>
+<li>2016 ~ 2020 <strong>Nanjing University of Finance and Economics</strong>, School of Information Engineering, Computer Science</li>
+<li>2017 ~ 2020 <strong>Nanjing University of Finance and Economicss</strong>(Second Degree), School of Finance, Finance</li>
+<li>2018.07 ~ 2018.08 <strong>UC Berkeley</strong>, Haas School of Business, Investment</li>
+</ul>
+<h2 id="work-experiences"><span class="mdi mdi-account-group-outline"></span> Work Experiences</h2>
+<p>2021.03 ~ Present, <strong>Alibaba Group</strong>, Data Engineer</p>
+<h2 id="project-experiences"><span class="mdi mdi-clipboard-list-outline"></span> Project Experiences</h2>
+<h3 id="teambition-dingtalk-project-data-mid-end-platform-modelling">Teambition(Dingtalk Project) Data Mid-End Platform Modelling</h3>
+<p><em>2021.04 ~ Present, Data Engineer</em></p>
+<h3 id="efficiency-360-product-upgrade">Efficiency 360 Product Upgrade</h3>
+<p><em>2021.04 ~ 2021.05, Data Engineer &amp; Analyst</em></p>
+<ul>
+<li>Access to Dataphin platform code submissions</li>
+<li>Identify abnormal code commits</li>
+</ul>
+<h2 id="skills"><span class="mdi mdi-cog-outline"></span> Skills</h2>
+<h3 id="programing-languages">Programing Languages</h3>
+<ul>
+<li>R: <span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star-outline"></span></li>
+<li>Python: <span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star-outline"></span></li>
+<li>SQL: <span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star-outline"></span></li>
+<li>HTML / CSS / JavaScript: <span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star-outline"></span><span class="mdi mdi-star-outline"></span></li>
+</ul>
+<p>
+  
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/material-components-web@latest/dist/material-components-web.min.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="mdc-chip-set" role="grid">
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="0" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2000: Logo</span>
+      </span>
+    </span>
+  </div>
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="1" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2002: Basic & HTML</span>
+      </span>
+    </span>
+  </div>
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="2" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2006: Visual Basic</span>
+      </span>
+    </span>
+  </div>
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="3" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2008: C/C++ & PHP</span>
+      </span>
+    </span>
+  </div>
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="4" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2010: Matlab</span>
+      </span>
+    </span>
+  </div>
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="5" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2012: Python & R</span>
+      </span>
+    </span>
+  </div>
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="5" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2015: Java</span>
+      </span>
+    </span>
+  </div>
+  <div class="mdc-chip" role="row">
+    <div class="mdc-chip__ripple"></div>
+    <span role="gridcell">
+      <span role="button" tabindex="6" class="mdc-chip__primary-action">
+        <span class="mdc-chip__text">2017: JavaScript</span>
+      </span>
+    </span>
+  </div>
+</div>
+
+
+
+
+</p>
+<!-- 这个标签用到了short-code load-mdc是什么意思，需要搞清楚 -->
+<h3 id="tools">Tools</h3>
+<ul>
+<li>Axure: <span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star"></span><span class="mdi mdi-star-outline"></span></li>
+</ul>
+<h3 id="open-source-projects">Open Source Projects</h3>
+<ol>
+<li><a href="https://github.com/fang-zeqiang/PyQt_Echarts_GUI">PyQt GUI for ECharts</a>: Readme manual (English/Chinese Version). <img src="https://img.shields.io/github/stars/fang-zeqiang/PyQt_Echarts_GUI.svg?style=social&amp;label=Stars" alt="github-stars"></li>
+</ol>
+<!-- 只需要改动/fang-zeqiang/PyQt_Echarts_GUI即可更改对应仓库的star数统计 -->
+<h2><a href="https://zeqiang.fun/cv-cn/" target="_blank" style="border: none;">Online Version <span class="mdi mdi-download"></span></a></h2>
+<!-- 上面的标签原本是为了提供离线版本的简历 -->
+<p style="text-align: right;">Updated on: 2022-06-03</p>
+
+        ]]></description></item><item><title>关于</title><link>https://zeqiang.fun/cn/about/</link><pubDate>Wed, 04 Dec 2019 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/about/</guid><description><![CDATA[
+        <h1 id="我是谁">我是谁？</h1>
+<p>一个在杭州工作的胡建人，比王力宏鼻子大，比坎德拉玛白，比林更新脸长，比中文说得好…… 正经介绍请参见<a href="https://zeqiang.fun/cn/resume/">我的简历</a>。大部分时间里，我作为一个数据工程师投身于阿里巴巴的组织数字化事业，每天研究如何搭建高效的数据生产链路，会在 GitHub 和Kaggle上出没。我学软件工程出身，但兴趣和职业都是用数据讲故事，尤其喜欢用可视化方法发现和常识不同的事实。我的业余爱好常常伴随着海浪和雪花，享受在单板上与风对话的畅快感。在泛娱乐年代，更喜欢享受纸质书，好电影和第九艺术带来的美感。</p>
+<p>一个潜伏在阿里巴巴的数据工程师，……介绍请参见。</p>
+<picture>
+  <source media="(min-width: 1200px)" srcset="/images/me/about-large.jpg">
+  <source media="(min-width: 800px)" srcset="/images/me/about-medium.jpg">
+  <img src="/images/me/about-small.jpg" alt="方泽强">
+  <source type="image/webp" media="(min-width: 1200px)" srcset="/images/me/about-large.webp">
+  <source type="image/webp" media="(min-width: 800px)" srcset="/images/me/about-medium.webp">
+  <source type="image/webp" srcset="/images/me/about-small.webp">
+</picture>
+<blockquote>
+</blockquote>
+<p>终身学习者与生活体验家</p>
+<blockquote>
+</blockquote>
+<p>建立这个博客的意义在于希望给世界留下些东西，复盘自己经手技术项目，记录生活中思考时刻，塑造自己的成长型思维。我是一个喜欢折腾的人，爱看科幻小说（心头好是阿西莫夫基地和特德·姜你一生的故事）；喜欢捣弄技术类的东西，比如把玩云服务器，亦或是个体仿真模拟复现的<a href="https://github.com/openai/neural-mmo">OpenAI的沙盘游戏</a>；也热衷于电子游戏鉴赏，最爱<a href="https://www.douban.com/game/26317250/">奇异人生系列</a>和<a href="http://mc.163.com/">我的世界</a>。从初中就开始滑板的我，喜欢HIPHOP文化愿意结交大佬一起解锁新姿势；也爱画画可以说擅长手绘+编程的视觉传达；另外本人沉迷电影无法自拔，最爱<a href="https://movie.douban.com/subject/2132932/">星际迷航系列</a>和<a href="https://movie.douban.com/subject/25934014/">爱乐之城</a>，看图识电影比GGoogle还准。</p>
+<blockquote>
+</blockquote>
+<p>优雅永不过时</p>
+<blockquote>
+</blockquote>
+<p>我属于在某些小处的略微偏执狂，比如网页的字体要调成<a href="https://source.typekit.com/source-han-sans/cn/">思源宋体</a>，喜欢井井有条的一切，还在不断修炼自己的全局观。享受在世界不同地点做有趣的事，比如在欧洲用法棍打过架，在新西兰和炸鱼薯条对过话，在英国穿过九磅十五便士的衬衫，在洛杉矶用莫吉托治疗中暑，年纪越大越喜欢荒诞感（今年一定要看完百年孤独）</p>
+
+        ]]></description></item><item><title>About</title><link>https://zeqiang.fun/en/about/</link><pubDate>Mon, 04 Dec 2017 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/en/about/</guid><description><![CDATA[
+        <h1 id="who-am-i">Who am I?</h1>
+<p>Hi there, I am Zeqiang Fang, working in Hangzhou city. I have a big nose like Wang Lihong, and a long face like Lin Gengxin. But enough about my looks, let me introduce myself professionally. I currently work as a data engineer at Alibaba Group, where I spend most of my time working on efficient data production pipelines. I have a background in software engineering, but my passion and profession are in storytelling with data. I especially enjoy using visualizations to discover facts that challenge common sense. In my free time, I love to go surfing and slopes with my snowboard, and I find joy in reading physical books and watching movies, which bring beauty and wonder to my life.</p>
+<p>As a lifelong learner and adventurer, I started this blog to leave something for the world, to review my technical projects, record my life reflections, and cultivate a growth mindset. I love sci-fi (Asimov&rsquo;s Foundation and Ted Chiang&rsquo;s Stories of Your Life and Others are my favorites), tinkering with technology (cloud servers and OpenAI&rsquo;s sandbox games are some of my favorites), and appreciating video games (Life is Strange and Minecraft top my list). Since middle school, I have been skateboarding, and I enjoy immersing myself in hip-hop culture to unlock new moves. I also enjoy drawing, and I am skilled in combining hand-drawn visuals with coding to communicate ideas. Lastly, I am a movie addict and can recognize films by their stills better than Google can.</p>
+<p>I believe that elegance is timeless, and I am slightly obsessive about details, such as using the Source Han Serif font for my website(Yes! this website) and organizing everything in an orderly fashion. I also enjoy doing interesting things in different parts of the world, such as fighting with a French baguette in Europe, chatting with fish and chips in New Zealand, wearing a fifteen-pound shirt in the UK(A Chinese joke), and treating heat stroke with a mojito in L.A. As I age, I appreciate absurdity more and plan to finish reading One Hundred Years of Solitude this year.</p>
+
+        ]]></description></item><item><title>English Blogs</title><link>https://zeqiang.fun/en/</link><pubDate>Mon, 04 Dec 2017 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/en/</guid><description>
+        
+        </description></item><item><title>中文博客</title><link>https://zeqiang.fun/cn/</link><pubDate>Mon, 04 Dec 2017 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/</guid><description>
+        
+        </description></item></channel></rss>

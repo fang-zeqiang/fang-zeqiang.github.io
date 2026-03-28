@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Draw</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #ff6b6b, #ff8e53);
+            color: white;
+            text-align: center;
+            padding: 25px 20px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 25px;
+        }
+        
+        .left-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            border-right: 1px solid #eee;
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+            display: flex;
+            align-items: center;
+        }
+        
+        .panel-title i {
+            margin-right: 10px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            border-color: #ff6b6b;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #ff6b6b, #ff8e53);
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(255, 107, 107, 0.5);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .result-container {
+            background: linear-gradient(135deg, #f5f7fa, #e4e7f0);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-placeholder {
+            color: #999;
+            font-size: 1.2rem;
+        }
+        
+        .winner {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .drawing {
+            font-size: 2.5rem;
+            color: #ff8e53;
+            animation: blink 0.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .history {
+            margin-top: 25px;
+        }
+        
+        .history-list {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+        
+        .history-list li {
+            padding: 10px 15px;
+            border-bottom: 1px dashed #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .history-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .history-list li .timestamp {
+            color: #888;
+            font-size: 0.85rem;
+        }
+        
+        .counter {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            gap: 15px;
+        }
+        
+        .counter-item {
+            background: linear-gradient(to right, #36d1dc, #5b86e5);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 100px;
+        }
+        
+        .counter-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .counter-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f8f8;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .winner {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-gift"></i> Lucky Draw</h1>
+            <p class="subtitle">Random Role</p>
+        </header>
+        <div class="content">
+            <div class="left-panel">
+                <div class="button-group" style="margin-bottom: 20px;">
+                    <button id="mode-role-btn" class="btn btn-secondary"><i class="fas fa-user-tag"></i> 角色单独抽取</button>
+                    <button id="mode-pair-btn" class="btn btn-primary"><i class="fas fa-user-friends"></i> 角色-人员配对抽取</button>
+                </div>
+                <div id="role-mode-panel" style="display: none;">
+                    <h2 class="panel-title"><i class="fas fa-users"></i> Role</h2>
+                    <textarea id="participants" placeholder="Input Role Name
+例如：
+Timer
+Ah-counter
+Grammarian">Timer
+Ah-counter
+Grammarian
+</textarea>
+                    <div class="button-group">
+                        <button id="add-btn" class="btn btn-secondary"><i class="fas fa-plus"></i> 添加示例</button>
+                        <button id="clear-btn" class="btn btn-secondary"><i class="fas fa-trash"></i> 清空名单</button>
+                    </div>
+                    <div class="counter">
+                        <div class="counter-item">
+                            <div class="counter-label">总人数</div>
+                            <div id="total-count" class="counter-value">3</div>
+                        </div>
+                        <div class="counter-item">
+                            <div class="counter-label">已抽取</div>
+                            <div id="drawn-count" class="counter-value">0</div>
+                        </div>
+                    </div>
+                    <button id="draw-btn" class="btn btn-primary"><i class="fas fa-star"></i> 开始抽奖</button>
+                    <button id="reset-btn" class="btn btn-secondary"><i class="fas fa-redo"></i> 重置抽奖</button>
+                </div>
+                <div id="pair-mode-panel" style="">
+                    <div class="button-group" style="margin-bottom: 10px;">
+                        <button id="pair-import-default-btn" class="btn btn-secondary"><i class="fas fa-download"></i> 导入默认名单</button>
+                    </div>
+                    <h2 class="panel-title"><i class="fas fa-user"></i> 参会人员名单 <span id="pair-participants-count" style="font-size:1rem;color:#888;margin-left:10px;">(20)</span></h2>
+                    <textarea id="pair-participants" placeholder="输入参会人员名单，每行一个" style="height: 375px;">Michael
+Marco
+Smile
+</textarea>
+                    <h2 class="panel-title"><i class="fas fa-user-tag"></i> 角色名单 <span id="pair-roles-count" style="font-size:1rem;color:#888;margin-left:10px;">(18)</span></h2>
+                    <textarea id="pair-roles" placeholder="输入角色列表，每行一个" style="height: 343px;">Grammarian
+Timer
+Ah-counter
+</textarea>
+                    <div class="button-group">
+                        <button id="pair-clear-btn" class="btn btn-secondary"><i class="fas fa-trash"></i> 清空名单</button>
+                        <button id="pair-reset-btn" class="btn btn-secondary"><i class="fas fa-redo"></i> 重置抽奖</button>
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <label for="pair-person-select" style="font-weight:600;">选择参会人：</label>
+                        <select id="pair-person-select" style="padding:8px 12px; border-radius:8px; min-width:120px;"><option value="Nicole LIU">Nicole LIU</option><option value="Grace MA">Grace MA</option><option value="Liyuan HONG">Liyuan HONG</option><option value="Laurel ZHANG">Laurel ZHANG</option><option value="Cuicui QIN">Cuicui QIN</option><option value="Angie ZENG">Angie ZENG</option><option value="Charlie ZHANG">Charlie ZHANG</option><option value="Judy Zhou">Judy Zhou</option><option value="Marco ZHANG">Marco ZHANG</option><option value="Mariana SUN">Mariana SUN</option><option value="Yuhan Gao">Yuhan Gao</option><option value="Kian How Yao">Kian How Yao</option><option value="Daniel Burton">Daniel Burton</option></select>
+                    </div>
+                    <button id="pair-draw-btn" class="btn btn-primary"><i class="fas fa-random"></i> 为该参会人抽取角色</button>
+                </div>
+            </div>
+            <div class="right-panel">
+                <div id="role-mode-result-panel" style="display: none;">
+                    <h2 class="panel-title"><i class="fas fa-trophy"></i> 抽奖结果</h2>
+                    <div class="result-container">
+                        <div id="result" class="result-placeholder">等待抽奖...</div>
+                    </div>
+                    <h2 class="panel-title"><i class="fas fa-history"></i> 历史记录</h2>
+                    <div class="history">
+                        <ul id="history-list" class="history-list"><li>暂无抽奖记录</li></ul>
+                    </div>
+                    <div class="button-group">
+                        <button id="export-btn" class="btn btn-secondary"><i class="fas fa-download"></i> 导出记录</button>
+                    </div>
+                </div>
+                <div id="pair-mode-result-panel" style="">
+                    <h2 class="panel-title"><i class="fas fa-link"></i> 角色-人员配对结果 <span id="pair-result-count" style="font-size:1rem;color:#888;margin-left:10px;">(7 / 18)</span></h2>
+                    <div class="result-container" style="width: 100%; max-width: 520px; min-width: 320px; margin: 0 auto;">
+                        <ul id="pair-result-list" class="history-list" style="min-height:120px; max-height:400px; overflow-y:auto; width:100%;"><li><span>Toastmaster of the Evening</span><span style="color:#888;">Felicia MAO</span></li><li><span>Photographer</span><span style="color:#888;">Michael ZHENG</span></li><li><span>Prepared Speech2</span><span style="color:#888;">Smile ZHAO</span></li><li><span>Individual Evaluator3</span><span style="color:#888;">Sarah Wu</span></li><li><span>Grammarian</span><span style="color:#888;">Sandy LI</span></li><li><span>Timer</span><span style="color:#888;">Addy YOUNG</span></li><li><span>Singing for Opening</span><span style="color:#888;">Hazel SHANG</span></li></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <p>© 2025 Amazing Friday | Lucky Draw Program | Better Communication Better Life</p>
+        </footer>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const participantsTextarea = document.getElementById('participants');
+            const drawButton = document.getElementById('draw-btn');
+            const resetButton = document.getElementById('reset-btn');
+            const addButton = document.getElementById('add-btn');
+            const clearButton = document.getElementById('clear-btn');
+            const exportButton = document.getElementById('export-btn');
+            const resultDiv = document.getElementById('result');
+            const historyList = document.getElementById('history-list');
+            const totalCountSpan = document.getElementById('total-count');
+            const drawnCountSpan = document.getElementById('drawn-count');
+            
+            // 新增配对模式相关DOM
+            const modeRoleBtn = document.getElementById('mode-role-btn');
+            const modePairBtn = document.getElementById('mode-pair-btn');
+            const roleModePanel = document.getElementById('role-mode-panel');
+            const pairModePanel = document.getElementById('pair-mode-panel');
+            const roleModeResultPanel = document.getElementById('role-mode-result-panel');
+            const pairModeResultPanel = document.getElementById('pair-mode-result-panel');
+            const pairParticipantsTextarea = document.getElementById('pair-participants');
+            const pairRolesTextarea = document.getElementById('pair-roles');
+            const pairClearBtn = document.getElementById('pair-clear-btn');
+            const pairResetBtn = document.getElementById('pair-reset-btn');
+            const pairPersonSelect = document.getElementById('pair-person-select');
+            const pairDrawBtn = document.getElementById('pair-draw-btn');
+            const pairResultList = document.getElementById('pair-result-list');
+            const pairImportDefaultBtn = document.getElementById('pair-import-default-btn');
+            
+            // 状态变量
+            let participants = [];
+            let availableParticipants = [];
+            let drawnParticipants = [];
+            let drawingInterval = null;
+            
+            // 配对模式状态
+            let pairParticipants = [];
+            let pairRoles = [];
+            let availablePairParticipants = [];
+            let availablePairRoles = [];
+            let pairResults = [];
+            
+            // 初始化参与者名单
+            function initParticipants() {
+                const text = participantsTextarea.value.trim();
+                participants = text ? text.split('\n').map(name => name.trim()).filter(name => name) : [];
+                availableParticipants = [...participants];
+                drawnParticipants = [];
+                updateCounters();
+                updateHistory();
+                resultDiv.className = 'result-placeholder';
+                resultDiv.textContent = '等待抽奖...';
+            }
+            
+            // 更新计数器
+            function updateCounters() {
+                totalCountSpan.textContent = participants.length;
+                drawnCountSpan.textContent = drawnParticipants.length;
+            }
+            
+            // 更新历史记录
+            function updateHistory() {
+                historyList.innerHTML = '';
+                
+                if (drawnParticipants.length === 0) {
+                    historyList.innerHTML = '<li>暂无抽奖记录</li>';
+                    return;
+                }
+                
+                // 只显示最近10条记录
+                const recentWinners = drawnParticipants.slice(-10).reverse();
+                
+                recentWinners.forEach(winner => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${winner.name}</span>
+                        <span class="timestamp">${winner.timestamp}</span>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
+            
+            // 抽奖函数
+            function drawWinner() {
+                if (availableParticipants.length === 0) {
+                    alert('所有参与者都已被抽取！请重置抽奖。');
+                    return;
+                }
+                
+                // 禁用按钮
+                drawButton.disabled = true;
+                resetButton.disabled = true;
+                
+                // 开始抽奖动画
+                let counter = 0;
+                resultDiv.className = 'drawing';
+                
+                drawingInterval = setInterval(() => {
+                    const randomIndex = Math.floor(Math.random() * participants.length);
+                    resultDiv.textContent = participants[randomIndex];
+                }, 80);
+                
+                // 2秒后停止动画并显示结果
+                setTimeout(() => {
+                    clearInterval(drawingInterval);
+                    
+                    // 随机选择一个中奖者
+                    const randomIndex = Math.floor(Math.random() * availableParticipants.length);
+                    const winner = availableParticipants[randomIndex];
+                    
+                    // 更新可用名单
+                    availableParticipants.splice(randomIndex, 1);
+                    
+                    // 记录中奖者
+                    const now = new Date();
+                    const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+                    drawnParticipants.push({ name: winner, timestamp });
+                    
+                    // 显示结果
+                    resultDiv.className = 'winner';
+                    resultDiv.textContent = winner;
+                    
+                    // 更新UI
+                    updateCounters();
+                    updateHistory();
+                    
+                    // 启用按钮
+                    drawButton.disabled = false;
+                    resetButton.disabled = false;
+                }, 2000);
+            }
+            
+            // 重置抽奖
+            function resetDraw() {
+                availableParticipants = [...participants];
+                drawnParticipants = [];
+                updateCounters();
+                updateHistory();
+                resultDiv.className = 'result-placeholder';
+                resultDiv.textContent = '抽奖已重置';
+                
+                setTimeout(() => {
+                    resultDiv.textContent = '等待抽奖...';
+                }, 1500);
+            }
+            
+            // 添加示例名单
+            function addExampleNames() {
+                const examples = [
+                    'Timer', 'Ah-Counter', 'Grammarian', 'GuestTalk','Vote&Announcement','TableTopic Master', 'Toastmaster of the Evening',
+                    'Prepared Speech1', 'Prepared Speech2', 'Prepared Speech3', 'Individual Evaluator1', 'Individual Evaluator2',
+                    'Individual Evaluator3'
+                ];
+                
+                participantsTextarea.value = examples.join('\n');
+                initParticipants();
+            }
+            
+            // 清空名单
+            function clearNames() {
+                participantsTextarea.value = '';
+                initParticipants();
+            }
+            
+            // 导出历史记录
+            function exportHistory() {
+                if (drawnParticipants.length === 0) {
+                    alert('没有可导出的记录！');
+                    return;
+                }
+                
+                let csv = '中奖者,时间\n';
+                drawnParticipants.forEach(winner => {
+                    csv += `${winner.name},${winner.timestamp}\n`;
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '抽奖记录.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            // 模式切换
+            function switchToRoleMode() {
+                roleModePanel.style.display = '';
+                roleModeResultPanel.style.display = '';
+                pairModePanel.style.display = 'none';
+                pairModeResultPanel.style.display = 'none';
+                modeRoleBtn.classList.add('btn-primary');
+                modeRoleBtn.classList.remove('btn-secondary');
+                modePairBtn.classList.remove('btn-primary');
+                modePairBtn.classList.add('btn-secondary');
+            }
+            function switchToPairMode() {
+                roleModePanel.style.display = 'none';
+                roleModeResultPanel.style.display = 'none';
+                pairModePanel.style.display = '';
+                pairModeResultPanel.style.display = '';
+                modePairBtn.classList.add('btn-primary');
+                modePairBtn.classList.remove('btn-secondary');
+                modeRoleBtn.classList.remove('btn-primary');
+                modeRoleBtn.classList.add('btn-secondary');
+                updatePairPersonSelect();
+                updatePairResultList();
+            }
+            modeRoleBtn.addEventListener('click', switchToRoleMode);
+            modePairBtn.addEventListener('click', switchToPairMode);
+            // 初始化配对名单
+            function initPairLists() {
+                pairParticipants = pairParticipantsTextarea.value.trim().split('\n').map(x=>x.trim()).filter(x=>x);
+                pairRoles = pairRolesTextarea.value.trim().split('\n').map(x=>x.trim()).filter(x=>x);
+                availablePairParticipants = pairParticipants.filter(p=>!pairResults.some(r=>r.person===p));
+                availablePairRoles = pairRoles.filter(r=>!pairResults.some(pr=>pr.role===r));
+                // 更新数量显示
+                const participantsCountSpan = document.getElementById('pair-participants-count');
+                const rolesCountSpan = document.getElementById('pair-roles-count');
+                participantsCountSpan.textContent = `(${pairParticipants.length})`;
+                rolesCountSpan.textContent = `(${pairRoles.length})`;
+                updatePairPersonSelect();
+                updatePairResultList();
+            }
+            // 更新参会人下拉
+            function updatePairPersonSelect() {
+                // 只显示未分配角色的参会人
+                availablePairParticipants = pairParticipants.filter(p=>!pairResults.some(r=>r.person===p));
+                pairPersonSelect.innerHTML = '';
+                availablePairParticipants.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    pairPersonSelect.appendChild(opt);
+                });
+                if(availablePairParticipants.length===0) {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = '无可选参会人';
+                    pairPersonSelect.appendChild(opt);
+                }
+            }
+            // 更新配对结果列表
+            function updatePairResultList() {
+                pairResultList.innerHTML = '';
+                const countSpan = document.getElementById('pair-result-count');
+                const total = pairRoles.length > pairParticipants.length ? pairParticipants.length : pairRoles.length;
+                countSpan.textContent = `(${pairResults.length} / ${total})`;
+                if(pairResults.length===0) {
+                    pairResultList.innerHTML = '<li>暂无配对记录</li>';
+                    return;
+                }
+                // 逆序显示，最新的在最前面
+                for(let i = pairResults.length - 1; i >= 0; i--) {
+                    const pr = pairResults[i];
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${pr.role}</span><span style='color:#888;'>${pr.person}</span>`;
+                    pairResultList.appendChild(li);
+                }
+            }
+            // 配对抽奖
+            let pairDrawingInterval = null;
+            function pairDraw() {
+                const person = pairPersonSelect.value;
+                if(!person || availablePairRoles.length===0) {
+                    alert('请选择参会人且角色列表不能为空！');
+                    return;
+                }
+                // 动效：3秒内快速切换角色名
+                pairDrawBtn.disabled = true;
+                pairPersonSelect.disabled = true;
+                let counter = 0;
+                const animDuration = 3000;
+                const animInterval = 80;
+                const animStart = Date.now();
+                const animList = [...availablePairRoles];
+                // 在结果区顶部显示动效
+                let animLi = document.createElement('li');
+                animLi.className = 'drawing';
+                animLi.style.fontWeight = 'bold';
+                animLi.style.fontSize = '1.3rem';
+                animLi.innerHTML = `<span>?</span><span style='color:#888;'>${person}</span>`;
+                pairResultList.insertBefore(animLi, pairResultList.firstChild);
+                pairDrawingInterval = setInterval(() => {
+                    const idx = Math.floor(Math.random()*animList.length);
+                    animLi.innerHTML = `<span>${animList[idx]}</span><span style='color:#888;'>${person}</span>`;
+                }, animInterval);
+                setTimeout(() => {
+                    clearInterval(pairDrawingInterval);
+                    // 随机分配一个未分配的角色
+                    const randomIndex = Math.floor(Math.random()*availablePairRoles.length);
+                    const role = availablePairRoles[randomIndex];
+                    // 替换动效li为最终结果
+                    animLi.className = '';
+                    animLi.style.fontWeight = '';
+                    animLi.style.fontSize = '';
+                    animLi.innerHTML = `<span>${role}</span><span style='color:#888;'>${person}</span>`;
+                    pairResults.push({role, person});
+                    // 更新可用名单
+                    availablePairRoles = availablePairRoles.filter(r=>r!==role);
+                    availablePairParticipants = availablePairParticipants.filter(p=>p!==person);
+                    updatePairPersonSelect();
+                    updatePairResultList();
+                    pairDrawBtn.disabled = false;
+                    pairPersonSelect.disabled = false;
+                    if(availablePairRoles.length===0 || availablePairParticipants.length===0) {
+                        alert('配对已完成！');
+                    }
+                }, animDuration);
+            }
+            // 配对清空名单
+            function pairClear() {
+                pairParticipantsTextarea.value = '';
+                pairRolesTextarea.value = '';
+                pairResults = [];
+                initPairLists();
+            }
+            // 配对重置
+            function pairReset() {
+                pairResults = [];
+                initPairLists();
+            }
+            
+            // 初始化
+            initParticipants();
+            initPairLists();
+            
+            // 事件监听
+            participantsTextarea.addEventListener('input', initParticipants);
+            drawButton.addEventListener('click', drawWinner);
+            resetButton.addEventListener('click', resetDraw);
+            addButton.addEventListener('click', addExampleNames);
+            clearButton.addEventListener('click', clearNames);
+            exportButton.addEventListener('click', exportHistory);
+            pairParticipantsTextarea.addEventListener('input', initPairLists);
+            pairRolesTextarea.addEventListener('input', initPairLists);
+            pairDrawBtn.addEventListener('click', pairDraw);
+            pairClearBtn.addEventListener('click', pairClear);
+            pairResetBtn.addEventListener('click', pairReset);
+            // 导入默认名单
+            function importDefaultPairLists() {
+                pairParticipantsTextarea.value = `Sandy LI
+Sarah Wu
+Smile ZHAO
+Michael ZHENG
+Felicia MAO
+Nicole LIU
+Grace MA
+Liyuan HONG
+Laurel ZHANG
+Hazel SHANG
+Cuicui QIN
+Angie ZENG
+Addy YOUNG
+Charlie ZHANG
+Judy Zhou
+Marco ZHANG
+Mariana SUN
+Yuhan Gao
+Kian How Yao
+Daniel Burton`;
+                pairRolesTextarea.value = `Photographer
+Singing for Opening
+Timer
+Ah-Counter
+Grammarian
+Toastmaster of the Evening
+Guest Talk Host
+Table Topic Master
+Vote & Announcement Host
+Prepared Speech1
+Prepared Speech2
+Prepared Speech3
+Individual Evaluator1
+Individual Evaluator2
+Individual Evaluator3
+Table Topics Evaluator
+Audience
+Audience`;
+                initPairLists();
+            }
+            pairImportDefaultBtn.addEventListener('click', importDefaultPairLists);
+        });
+    </script>
+</body>
+</html>

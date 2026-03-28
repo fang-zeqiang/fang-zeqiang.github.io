@@ -1,0 +1,609 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>认知科学 on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/categories/%E8%AE%A4%E7%9F%A5%E7%A7%91%E5%AD%A6/</link><description>Recent content in 认知科学 on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 26 Mar 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/categories/%E8%AE%A4%E7%9F%A5%E7%A7%91%E5%AD%A6/" rel="self" type="application/rss+xml"/><item><title>认知思维导图 · 政治经济历史</title><link>https://zeqiang.fun/cn/2026/03/political-economic-history-mindmap/</link><pubDate>Thu, 26 Mar 2026 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2026/03/political-economic-history-mindmap/</guid><description><![CDATA[
+        <blockquote>
+<p>构建方式：通过对谈逐步扩展<br>
+起始时间：2026-03-09<br>
+当前状态：🟡 发展中（1个核心节点 + 9个扩展节点 + 跨分支连接）</p>
+</blockquote>
+<hr>
+<h2 id="核心起始节点">🎯 核心起始节点</h2>
+<p><strong>政治经济制度如何塑造人类文明的进程与分配正义？</strong></p>
+<p><em>How do political-economic institutions shape the course of civilization and the justice of distribution?</em></p>
+<hr>
+<h2 id="知识分支">📚 知识分支</h2>
+<h3 id="分支一-古典文明与早期制度">🏛️ 分支一：古典文明与早期制度</h3>
+<p><em>（待对谈填充）</em></p>
+<h3 id="分支二-帝国-战争与资源争夺">⚔️ 分支二：帝国、战争与资源争夺</h3>
+<p><em>（待对谈填充）</em></p>
+<h3 id="分支三-资本主义的起源与演变">💰 分支三：资本主义的起源与演变</h3>
+<p><em>（待对谈填充）</em></p>
+<h3 id="分支四-全球化与殖民经济">🌍 分支四：全球化与殖民经济</h3>
+<p><em>（待对谈填充）</em></p>
+<hr>
+<h3 id="分支五-工业革命与技术变革">🏭 分支五：工业革命与技术变革</h3>
+<h4 id="节点-5-1-工农剪刀差-the-price-scissors">节点 5.1：工农剪刀差（The Price Scissors）</h4>
+<blockquote>
+<p><strong>问题</strong>：后发国家如何在没有殖民地的条件下完成工业化原始积累？</p>
+</blockquote>
+<p><strong>核心定义</strong>：国家通过行政手段压低农产品价格、抬高工业品价格，将农业剩余强制转移到工业部门的制度安排。</p>
+<p><strong>🔸 历史案例</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>国家</th>
+          <th>时期</th>
+          <th>形式</th>
+          <th>提取规模</th>
+          <th>后果</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>苏联</strong></td>
+          <td>1928-1953</td>
+          <td>集体化+义务交售制</td>
+          <td>占工业投资40%+</td>
+          <td>乌克兰大饥荒(1932-33)，农业崩溃</td>
+      </tr>
+      <tr>
+          <td><strong>中国</strong></td>
+          <td>1953-2006</td>
+          <td>统购统销+人民公社</td>
+          <td>6000-8000亿元(1952-86)</td>
+          <td>完整工业体系，但城乡二元固化</td>
+      </tr>
+      <tr>
+          <td><strong>日韩台</strong></td>
+          <td>1960s-80s</td>
+          <td>压低粮价+进口替代</td>
+          <td>隐性城市偏向政策</td>
+          <td>出口导向成功，农民牺牲</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>🔸 运作机制（三支柱）</strong></p>
+<pre><code>价格控制 ──┬──► 压低农产品收购价
+           │
+制度锁定 ──┼──► 集体化/户籍制防止农民退出
+           │
+产业垄断 ──┘──► 国营工业垄断定价权
+</code></pre>
+<p><strong>🔸 理论支撑</strong></p>
+<ul>
+<li><strong>普列奥布拉任斯基</strong>（1924）：「社会主义原始积累论」</li>
+<li><strong>张培刚</strong>（1949）：「农业国工业化」——农业应贡献剩余，但不能通过剥夺</li>
+<li><strong>阿马蒂亚·森</strong>：剪刀差是「可行能力」的剥夺（定价权、交易权、迁徙权）</li>
+</ul>
+<p><strong>🔸 评价维度</strong></p>
+<ul>
+<li>✅ <strong>国家视角</strong>：快速工业化、避免对外依赖（自主性）</li>
+<li>❌ <strong>分配正义视角</strong>：对农民的系统性剥削、城乡差距固化、人权代价</li>
+</ul>
+<hr>
+<h4 id="节点-5-2-技术革命的长波周期-佩雷斯框架">节点 5.2：技术革命的长波周期（佩雷斯框架）</h4>
+<blockquote>
+<p><strong>问题</strong>：大模型掀起的AI热潮是否属于第六次技术革命的导入期？</p>
+</blockquote>
+<p><strong>🔸 佩雷斯核心框架</strong></p>
+<pre><code>技术突破 → 金融资本涌入 → 泡沫/狂热 → 崩溃/调整 → 制度重组 → 生产资本主导 → 黄金年代
+     │                                                        │
+     └── 导入期（Installation，20-30年）──┬── 展开期（Deployment，20-30年）
+                                          │
+                                    转折点（Turning Point）
+                                    社会契约重新谈判
+</code></pre>
+<p><strong>🔸 五次技术革命历史回顾</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>次</th>
+          <th>时期</th>
+          <th>核心产业</th>
+          <th>基础设施</th>
+          <th>当前状态</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>1</strong></td>
+          <td>1771</td>
+          <td>棉纺织、铁、水力</td>
+          <td>运河、水力工厂</td>
+          <td>已成熟</td>
+      </tr>
+      <tr>
+          <td><strong>2</strong></td>
+          <td>1829</td>
+          <td>蒸汽机、铁路、钢铁</td>
+          <td>铁路网、煤炭</td>
+          <td>已成熟</td>
+      </tr>
+      <tr>
+          <td><strong>3</strong></td>
+          <td>1875</td>
+          <td>钢铁、重型工程、电气</td>
+          <td>钢铁船舶、电报</td>
+          <td>已成熟</td>
+      </tr>
+      <tr>
+          <td><strong>4</strong></td>
+          <td>1908</td>
+          <td>石油、汽车、大规模生产</td>
+          <td>公路网、电网</td>
+          <td>已成熟</td>
+      </tr>
+      <tr>
+          <td><strong>5</strong></td>
+          <td>1971</td>
+          <td>ICT、互联网</td>
+          <td>数字网络、光纤</td>
+          <td>已成熟/衰退</td>
+      </tr>
+      <tr>
+          <td><strong>6？</strong></td>
+          <td>2022？</td>
+          <td><strong>AI与智能革命</strong></td>
+          <td>算力中心、边缘AI</td>
+          <td><strong>导入期？</strong></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>🔸 当前AI大模型所处阶段判断：导入期（Installation）</strong></p>
+<p><strong>爆发阶段（Irruption，2022-2023）→ 狂热阶段（Frenzy，2024-？）</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>导入期特征</th>
+          <th>当前AI领域证据</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>金融资本主导</strong></td>
+          <td>2023年AI投资占全球VC 30%+；OpenAI估值800亿美元</td>
+      </tr>
+      <tr>
+          <td><strong>技术不确定性</strong></td>
+          <td>大模型 vs 小模型？商业模式不清晰</td>
+      </tr>
+      <tr>
+          <td><strong>基础设施建设中</strong></td>
+          <td>算力短缺、电力约束；GPU成为新&quot;石油&quot;</td>
+      </tr>
+      <tr>
+          <td><strong>制度滞后</strong></td>
+          <td>监管框架碎片化；版权、隐私未解决</td>
+      </tr>
+      <tr>
+          <td><strong>旧范式抵抗</strong></td>
+          <td>传统软件公司被迫全面AI化</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>🔸 接下来的历史剧本</strong></p>
+<p><strong>阶段3：狂热/崩溃（2025-2027）</strong></p>
+<ul>
+<li>🫧 泡沫破裂：部分高估值AI公司倒闭</li>
+<li>💥 重大事故：AI造成安全/社会危机</li>
+<li>⚖️ 监管危机：公众要求政府介入</li>
+</ul>
+<p><strong>阶段4：协同期（2028-2040+）</strong></p>
+<ul>
+<li>生产资本主导：制造业、政府、实体产业全面AI化</li>
+<li>制度成熟：AI监管框架、UBI试点</li>
+<li>生产力爆发：全要素生产率（TFP）显著提升</li>
+</ul>
+<hr>
+<h4 id="节点-5-3-运河热与铁路热的微观视角">节点 5.3：运河热与铁路热的微观视角</h4>
+<blockquote>
+<p><strong>问题</strong>：当技术革命席卷社会时，普通投资者、建设者、旁观者经历了什么？</p>
+</blockquote>
+<p><strong>🔸 运河热（Canal Mania，1790s-1810s）</strong></p>
+<p><strong>投资者：从理性到狂热</strong></p>
+<ul>
+<li>早期（1790s）：公爵、银行家谨慎投资，股息稳定（5-10%）</li>
+<li>狂热期（1790s末-1810s）：全民投机，小市民、农民都在买</li>
+<li>崩溃（1810s）：股票暴跌
+<ul>
+<li><em>一个织工的日记（1811年）</em>：「我把织机卖了买运河股票，现在织机和股票都没了。」</li>
+</ul>
+</li>
+</ul>
+<p><strong>建设者（Navvies）的生活</strong></p>
+<ul>
+<li>人群：爱尔兰逃荒农民、失地农民、退伍士兵</li>
+<li>条件：每天12-14小时手工挖掘，塌方、溺水、热病</li>
+<li><em>一个爱尔兰工人的家书（1802年）</em>：「我们在挖一条叫『联合大运河』的东西。这里很潮湿，很多人得了热病。但我每周能寄1英镑回家，够孩子们吃饱。」</li>
+</ul>
+<p><strong>🔸 铁路热（Railway Mania，1840s）</strong></p>
+<p><strong>投资者：全民疯狂</strong></p>
+<ul>
+<li>1845年议会通过2,700英里新铁路计划</li>
+<li>律师、医生、教师、仆人都在买股票</li>
+<li><em>一个小学教师的日记（1845年）</em>：「我今天把积蓄全部买了『大北铁路』的股票。校长说我不理智，但他说的时候自己也买了。」</li>
+<li>崩溃（1847-1849）：银行倒闭，股票暴跌80-90%</li>
+</ul>
+<p><strong>建设者：更危险的「铁路工人」</strong></p>
+<ul>
+<li>规模：1840年代25万铁路工人（占总劳动力2%）</li>
+<li>危险：隧道粉尘、高空坠落、炸药事故</li>
+<li><em>一个铁路工人的证词（1846年）</em>：「我们在挖一条穿过山丘的隧道。里面很黑，只有蜡烛。上周有3个人被塌方埋了，我们只挖出了2个。」</li>
+</ul>
+<p><strong>🔸 对当下的启示：AI热潮中的「普通人」</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>历史角色</th>
+          <th>今天对应</th>
+          <th>风险</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>运河/铁路股票投资者</strong></td>
+          <td>AI概念股投资者、加密货币投机者</td>
+          <td>泡沫破裂，财富蒸发</td>
+      </tr>
+      <tr>
+          <td><strong>Navvies（建设者）</strong></td>
+          <td>AI标注员、数据中心建设者</td>
+          <td>工作伤害、职业替代</td>
+      </tr>
+      <tr>
+          <td><strong>沿线居民</strong></td>
+          <td>被AI改变行业的从业者</td>
+          <td>生计被颠覆，技能过时</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>关键问题</strong>：泡沫破裂时，谁会像那个寡妇一样破产？</p>
+<hr>
+<h4 id="节点-5-4-技术的本质-布莱恩-阿瑟的-组合进化-视角">节点 5.4：技术的本质——布莱恩·阿瑟的「组合进化」视角</h4>
+<blockquote>
+<p><strong>问题</strong>：技术到底是什么？它是如何产生和进化的？</p>
+</blockquote>
+<p><strong>🔸 核心认知短语</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>认知短语</th>
+          <th>核心含义</th>
+          <th>个人应用</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>技术是&quot;组合进化&quot;的产物</strong></td>
+          <td>新技术=旧技术的新组合</td>
+          <td>创新时寻找跨领域技术组合</td>
+      </tr>
+      <tr>
+          <td><strong>经济是技术的表达形式</strong></td>
+          <td>技术结构决定经济结构</td>
+          <td>关注技术变革对职业/投资的重塑</td>
+      </tr>
+      <tr>
+          <td><strong>收益递增导致&quot;赢者通吃&quot;</strong></td>
+          <td>早期小优势通过正反馈被放大</td>
+          <td>在新技术导入期尽早建立生态位</td>
+      </tr>
+      <tr>
+          <td><strong>技术以&quot;域&quot;的形式聚集</strong></td>
+          <td>相关技术形成互相支持的集群</td>
+          <td>选择技术域的交汇点</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>🔸 关键事实</strong></p>
+<ul>
+<li>喷气发动机 = 燃气轮机 + 压缩机 + 涡轮 + 尾喷管</li>
+<li>晶体管 → 集成电路 → 微处理器 → PC → 互联网</li>
+<li>Windows、互联网协议呈现收益递增</li>
+</ul>
+<p><strong>🔸 对个人决策的指导</strong></p>
+<ul>
+<li>技能发展：追求跨领域组合能力（T型/π型）</li>
+<li>创业/创新：寻找已有技术的「新组合」应用场景</li>
+<li>职业选择：选择技术域的交汇点（如AI+医疗）</li>
+</ul>
+<hr>
+<h4 id="节点-5-5-技术锁定与路径依赖">节点 5.5：技术锁定与路径依赖</h4>
+<blockquote>
+<p><strong>问题</strong>：为什么次优技术可能胜出？历史如何被「锁定」？</p>
+</blockquote>
+<p><strong>🔸 核心认知短语</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>认知短语</th>
+          <th>核心含义</th>
+          <th>个人应用</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>历史是路径依赖的</strong></td>
+          <td>早期偶然选择可能锁定长期轨迹</td>
+          <td>早期决策权重极高</td>
+      </tr>
+      <tr>
+          <td><strong>转换成本是锁定的护城河</strong></td>
+          <td>即使更好替代也难以取代</td>
+          <td>评估新技术时看转换成本</td>
+      </tr>
+      <tr>
+          <td><strong>锁定可能是理性的</strong></td>
+          <td>市场并非总是失灵</td>
+          <td>不要盲目追求&quot;更好&quot;技术</td>
+      </tr>
+      <tr>
+          <td><strong>三种锁定机制</strong></td>
+          <td>学习效应+网络效应+协调效应</td>
+          <td>设计产品/职业时建立这三种效应</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>🔸 经典文献</strong></p>
+<ul>
+<li>David (1985): &ldquo;Clio and the Economics of QWERTY&rdquo;</li>
+<li>Arthur (1989): &ldquo;Competing Technologies, Increasing Returns, and Lock-In&rdquo;</li>
+<li>Liebowitz &amp; Margolis (1990): &ldquo;The Fable of the Keys&rdquo;</li>
+</ul>
+<p><strong>🔸 经典案例</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>案例</th>
+          <th>所谓&quot;锁定&quot;</th>
+          <th>关键事实</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>QWERTY键盘</strong></td>
+          <td>Dvorak更高效，但QWERTY锁定</td>
+          <td>1873年为解决卡键设计；Dvorak优势被夸大</td>
+      </tr>
+      <tr>
+          <td><strong>VHS vs Betamax</strong></td>
+          <td>画质更好的Beta失败</td>
+          <td>VHS通过开放授权、更长录制时间获胜</td>
+      </tr>
+      <tr>
+          <td><strong>Windows操作系统</strong></td>
+          <td>微软通过网络效应锁定</td>
+          <td>应用软件生态形成锁定</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h3 id="分支六-现代宏观经济与政治周期">📊 分支六：现代宏观经济与政治周期</h3>
+<h4 id="节点-6-1-置身事内-中国政府与经济发展">节点 6.1：《置身事内》——中国政府与经济发展</h4>
+<blockquote>
+<p><strong>核心命题</strong>：理解中国经济，必须理解政府如何「置身事内」</p>
+</blockquote>
+<p><strong>🔸 核心框架：地方政府公司化</strong></p>
+<pre><code>传统视角：政府 = 提供公共服务 + 纠正市场失灵
+
+置身事内视角：政府 = 深度参与经济 + 直接推动发展
+                        ↓
+                  通过「招商引资」竞争
+                        ↓
+                  地方政府公司化（GDP锦标赛）
+</code></pre>
+<p><strong>🔸 关键制度演变（四部曲）</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>时期</th>
+          <th>核心机制</th>
+          <th>提取方式</th>
+          <th>结果</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>1994前</strong></td>
+          <td>财政包干</td>
+          <td>地方保留多</td>
+          <td>中央弱、地方强</td>
+      </tr>
+      <tr>
+          <td><strong>1994</strong></td>
+          <td>分税制改革</td>
+          <td>中央拿税、地方拿地</td>
+          <td>中央集权，土地财政兴起</td>
+      </tr>
+      <tr>
+          <td><strong>1998-2020</strong></td>
+          <td>土地财政+城投债</td>
+          <td>征地-出让-基建循环</td>
+          <td>城市化快、债务累积</td>
+      </tr>
+      <tr>
+          <td><strong>2020后</strong></td>
+          <td>双循环+房住不炒</td>
+          <td>旧模式难持续</td>
+          <td>转型中</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>🔸 土地财政逻辑</strong></p>
+<p>低价征地（农村）→ 高价出让（城市）→ 差价用于基建</p>
+<p>本质是<strong>农村剩余的城市化提取</strong>（剪刀差的现代形式）</p>
+<p><strong>🔸 结构性失衡</strong></p>
+<ul>
+<li>城乡失衡：户籍制度维持「重物轻人」的城市化</li>
+<li>债务结构：居民（房贷）+ 企业（国企）+ 政府（隐性）三重债务</li>
+<li>内外失衡：高储蓄、高投资、高出口 → 低消费</li>
+</ul>
+<hr>
+<h3 id="分支七-分配正义与伦理维度">⚖️ 分支七：分配正义与伦理维度</h3>
+<h4 id="节点-7-1-演化思维的三重奏">节点 7.1：演化思维的三重奏</h4>
+<blockquote>
+<p><strong>问题</strong>：《规模》、佩雷斯与复杂系统如何指导宏观判断与个人决策？</p>
+</blockquote>
+<p><strong>🔸 三重理论的交汇</strong></p>
+<p>《规模》（West）的缩放法则 + 佩雷斯的周期理论 + 演化思维
+= 「没有最优，只有适应；没有均衡，只有演化」</p>
+<p><strong>🔸 《规模》的核心发现</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>系统</th>
+          <th>规模翻倍时</th>
+          <th>数学关系</th>
+          <th>启示</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>生物</strong></td>
+          <td>代谢率只增加75%</td>
+          <td>亚线性（&lt;1）</td>
+          <td>效率提升</td>
+      </tr>
+      <tr>
+          <td><strong>城市</strong></td>
+          <td>创新/犯罪增加115%</td>
+          <td>超线性（&gt;1）</td>
+          <td>正反馈</td>
+      </tr>
+      <tr>
+          <td><strong>公司</strong></td>
+          <td>利润增长放缓</td>
+          <td>超→亚→崩溃</td>
+          <td>警惕规模陷阱</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>🔸 杠铃策略（Barbell Strategy）</strong></p>
+<pre><code>资产配置：
+├─ 90% 极度安全（现金、国债、黄金）
+│     → 确保生存底线
+│
+└─ 10% 高风险高回报（期权、加密货币、早期项目）
+      → 有限损失，无限 upside
+      
+避免：60%股票+40%债券的「中等风险」组合
+</code></pre>
+<hr>
+<h4 id="节点-7-2-塔勒布三部曲-不确定性-黑天鹅与反脆弱">节点 7.2：塔勒布三部曲——不确定性、黑天鹅与反脆弱</h4>
+<blockquote>
+<p><strong>问题</strong>：如何在不可预测的世界中配置资产、设计人生？</p>
+</blockquote>
+<p><strong>🔸 五大核心事实</strong></p>
+<ol>
+<li><strong>世界是非线性的</strong>：小原因可能引发大结果（蝴蝶效应）</li>
+<li><strong>极端事件主导历史</strong>：尾部事件塑造世界</li>
+<li><strong>预测是徒劳的</strong>：复杂系统的未来不可预测</li>
+<li><strong>生存优于优化</strong>：先确保不被淘汰</li>
+<li><strong>选择权 &gt; 知识</strong>：有选择做或不做的权利</li>
+</ol>
+<p><strong>🔸 脆弱性光谱</strong></p>
+<pre><code>脆弱（Fragile）    强韧（Robust）    反脆弱（Antifragile）
+    │                  │                  │
+    ▼                  ▼                  ▼
+ 冲击带来损失       冲击无损          冲击带来收益
+    │                  │                  │
+ 玻璃杯            塑料杯             肌肉/进化
+    │                  │                  │
+ 高杠杆投资        现金储备           杠铃策略
+</code></pre>
+<p><strong>🔸 建立「选择权」（Optionality）</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>类型</th>
+          <th>例子</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>财务期权</strong></td>
+          <td>持有现金等待机会</td>
+      </tr>
+      <tr>
+          <td><strong>时间期权</strong></td>
+          <td>延迟决策，等待更多信息</td>
+      </tr>
+      <tr>
+          <td><strong>知识期权</strong></td>
+          <td>学习多种可迁移技能</td>
+      </tr>
+      <tr>
+          <td><strong>职业期权</strong></td>
+          <td>副业收入 + 低成本生活</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>核心原则</strong>：</p>
+<blockquote>
+<p>「不要试图预测黑天鹅，要构建一个黑天鹅来临时不仅存活、还能受益的系统。」</p>
+</blockquote>
+<hr>
+<h2 id="对谈记录索引">🗣️ 对谈记录索引</h2>
+<table>
+  <thead>
+      <tr>
+          <th>日期</th>
+          <th>主题</th>
+          <th>新增节点</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>2026-03-09</td>
+          <td>初始节点创建</td>
+          <td>核心起始节点</td>
+      </tr>
+      <tr>
+          <td>2026-03-09</td>
+          <td>工农剪刀差</td>
+          <td>节点5.1</td>
+      </tr>
+      <tr>
+          <td>2026-03-09</td>
+          <td>《置身事内》</td>
+          <td>节点6.1</td>
+      </tr>
+      <tr>
+          <td>2026-03-09</td>
+          <td>技术革命长波周期</td>
+          <td>节点5.2</td>
+      </tr>
+      <tr>
+          <td>2026-03-09</td>
+          <td>运河热与铁路热</td>
+          <td>节点5.3</td>
+      </tr>
+      <tr>
+          <td>2026-03-10</td>
+          <td>演化思维的三重奏</td>
+          <td>节点7.1</td>
+      </tr>
+      <tr>
+          <td>2026-03-10</td>
+          <td>塔勒布三部曲</td>
+          <td>节点7.2</td>
+      </tr>
+      <tr>
+          <td>2026-03-26</td>
+          <td>《技术的本质》</td>
+          <td>节点5.4</td>
+      </tr>
+      <tr>
+          <td>2026-03-26</td>
+          <td>技术锁定与路径依赖</td>
+          <td>节点5.5</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<blockquote>
+<p><strong>「知识不是堆积，而是编织。」</strong></p>
+<p>从那个核心问题开始，一步步编织政治经济历史的认知网络。</p>
+</blockquote>
+<hr>
+<p><em>本思维导图持续更新中，通过对谈逐步扩展&hellip;</em></p>
+
+        ]]></description></item></channel></rss>
