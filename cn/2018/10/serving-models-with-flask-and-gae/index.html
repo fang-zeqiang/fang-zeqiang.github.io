@@ -1,0 +1,252 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>利用 Flask 和 Google App Engine 部署模型服务 - Zeqiang Fang | 方泽强</title><meta name=referrer content="no-referrer"><meta property="og:title" content="利用 Flask 和 Google App Engine 部署模型服务 - Zeqiang Fang | 方泽强"><meta name=description property="og:description" content="本文的配套代码请参见 这里，建议配合代码阅读本文。
+模型部署和服务调用
+对于做算法的同学，大家或多或少的更关心模型的性能指标多些，对于一些工程性问题考虑的较少。模型的部署是这些工程性问题中重要的一个，它直接关系到模型在生产系统的使用。一些成熟的机器学习框架会提供自己的解决方案，例如 Tensorflow 提供的 Serving 服务等。但很多情况下我们构建的工程可能不只使用了一种框架，因此一个框架自身的部署工具可能就很难满足我们的需求了。"><meta property="og:type" content="article"><meta property="og:site_name" content="Zeqiang Fang | 方泽强"><meta property="og:url" content="https://zeqiang.fun/cn/2018/10/serving-models-with-flask-and-gae/"><meta name=author property="article:author" content="范叶亮"><meta name=date property="article:published_time" content="2018-10-19" scheme=YYYY-MM-DD><meta name=date property="article:modified_time" content="2018-10-19" scheme=YYYY-MM-DD><meta name=keywords property="article:tag" content="Flask,Google App Engine,GAE,RESTful,模型部署,模型服务"><meta name=theme-color content="#0d0d0d"><link rel=icon type=image/png sizes=16x16 href=/images/web/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=/images/web/favicon-32x32.png><link rel=icon type=image/png sizes=48x48 href=/images/web/favicon-48x48.png><link rel=icon type=image/png sizes=62x62 href=/images/web/favicon-62x62.png><link rel=icon type=image/png sizes=192x192 href=/images/web/favicon-192x192.png><link rel=apple-touch-icon size=192x192 href=/images/web/icon-192x192.png><link rel=manifest href=/manifest.json><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://zeqiang.fun/cn"},"name":"利用 Flask 和 Google App Engine 部署模型服务","headline":"利用 Flask 和 Google App Engine 部署模型服务","description":"\u003cdiv class=\"blockquote\" style='border-left: 4px solid #369BE5;'\u003e本文的配套代码请参见 \u003ca href=\"https://github.com/leovan/model-serving-demo\"\u003e这里\u003c/a\u003e，建议配合代码阅读本文。\u003c/div\u003e\n\u003ch2 id=\"模型部署和服务调用\"\u003e模型部署和服务调用\u003c/h2\u003e\n\u003cp\u003e对于做算法的同学，大家或多或少的更关心模型的性能指标多些，对于一些工程性问题考虑的较少。模型的部署是这些工程性问题中重要的一个，它直接关系到模型在生产系统的使用。一些成熟的机器学习框架会提供自己的解决方案，例如 \u003ca href=\"https://www.tensorflow.org\"\u003eTensorflow\u003c/a\u003e 提供的 \u003ca href=\"https://www.tensorflow.org/serving/\"\u003eServing\u003c/a\u003e 服务等。但很多情况下我们构建的工程可能不只使用了一种框架，因此一个框架自身的部署工具可能就很难满足我们的需求了。\u003c/p\u003e","genre":["编程","机器学习","深度学习"],"datePublished":"2018-10-19","dateModified":"2018-10-19","wordCount":"4402","keywords":["Flask","Google App Engine","GAE","RESTful","模型部署","模型服务"],"image":["https://zeqiang.fun/images/cn/2018-10-19-serving-models-with-flask-and-gae/model-serving.png"],"author":{"@type":"Person","name":"范叶亮"},"publisher":{"@type":"Organization","name":"范叶亮","logo":{"@type":"ImageObject","url":"https://zeqiang.fun/images/web/publisher-logo.png"}},"url":"https://zeqiang.fun/cn/2018/10/serving-models-with-flask-and-gae/"}</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js></script><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/6.5.95/css/materialdesignicons.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-.min.css><script async src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js></script><link rel=stylesheet type=text/css href=/css/fonts.css><link rel=stylesheet type=text/css href=/css/style.css><link rel=stylesheet type=text/css href=/css/light.css><link rel=stylesheet type=text/css href=/css/dark.css id=dark-mode-style disabled><link rel=stylesheet type=text/css href=/css/icons.css><link rel=stylesheet type=text/css href=/css/print.css></head><body class=cn><header class=masthead><div class=logo></div><p class=slogan>优雅永不过时</p><nav class=menu><ul><li><a href=/>首页</a></li><li><a href=/cn/>博客</a></li><li><a href=/categories/>分类</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/about/>关于</a></li><li><a href=/cn/resume/>简历</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/index.xml target=_blank type=application/rss+xml title="RSS feed">订阅</a></li><li><a href=https://github.com/fang-zeqiang/fang-zeqiang.github.io/blob/master/LICENSE target=_blank title="Attribution-NonCommercial-ShareAlike 4.0 International">版权</a></li><li class="light-dark-mode no-border-bottom"><a id=light-dark-mode-action><span id=light-dark-mode-icon class="mdi mdi-weather-night"></span></a></li></ul></nav><script src=/js/toggle-theme.js></script></header><article class=main><header class=title><h1>利用 Flask 和 Google App Engine 部署模型服务</h1><h3>范叶亮 /
+2018-10-19</h3><h3 class=post-meta><strong>分类: </strong><a href=/categories/%E7%BC%96%E7%A8%8B>编程</a>, <a href=/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0>机器学习</a>, <a href=/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0>深度学习</a>
+/
+<strong>标签: </strong><span>Flask</span>, <span>Google App Engine</span>, <span>GAE</span>, <span>RESTful</span>, <span>模型部署</span>, <span>模型服务</span>
+/
+<strong>字数: </strong>4402</h3><hr></header><div class=blockquote style='border-left:4px solid #369be5'>本文的配套代码请参见 <a href=https://github.com/leovan/model-serving-demo>这里</a>，建议配合代码阅读本文。</div><h2 id=模型部署和服务调用>模型部署和服务调用</h2><p>对于做算法的同学，大家或多或少的更关心模型的性能指标多些，对于一些工程性问题考虑的较少。模型的部署是这些工程性问题中重要的一个，它直接关系到模型在生产系统的使用。一些成熟的机器学习框架会提供自己的解决方案，例如 <a href=https://www.tensorflow.org>Tensorflow</a> 提供的 <a href=https://www.tensorflow.org/serving/>Serving</a> 服务等。但很多情况下我们构建的工程可能不只使用了一种框架，因此一个框架自身的部署工具可能就很难满足我们的需求了。</p><p>针对此类情况，本文介绍一个 <strong>简单</strong> 的 <strong>准生产</strong> 模型部署方案。简单是指除了模型相关代码之外的工程性代码量不大，这得益于将要使用的 <a href=http://flask.pocoo.org/>Flask</a> 框架。准生产是指这种部署方案应对一般的生产环境问题不大，对于高并发的场景可以通过横向扩容并进行负载均衡解决，但对于单次调用时效性要求较高的场景则需要另寻其他解决方案。</p><p>本文方案的模型部署和服务调用框架如下图所示：</p><p><img src=/images/cn/2018-10-19-serving-models-with-flask-and-gae/model-serving.png alt=Model-Serving></p><p>其主要特性如下：</p><ol><li>服务端采用 Python 的 Flask 框架构建，无需使用其他外部服务。Flask 框架的 <a href=https://zh.wikipedia.org/zh/%E5%BE%AE%E6%9C%8D%E5%8A%A1>微服务</a> (Microframework) 特性使得服务端代码简洁高效。</li><li>利用 <a href=https://gunicorn.org/>Gunicorn</a> 提供的高性能 Python WSGI HTTP UNIX Server，方便在服务端运行 Flask 应用。</li><li>客户端和服务端之间采用 <a href=https://zh.wikipedia.org/zh/%E8%A1%A8%E7%8E%B0%E5%B1%82%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2>RESTful API</a> 调用方式，尽管在性能上可能不及其他一些方案 (例如：基于 RPC 的解决方案等)，但其较好地解决了跨语言交互的问题，不同语言之间交互仅需使用 HTTP 协议和 JSON 数据格式即可。</li></ol><h2 id=flask-服务和-ajax-调用>Flask 服务和 AJAX 调用</h2><h3 id=flask-服务封装>Flask 服务封装</h3><p>为了将模型代码和 Flask 服务进行整合，首先假设你已经对模型部分代码做了完美的封装 &#x1f60e;，整个工程先叫做 <code>model-serving-demo</code> 吧。整理一下代码的目录结构，给一个我中意的 Python 目录结构风格：</p><pre><code>model-serving-demo/                # 工程根目录
+├── bin/                           # 可执行命令目录
+|   ├─ start.sh                    # 启动脚本
+|   ├─ stop.sh                     # 停止脚本
+|   └─ ...
+├── conf/                          # 配置文件目录
+|   ├─ logging.conf                # 日志配置文件
+|   ├─ xxx_model.conf              # XXX Model 配置文件
+|   └─ ...
+├── data/                          # 数据文件目录
+├── docs/                          # 文档目录
+├── model_serving/                 # 模块根目录
+|   ├─ models/                     # 模型代码目录
+|   |   ├─ __init__.py
+|   |   ├─ xxx_model.py            # XXX Model 代码
+|   |   └─ ...
+|   ├─ resources/                  # Flask RESTful Resources 代码目录
+|   |   ├─ __init__.py
+|   |   ├─ xxx_model_resource.py   # XXX Model Flask RESTful Resources 代码
+|   |   └─ ...
+|   ├─ tests/                      # 测试代码根目录
+|   |   ├─ models                  # 模型测试代码目录
+|   |   |   ├─ __init__.py
+|   |   |   ├─ test_xxx_model.py   # XXX Model 测试代码
+|   |   |   └─ ...
+|   |   ├─ __init__.py
+|   |   └─ ...
+|   ├─ tmp/                        # 临时目录
+|   └─ ...
+├── .gitignore                     # Git Ignore 文件
+├── app.yaml                       # Google App Engine 配置文件
+├── LICENSE                        # 授权协议
+├── main.py                        # 主程序代码
+├── README.md                      # 说明文件
+└── requirements.txt               # 依赖包列表
+</code></pre><p>我们利用一个极简的示例介绍整个模型部署，相关的库依赖 <code>requirements.txt</code> 如下：</p><pre><code>Flask==1.0.2
+Flask-RESTful==0.3.6
+Flask-Cors==3.0.6
+jsonschema==2.6.0
+docopt==0.6.2
+
+# 本地部署时需保留，GAE 部署时请删除
+# gunicorn==19.9.0
+</code></pre><p>其中：</p><ol><li><a href=http://flask.pocoo.org/>Flask</a> 用于构建 Flask 服务。</li><li><a href=https://flask-restful.readthedocs.io/>Flask-RESTful</a> 用于构建 Flask RESTful API。</li><li><a href=https://flask-cors.readthedocs.io/>Flask-Cors</a> 用于解决 AJAX 调用时的 <a href=https://zh.wikipedia.org/zh/%E8%B7%A8%E4%BE%86%E6%BA%90%E8%B3%87%E6%BA%90%E5%85%B1%E4%BA%AB>跨域问题</a>。</li><li><a href=https://python-jsonschema.readthedocs.io/>jsonschema</a> 用于对请求数据的 JSON 格式进行校验。</li><li><a href=http://docopt.org/>docopt</a> 用于从代码文档自动生成命令行参数解析器。</li><li><a href=https://gunicorn.org/>gunicorn</a> 用于提供的高性能 Python WSGI HTTP UNIX Server。</li></ol><p>XXX Model 的代码 <code>xxx_model.py</code> 如下：</p><pre><code class=language-python>from ..utils.log_utils import XXXModel_LOGGER
+
+
+LOGGER = XXXModel_LOGGER
+
+
+class XXXModel():
+    def __init__(self):
+        LOGGER.info('Initializing XXX Model ...')
+
+        LOGGER.info('XXX Model Initialized.')
+
+    def hello(self, name:str) -&gt; str:
+        return 'Hello, {name}!'.format(name=name)
+</code></pre><p>其中 <code>hello()</code> 为服务使用的方法，其接受一个类型为 <code>str</code> 的参数 <code>name</code>，并返回一个类型为 <code>str</code> 的结果。</p><p>XXX Model 的 Flask RESTful Resource 代码 <code>xxx_model_resource.py</code> 如下：</p><pre><code class=language-python>from flask_restful import Resource, request
+
+from ..models.xxx_model import XXXModel
+from ..utils.validation_utils import validate_json
+
+
+xxx_model_instance = XXXModel()
+xxx_model_schema = {
+    'type': 'object',
+    'properties': {
+        'name': {'type': 'string'}
+    },
+    'required': ['name']
+}
+
+
+class XXXModelResource(Resource):
+    @validate_json(xxx_model_schema)
+    def post(self):
+        json = request.json
+
+        return {'result': xxx_model_instance.hello(json['name'])}
+</code></pre><p>我们需要从 Flask RESTful 的 <code>Resource</code> 类继承一个新的类 <code>XXXModelResource</code> 用于处理 XXX Model 的服务请求。如上文介绍，我们在整个模型服务调用中使用 POST 请求方式和 JSON 数据格式，因此我们需要在类 <code>XXXModelResource</code> 中实现 <code>post()</code> 方法，同时对于传入数据的 JSON 格式进行校验。</p><p><code>post()</code> 方法用于处理整个模型的服务请求，<code>xxx_model_instance</code> 模型实例在类 <code>XXXModelResource</code> 外部进行实例化，避免每次处理请求时都进行初始化。<code>post()</code> 的返回结果无需处理成 JSON 格式的字符串，仅需返回词典数据即可，Flask RESTful 会自动对其进行转换。</p><p>为了方便对请求数据的 JSON 格式进行校验，我们将对 JSON 格式的校验封装成一个修饰器。使用时如上文代码中所示，在 <code>post()</code> 方法上方添加 <code>@validate_json(xxx_model_schema)</code> 即可，其中 <code>xxx_model_schema</code> 为一个符合 <a href=https://python-jsonschema.readthedocs.io/>jsonschema</a> 要求的 JSON Schema。示例代码中要求传入的 JSON 数据 <strong>必须</strong> 包含一个名为 <code>name</code> 类型为 <code>string</code> 的字段。</p><p><code>validate_json</code> 修饰器的代码 <code>validation_utils.py</code> 如下：</p><pre><code class=language-python>from functools import wraps
+from jsonschema import validate, ValidationError
+from flask_restful import request
+
+
+def validate_json(schema, force=False):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            json_body = request.get_json(force=force)
+
+            if json_body is None:
+                return {'message': 'No JSON object'}, 400
+
+            try:
+                validate(json_body, schema)
+            except ValidationError as e:
+                return {'message': e.message}, 400
+
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+</code></pre><p>首先我们需要验证请求包含一个 JSON 请求体，同时 JSON 请求体的内容需满足 <code>schema</code> 的要求。如果不满足这些条件，我们需要返回对应的错误信息 <code>message</code>，同时返回合理的 <a href=https://zh.wikipedia.org/zh/HTTP%E7%8A%B6%E6%80%81%E7%A0%81>HTTP 状态码</a> (例如：<code>400</code>) 用于表示无法处理错误的请求。对于正常的请求响应 (即 HTTP 状态码为 200 的情况)，状态码可以省略不写。</p><p>构建完 XXX Model 的 Flask RESTful Resource 后，我们就可以构建 Flask 的主服务了，主程序代码 <code>main.py</code> 如下：</p><pre><code class=language-python>&quot;&quot;&quot;
+Model Serving Demo
+
+Usage:
+    main.py [--host &lt;host&gt;] [--port &lt;port&gt;] [--debug]
+    main.py (-h | --help)
+    main.py --version
+
+Options:
+    --host &lt;host&gt;                     绑定的 Host [default: 0.0.0.0]
+    --port &lt;port&gt;                     绑定的 Port [default: 9999]
+    --debug                           是否开启 Debug [default: False]
+    -h --help                         显示帮助
+    -v --version                      显示版本
+
+&quot;&quot;&quot;
+
+from docopt import docopt
+
+from flask import Flask
+from flask_cors import CORS
+from flask_restful import Api
+
+from model_serving.resources.xxx_model_resource import XXXModelResource
+
+
+app = Flask(__name__)
+CORS(app)
+
+api = Api(app)
+api.add_resource(XXXModelResource, '/v1/XXXModel')
+
+
+if __name__ == '__main__':
+    args = docopt(__doc__, version='Model Serving Demo v1.0.0')
+    app.run(host=args['--host'], port=args['--port'], debug=args['--debug'])
+</code></pre><p><code>docopt</code> 库用于从代码文档自动生成命令行参数解析器，具体使用方法请参见 <a href=http://docopt.org/>官方文档</a>。整个 Flask 主服务的构建比较简单，流程如下：</p><ol><li>构建 Flask 主程序，<code>app = Flask(__name__)</code>。</li><li>解决 AJAX 调用的跨域问题， <code>CORS(app)</code>。为了方便起见，我们不加任何参数，允许任意来源的请求，详细的使用方式请参见 <a href=https://flask-cors.readthedocs.io/>官方文档</a>。</li><li>构建 Flask RESTful API，<code>api = Api(app)</code>。</li><li>将构建好的 XXX Model 的 Flask RESTful Resource 添加到 API 中，<code>api.add_resource(XXXModelResource, '/v1/XXXModel')</code>。
+其中第二个参数为请求的 URL，对于这个 URL 的建议将在后续小节中详细说明。</li></ol><p>Flask 主程序配置完毕后，我们通过 <code>app.run()</code> 在本地启动 Flask 服务，同时可以指定绑定的主机名，端口，以及是否开启调试模式等。通过 <code>python main.py</code> 启动 Flask 服务后，可以在命令行看到如下类似的日志：</p><pre><code>[2018/10/21 00:00:00] - [INFO] - [XXXModel] - Initializing XXX Model ...
+[2018/10/21 00:00:00] - [INFO] - [XXXModel] - XXX Model Initialized.
+ * Serving Flask app &quot;main&quot; (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+[2018/10/21 00:00:00] - [INFO] - [werkzeug] -  * Running on http://0.0.0.0:9999/ (Press CTRL+C to quit)
+</code></pre><p>现在就可以测试调用服务了，我们用 <code>curl</code> 命令进行简单的测试，相关代码 <code>request-demo.sh</code> 如下：</p><pre><code class=language-bash>host=0.0.0.0
+port=9999
+url=/v1/XXXModel
+curl_url=http://${host}:${port}${url}
+
+invalid_json='{}'
+valid_json='{&quot;name&quot;: &quot;Leo&quot;}'
+
+# No JSON object
+curl --request POST --url ${curl_url} --verbose
+
+# Invalid JSON object
+curl --header 'Content-Type: application/json; charset=UTF-8' \
+    --request POST --data ${invalid_json} --url ${curl_url} --verbose
+
+# Valid JSON object
+curl --header 'Content-Type: application/json; charset=UTF-8' \
+    --request POST --data ${valid_json} --url ${curl_url} --verbose
+</code></pre><p>三种不同的请求返回的 HTTP 状态码和结果如下：</p><pre><code>HTTP/1.0 400 BAD REQUEST
+{&quot;message&quot;: &quot;No JSON object&quot;}
+
+HTTP/1.0 400 BAD REQUEST
+{&quot;message&quot;: &quot;'name' is a required property&quot;}
+
+HTTP/1.0 200 OK
+{&quot;result&quot;: &quot;Hello, Leo!&quot;}
+</code></pre><p>上文中，我们通过 <code>python main.py</code> 利用内置的 Server 启动了 Flask 服务，启动后日志中打印出来一条警告信息，告诉使用者不要在生产环境中使用内置的 Server。在生产环境中我们可以利用高性能 Python WSGI HTTP UNIX Server <a href=https://gunicorn.org/>gunicorn</a> 来启动 Flask 服务。</p><p>服务启动 (<code>start.sh</code>) 脚本代码如下：</p><pre><code class=language-bash>cd `dirname $0`
+cd ..
+
+base_dir=`pwd`
+tmp_dir=${base_dir}/tmp
+pid_file_path=${tmp_dir}/model-serving-demo.pid
+log_file_path=${tmp_dir}/model-serving-demo.log
+
+bind_host=0.0.0.0
+bind_port=9999
+workers=2
+
+nohup gunicorn -b ${bind_host}:${bind_port} \
+  -w ${workers} -p ${pid_file_path} \
+  main:app &gt; ${log_file_path} 2&gt;&amp;1 &amp;
+</code></pre><p>服务停止 (<code>stop.sh</code>) 脚本代码如下：</p><pre><code class=language-bash>cd `dirname $0`
+cd ..
+
+base_dir=`pwd`
+tmp_dir=${base_dir}/tmp
+pid_file_path=${tmp_dir}/model-serving-demo.pid
+
+kill -TERM `echo ${pid_file_path}`
+</code></pre><p>gunicorn 的详细参数配置和使用教程请参见 <a href=https://docs.gunicorn.org/en/stable/>官方文档</a>。</p><h3 id=restful-api-设计>RESTful API 设计</h3><p>RESTful API 是一种符合 REST(Representational State Transfer，表现层状态转换) 原则的框架，该框架是由 Fielding 在其博士论文 <sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup> 中提出。相关的核心概念如下：</p><ol><li><strong>资源 (Resources)</strong>，即网络中的一个实体 (文本，图片，服务等)，使用一个 URL 进行表示。</li><li><strong>表现层 (Representation)</strong>，资源具体的呈现形式即为表现层，例如图片可以表示为 PNG 文件，音乐可以表示为 MP3 文件，还有本文使用的数据格式 JSON 等。HTTP 请求的头信息中用 Accept 和 Content-Type 字段对表现层进行描述。</li><li><strong>状态转换 (State Transfer)</strong>，互联网通信协议 HTTP 协议是一个无状态协议，所有的状态都保存在服务端。因此如果客户端想要操作服务器，必须通过某种手段让服务器端发生 <strong>状态转换</strong>。客户端利用 HTTP 协议中的动作对服务器进行操作，例如：GET，POST，PUT，DELETE 等。</li></ol><p>利用 RESTful API 构建模型服务时，需要注意如下几点：</p><ol><li>为模型服务设置专用域名，例如：<code>https://api.example.com</code>，并配以负载均衡。</li><li>将 API 的版本号写入 URL 中，例如：<code>https://api.example.com/v1</code>。</li><li>RESTful 框架中每个 URL 表示一种资源，因此可以将模型的名称作为 URL 的终点 (Endpoint)，例如：<code>https://api.example.com/v1/XXXModel</code>。</li><li>对于操作资源的 HTTP 方式有多种，综合考虑建议选用 POST 方式，同时建议使用 JSON 数据格式。</li><li>为请求响应设置合理的状态码，例如：200 OK 表示正常返回，400 INVALID REQUEST 表示无法处理客户端的错误请求等。</li><li>对于错误码为 4xx 的情况，建议在返回中添加键名为 <code>message</code> 的错误信息。</li></ol><h3 id=ajax-调用>AJAX 调用</h3><p>对于动态网页，我们可以很容易的在后端服务中发起 POST 请求调用模型服务，然后将结果在前端进行渲染。对于静态网页，我们可以利用 AJAX 进行相关操作。首先我们需要一个交互界面，如下为利用 <a href=https://material.io/design/>Google Material Design</a> 风格的 <a href=https://github.com/material-components/material-components-web>Material Design Components Web</a> 组件设计一个交互界面，实现细节请参见 <a href=https://github.com/leovan/model-serving-demo/tree/master/client/xxx-model-ajax-client.html>示例代码</a>。</p><p><link rel=stylesheet type=text/css href=//cdn.jsdelivr.net/npm/material-components-web@latest/dist/material-components-web.min.css><style type=text/css>.center{justify-content:center}.text-field--fullwidth{width:100%}.loading{width:32px;height:32px;position:relative;margin:auto}.loading-bounce-1,.loading-bounce-2{width:100%;height:100%;border-radius:50%;background-color:#333;opacity:.6;position:absolute;top:0;left:0;-webkit-animation:bounce 2s infinite ease-in-out;animation:bounce 2s infinite ease-in-out}.loading-bounce-2{-webkit-animation-delay:-1s;animation-delay:-1s}@-webkit-keyframes bounce{0%,100%{-webkit-transform:scale(0)}50%{-webkit-transform:scale(1)}}@keyframes bounce{0%,100%{transform:scale(0);-webkit-transform:scale(0)}50%{transform:scale(1);-webkit-transform:scale(1)}}</style><div class=mdc-card><div class="mdc-card__actions center"><div class=mdc-typography--headline6><span>XXX Model AJAX Client</span></div></div><div class=mdc-card__actions><div class="mdc-text-field text-field--fullwidth" data-mdc-auto-init=MDCTextField><input id=name class=mdc-text-field__input value=Leo><div class=mdc-line-ripple></div></div></div><div class="mdc-card__actions center"><button id=submit class="mdc-button mdc-button--outlined" data-mdc-auto-init=MDCRipple>Submit</button><div class=loading id=loading style=display:none><div class=loading-bounce-1></div><div class=loading-bounce-2></div></div></div><div class="mdc-card__actions center"><div class=mdc-typography--body1><p id=result>Result</p></div></div></div><script>$(document).ready(function(){$("#submit").click(function(){$("#submit").toggle(),$("#loading").toggle(),setTimeout(function(){$("#result").html("Hello, "+$("#name").val()+"!"),$("#submit").toggle(),$("#loading").toggle()},1e3)})})</script></p><p>AJAX 服务请求代码的核心部分如下：</p><pre><code class=language-javascript>$(document).ready(function() {
+    $(&quot;#submit&quot;).click(function() {
+        $.ajax({
+            url: &quot;http://0.0.0.0:9999/v1/XXXModel&quot;,
+            method: &quot;POST&quot;,
+            contentType: &quot;application/json; charset=UTF-8&quot;,
+            data: JSON.stringify({&quot;name&quot;: $(&quot;#name&quot;).val()}),
+            timeout: 3000,
+
+            success: function (data, textStatus, jqXHR) {
+                $(&quot;#result&quot;).html(data.result);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                $(&quot;#result&quot;).html(errorThrown);
+            }
+        });
+    });
+});
+</code></pre><p>代码使用了 <a href=https://jquery.com/>jQuery</a> 的相关函数。<code>JSON.stringify({"name": $("#name").val()})</code> 获取 ID 为 <code>name</code> 的元素的值，并将其转换成符合服务端要求的 JSON 格式。通过 AJAX 向远程发出请求后，如果请求成功则将返回数据 <code>data</code> 中对应的结果 <code>result</code> 填充到 ID 为 <code>result</code> 的元素中，否则填入返回的错误信息。</p><h2 id=google-app-engine-部署>Google App Engine 部署</h2><p>上文中已经介绍了如何在本地利用 Flask 部署模型服务和相关调用方法，但如果希望在自己的网站中调用时，则利用 SaaS 来部署符合会是一个不二之选。国内外多个厂商均提供了相应的 SaaS 产品，例如 <a href=https://cloud.google.com/appengine/>Google</a>，<a href=https://aws.amazon.com/partners/saas-on-aws/>Amazon</a>，<a href=https://azure.microsoft.com/en-us/solutions/saas/>Microsoft</a> 等。Google App Engine (GAE) 提供了一个 <a href=https://cloud.google.com/free/docs/always-free-usage-limits>始终免费</a> 方案，虽然部署阶段会受到 GFW 的影响，但调用阶段测试影响并不是很大 (不同地区和服务提供商会有差异)。综合考虑，本文选择 GAE 作为 SaaS 平台部署服务，各位看官请自备梯子。</p><h3 id=环境准备>环境准备</h3><p>首先，在 <a href=https://console.cloud.google.com/projectcreate>Google Cloud Platform Console</a> 中建立一个新的 Project，假设项目名为 <code>YOUR_PROJECT_ID</code>。</p><p>其次，根据 <a href=https://cloud.google.com/sdk/docs/>Google Cloud SDK 文档</a> 在本地安装相应版本的 Google Cloud SDK。MacOS 下建议通过 <code>brew cask install google-cloud-sdk</code> 方式安装，安装完毕后确认在命令行中可以运行 <code>gcloud</code> 命令。</p><pre><code class=language-bash>$ gcloud version
+Google Cloud SDK 221.0.0
+bq 2.0.35
+core 2018.10.12
+gsutil 4.34
+</code></pre><h3 id=构建-gae-工程>构建 GAE 工程</h3><p>模型服务仅作为后端应用，因此本节不介绍前端页面开发的相关部分，有兴趣的同学请参见 <a href=https://cloud.google.com/appengine/docs/standard/python3/quickstart>官方文档</a>。GAE 部署 Python Web 应用采用了 <a href=https://wsgi.readthedocs.io/en/latest/>WSGI 标准</a>，我们构建的本地部署版本完全满足这个要求，因此仅需为项目在根目录添加一个 GAE 配置文件 <code>app.yaml</code> 即可，内容如下：</p><pre><code class=language-yaml>runtime: python37
+
+handlers:
+  - url: /.*
+    script: main.app
+
+skip_files:
+  - .idea/
+  - .vscode/
+  - __pycache__/
+  - .hypothesis/
+  - .pytest_cache/
+  - bin/
+  - ^(.*/)?.*\.py[cod]$
+  - ^(.*/)?.*\$py\.class$
+  - ^(.*/)?.*\.log$
+</code></pre><p>其中，<code>runtime</code> 指定了服务运行的环境，<code>handlers</code> 指定了不同的 URL 对应的处理程序，在此所有的 URL 均由 <code>main.py</code> 中的 <code>app</code> 进行处理，<code>skip_files</code> 用于过滤不需要上传的文件。更多关于 <code>app.yaml</code> 的设置信息，请参见 <a href=https://cloud.google.com/appengine/docs/standard/python3/config/appref>官方文档</a>。</p><h3 id=部署-gae-工程>部署 GAE 工程</h3><p>在部署 GAE 工程之前我们可以利用本地的开发环境对其进行测试，测试无误后，即可运行如下命令将其部署到 GAE 上：</p><pre><code class=language-bash>gcloud app deploy --project [YOUR_PROJECT_ID]
+</code></pre><p>然后根据命令行提示完成整个部署流程，部署完成的远程服务 URL 为 <code>https://YOUR_PROJECT_ID.appspot.com</code>，更多的测试和部署细节请参见 <a href=https://cloud.google.com/appengine/docs/standard/python3/testing-and-deploying-your-app>官方文档</a>。</p><p>部署后的 GAE 服务使用了其自带的域名 <code>appspot.com</code>。如果你拥有自己的域名，可以根据官方文档 <a href=https://cloud.google.com/appengine/docs/standard/python3/mapping-custom-domains>设置自己的域名</a> 并 <a href=https://cloud.google.com/appengine/docs/standard/python3/secURLng-custom-domains-with-ssl>开启 SSL</a>。</p><div class=blockquote style='border-left:4px solid #369be5'>本文部分内容参考了 Genthial 的博客 <a href=https://guillaumegenthial.github.io/serving.html>Serving a model with Flask</a> 和阮一峰的博客 <a href=https://www.ruanyifeng.com/blog/2011/09/restful.html>理解RESTful架构</a> 和 <a href=https://www.ruanyifeng.com/blog/2014/05/restful_api.html>RESTful API 设计指南</a>。</div><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>Fielding, Roy T., and Richard N. Taylor. <em>Architectural styles and the design of network-based software architectures.</em> Vol. 7. Doctoral dissertation: University of California, Irvine, 2000.&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div><link rel=stylesheet href=/css/donate.css><div class=donate><div class=donate-header></div><div class=donate-slug id=donate-slug>serving-models-with-flask-and-gae</div><button class=donate-button>赞 赏</button><div class=donate-footer>「真诚赞赏，手留余香」</div></div><div class=donate-modal-wrapper><div class=donate-modal><div class=donate-box><div class=donate-box-content><div class=donate-box-content-inner><div class=donate-box-header>「真诚赞赏，手留余香」</div><div class=donate-box-body><div class=donate-box-money><button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-2 data-v=2 data-unchecked="￥ 2" data-checked="2 元">￥ 2</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-5 data-v=5 data-unchecked="￥ 5" data-checked="5 元">￥ 5</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-10 data-v=10 data-unchecked="￥ 10" data-checked="10 元">￥ 10</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-50 data-v=50 data-unchecked="￥ 50" data-checked="50 元">￥ 50</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-100 data-v=100 data-unchecked="￥ 100" data-checked="100 元">￥ 100</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-custom data-v=custom data-unchecked=任意金额 data-checked=任意金额>任意金额</button></div><div class=donate-box-pay><img class=donate-box-pay-qrcode id=donate-box-pay-qrcode src></div></div><div class=donate-box-footer><div class="donate-box-pay-method donate-box-pay-method-checked" data-v=wechat-pay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-wechat-pay src></div><div class=donate-box-pay-method data-v=alipay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-alipay src></div></div></div></div></div><button type=button class=donate-box-close-button>
+<svg class="donate-box-close-button-icon" fill="#fff" viewBox="0 0 24 24" width="24" height="24"><path d="M13.486 12l5.208-5.207a1.048 1.048.0 00-.006-1.483 1.046 1.046.0 00-1.482-.005L12 10.514 6.793 5.305A1.048 1.048.0 005.31 5.31a1.046 1.046.0 00-.005 1.483L10.514 12l-5.208 5.207a1.048 1.048.0 00.006 1.483 1.046 1.046.0 001.482.005L12 13.486l5.207 5.208a1.048 1.048.0 001.483-.006 1.046 1.046.0 00.005-1.482L13.486 12z" fill-rule="evenodd"/></svg></button></div></div><script type=text/javascript src=/js/donate.js></script></script><footer><nav class=post-nav><span class=nav-prev>&larr; <a href=/cn/2018/10/seq2seq-and-attention-machanism/>序列到序列 (Seq2Seq) 和注意力机制 (Attention Machanism)</a></span>
+<span class=nav-next><a href=/cn/2018/11/computational-complexity-and-dynamic-programming/>计算复杂性 (Computational Complexity) 与动态规划 (Dynamic Programming)</a> &rarr;</span></nav><script type=text/javascript>document.addEventListener("keyup",function(e){if(e.target.nodeName.toUpperCase()!="BODY")return;var t=!1;e.which==37?t="/cn/2018/10/seq2seq-and-attention-machanism/":e.which==39&&(t="/cn/2018/11/computational-complexity-and-dynamic-programming/"),t&&(window.location=t)})</script><ins class=adsbygoogle style=display:block;text-align:center data-ad-layout=in-article data-ad-format=fluid data-ad-client=ca-pub-2608165017777396 data-ad-slot=1261604535></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({})</script><section class=comments><div id=disqus_thread></div><script>var disqus_config=function(){this.page.url="https://zeqiang.fun"+location.pathname};(function(){if(a=function(){var e=!0;try{e=window.self!==window.top}catch{}return e},a())return;var n,s,o,i,a,r="//.disqus.com/embed.js",e=document,t=e.createElement("script");if(t.src=r,t.async=!0,t.setAttribute("data-timestamp",+new Date),n=e.getElementById("disqus_thread"),s=!1,o=function(o){if(s)return;(e.head||e.body).appendChild(t),s=!0,o&&n.scrollIntoView()},t.onerror=function(){if(sessionStorage.getItem("failure-note"))return;n.innerText="Sorry, but you cannot make comments because Disqus failed to load for some reason. It is known to be blocked in China. If you are sure it is not blocked in your region, please refresh the page. 中国大陆地区读者需要翻墙才能发表评论。",sessionStorage.setItem("failure-note",!0)},location.hash.match(/^#comment-[0-9]+$/))return o(!0);i=function(){if(s)return;var e=n.getBoundingClientRect();e.top<window.innerHeight&&e.bottom>=0&&o()},window.addEventListener("load",i),e.addEventListener("scroll",i)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></section><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/show-language/prism-show-language.min.js></script><script>(function(){if(!self.Prism)return;Prism.languages.dos=Prism.languages.powershell,Prism.languages.gremlin=Prism.languages.groovy;var e={r:"R",python:"Python",xml:"XML",html:"HTML",yaml:"YAML",latex:"LaTeX",tex:"TeX",powershell:"PowerShell",javascript:"JavaScript",dos:"DOS",qml:"QML",json:"JSON",bash:"Bash",text:"Text",txt:"Text",sparql:"SPARQL",gremlin:"Gremlin",cypher:"Cypher",ngql:"nGQL",shell:"Shell",sql:"SQL",apacheconf:"Apache Configuration"};Prism.hooks.add("before-highlight",function(t){var n=e[t.language]||t.language;t.element.setAttribute("data-language",n)})})()</script><script async src=/js/fix-toc.js></script><script async src=/js/center-img.js></script><script async src=/js/right-quote.js></script><script async src=/js/fix-footnote.js></script><script async src=/js/external-link.js></script><script async src=/js/alt-title.js></script><script src=/js/no-highlight.js></script><script src=/js/math-code.js></script><script>window.MathJax={loader:{load:["[tex]/boldsymbol"]},tex:{tags:"all",inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"]],processEscapes:!0,processEnvironments:!0,packages:{"[+]":["boldsymbol"]}}}</script><script type=text/javascript id=MathJax-script async src=//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js crossorigin></script><script async src=/js/load-typekit.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js></script><script src=//cdn.jsdelivr.net/npm/vanilla-back-to-top@latest/dist/vanilla-back-to-top.min.js></script><script>addBackToTop({diameter:48})</script><hr><div class="copyright no-border-bottom"><div class=copyright-author-year><span>&copy; 2017-2021 Leo Van</span></div><div class=copyright-links><a href=https://github.com/leovan rel=noreferrer target=_blank>Github</a>
+<span>· </span><a href=https://orcid.org/0000-0002-9556-7821 rel=noreferrer target=_blank>ORCID</a>
+<span>· </span><span>I am Mr. Black.</span></div></div></footer></article></body></html>

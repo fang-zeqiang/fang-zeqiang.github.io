@@ -1,0 +1,496 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Ising 模型，Hopfield 网络和受限的玻尔兹曼机 (Ising, Hopfield and RBM) - Zeqiang Fang | 方泽强</title><meta name=referrer content="no-referrer"><meta property="og:title" content="Ising 模型，Hopfield 网络和受限的玻尔兹曼机 (Ising, Hopfield and RBM) - Zeqiang Fang | 方泽强"><meta name=description property="og:description" content="$\renewcommand{\sign}{\operatorname{sign}}$
+Ising 模型
+Ising 模型最早是由物理学家威廉·冷次在 1920 年发明的，他把该模型当成是一个给他学生恩斯特·易辛的问题。易辛在他一篇 1924 年的论文 1 中求得了一维易辛模型的解析解，并且证明它不会产生相变。 二维方晶格易辛模型相对于一维的难出许多，因此其解析的描述在一段时间之后才在 1943 年由拉斯·昂萨格给出 2。"><meta property="og:type" content="article"><meta property="og:site_name" content="Zeqiang Fang | 方泽强"><meta property="og:url" content="https://zeqiang.fun/cn/2018/01/ising-hopfield-and-rbm/"><meta name=author property="article:author" content="范叶亮"><meta name=date property="article:published_time" content="2018-01-17" scheme=YYYY-MM-DD><meta name=date property="article:modified_time" content="2018-01-17" scheme=YYYY-MM-DD><meta name=keywords property="article:tag" content="受限的玻尔兹曼机,RBM,Ising,Hopfield"><meta name=theme-color content="#0d0d0d"><link rel=icon type=image/png sizes=16x16 href=/images/web/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=/images/web/favicon-32x32.png><link rel=icon type=image/png sizes=48x48 href=/images/web/favicon-48x48.png><link rel=icon type=image/png sizes=62x62 href=/images/web/favicon-62x62.png><link rel=icon type=image/png sizes=192x192 href=/images/web/favicon-192x192.png><link rel=apple-touch-icon size=192x192 href=/images/web/icon-192x192.png><link rel=manifest href=/manifest.json><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://zeqiang.fun/cn"},"name":"Ising 模型，Hopfield 网络和受限的玻尔兹曼机 (Ising, Hopfield and RBM)","headline":"Ising 模型，Hopfield 网络和受限的玻尔兹曼机 (Ising, Hopfield and RBM)","description":"\u003cp\u003e\u003ccode\u003e$\\renewcommand{\\sign}{\\operatorname{sign}}$\u003c/code\u003e\u003c/p\u003e\n\u003ch2 id=\"ising-模型\"\u003eIsing 模型\u003c/h2\u003e\n\u003cp\u003e\u003ca href=\"https://zh.wikipedia.org/zh/%E6%98%93%E8%BE%9B%E6%A8%A1%E5%9E%8B\"\u003eIsing 模型\u003c/a\u003e最早是由物理学家威廉·冷次在 1920 年发明的，他把该模型当成是一个给他学生恩斯特·易辛的问题。易辛在他一篇 1924 年的论文 \u003csup id=\"fnref:1\"\u003e\u003ca href=\"#fn:1\" class=\"footnote-ref\" role=\"doc-noteref\"\u003e1\u003c/a\u003e\u003c/sup\u003e 中求得了一维易辛模型的解析解，并且证明它不会产生相变。 二维方晶格易辛模型相对于一维的难出许多，因此其解析的描述在一段时间之后才在 1943 年由拉斯·昂萨格给出 \u003csup id=\"fnref:2\"\u003e\u003ca href=\"#fn:2\" class=\"footnote-ref\" role=\"doc-noteref\"\u003e2\u003c/a\u003e\u003c/sup\u003e。\u003c/p\u003e","genre":["机器学习","表示学习"],"datePublished":"2018-01-17","dateModified":"2018-01-17","wordCount":"9715","keywords":["受限的玻尔兹曼机","RBM","Ising","Hopfield"],"image":["https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/ising-different-steps.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/ising-different-t.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/hopfield-network.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/digits.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/digits-test.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/digits-test-results.gif","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/digits-test-results.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/tsp-best-solution-path.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/bbrbm-mnist-errs.png","https://zeqiang.fun/images/cn/2018-01-17-ising-hopfield-and-rbm/bbrbm-mnist.png"],"author":{"@type":"Person","name":"范叶亮"},"publisher":{"@type":"Organization","name":"范叶亮","logo":{"@type":"ImageObject","url":"https://zeqiang.fun/images/web/publisher-logo.png"}},"url":"https://zeqiang.fun/cn/2018/01/ising-hopfield-and-rbm/"}</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js></script><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/6.5.95/css/materialdesignicons.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-.min.css><script async src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js></script><link rel=stylesheet type=text/css href=/css/fonts.css><link rel=stylesheet type=text/css href=/css/style.css><link rel=stylesheet type=text/css href=/css/light.css><link rel=stylesheet type=text/css href=/css/dark.css id=dark-mode-style disabled><link rel=stylesheet type=text/css href=/css/icons.css><link rel=stylesheet type=text/css href=/css/print.css></head><body class=cn><header class=masthead><div class=logo></div><p class=slogan>优雅永不过时</p><nav class=menu><ul><li><a href=/>首页</a></li><li><a href=/cn/>博客</a></li><li><a href=/categories/>分类</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/about/>关于</a></li><li><a href=/cn/resume/>简历</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/index.xml target=_blank type=application/rss+xml title="RSS feed">订阅</a></li><li><a href=https://github.com/fang-zeqiang/fang-zeqiang.github.io/blob/master/LICENSE target=_blank title="Attribution-NonCommercial-ShareAlike 4.0 International">版权</a></li><li class="light-dark-mode no-border-bottom"><a id=light-dark-mode-action><span id=light-dark-mode-icon class="mdi mdi-weather-night"></span></a></li></ul></nav><script src=/js/toggle-theme.js></script></header><article class=main><header class=title><h1>Ising 模型，Hopfield 网络和受限的玻尔兹曼机 (Ising, Hopfield and RBM)</h1><h3>范叶亮 /
+2018-01-17</h3><h3 class=post-meta><strong>分类: </strong><a href=/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0>机器学习</a>, <a href=/categories/%E8%A1%A8%E7%A4%BA%E5%AD%A6%E4%B9%A0>表示学习</a>
+/
+<strong>标签: </strong><span>受限的玻尔兹曼机</span>, <span>RBM</span>, <span>Ising</span>, <span>Hopfield</span>
+/
+<strong>字数: </strong>9715</h3><hr></header><p><code>$\renewcommand{\sign}{\operatorname{sign}}$</code></p><h2 id=ising-模型>Ising 模型</h2><p><a href=https://zh.wikipedia.org/zh/%E6%98%93%E8%BE%9B%E6%A8%A1%E5%9E%8B>Ising 模型</a>最早是由物理学家威廉·冷次在 1920 年发明的，他把该模型当成是一个给他学生恩斯特·易辛的问题。易辛在他一篇 1924 年的论文 <sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup> 中求得了一维易辛模型的解析解，并且证明它不会产生相变。 二维方晶格易辛模型相对于一维的难出许多，因此其解析的描述在一段时间之后才在 1943 年由拉斯·昂萨格给出 <sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>。</p><p>Ising 模型假设铁磁物质是由一堆规则排列的小磁针构成，每个磁针只有上下两个方向。相邻的小磁针之间通过能量约束发生相互作用，同时受到环境热噪声的干扰而发生磁性的随机转变。涨落的大小由关键的温度参数决定，温度越高，随机涨落干扰越强，小磁针越容易发生无序而剧烈地状态转变，从而让上下两个方向的磁性相互抵消，整个系统消失磁性，如果温度很低，则小磁针相对宁静，系统处于能量约束高的状态，大量的小磁针方向一致，铁磁系统展现出磁性。而当系统处于临界温度 <code>$T_C$</code> 时，Ising 模型表现出一系列幂律行为和自相似现象 <sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>。</p><p>由于 Ising 模型的高度抽象，可以很容易地将它应用到其他领域之中。例如，将每个小磁针比喻为某个村落中的村民，而将小磁针上下的两种状态比喻成个体所具备的两种政治观点，相邻小磁针之间的相互作用比喻成村民之间观点的影响，环境的温度比喻成每个村民对自己意见不坚持的程度，这样 Ising 模型就可以建模该村落中不同政治见解的动态演化。在社会科学中，人们已经将 Ising 模型应用于股票市场、种族隔离、政治选择等不同的问题。另一方面，如果将小磁针比喻成神经元细胞，向上向下的状态比喻成神经元的激活与抑制，小磁针的相互作用比喻成神经元之间的信号传导，那么，Ising 模型的变种还可以用来建模神经网络系统，从而搭建可适应环境、不断学习的机器，例如 Hopfield 网络或 Boltzmann 机。</p><p>考虑一个二维的情况</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/ising-model.svg alt></p><p>如图所示，每个节点都有两种状态 <code>$s_i \in \{+1, -1\}$</code>，则我们可以定义这个系统的能量为</p><p><code>$$ E = -H \sum_{i=1}^{N}{s_i} - J \sum_{&lt;i, j>}{s_i s_j} $$</code></p><p>其中 <code>$H$</code> 为外界磁场的强度，<code>$J$</code> 为能量耦合常数，<code>$\sum_{&lt;i, j>}$</code>表示对于相邻的两个节点的函数值求和。因此，可以得出</p><ol><li>当每个节点的方向同外部磁场一致时，系统能量越小；反之系统能量越大。</li><li>对于 <code>$J > 0$</code>，当相邻的节点方向相同时，系统能量越小；反之系统能量越大。</li></ol><p>对于整个系统的演变，除了系统的总能量以外，还受到节点所处环境的热噪声影响。我们利用温度 <code>$T$</code> 表示环境对节点的影响，当 <code>$T$</code> 越高时，节点状态发生变化的可能性越大。此时，则有两种力量作用在每个节点上</p><ol><li>节点邻居和外部磁场的影响，这种影响使得当前节点尽可能的同其邻居和外部磁场保持一致，即尽可能是系统的总能量达到最小。</li><li>环境的影响，这种影响使得每个节点的状态以一定的概率发生随机变化。</li></ol><p>不难想像，当 <code>$T = 0$</code> 时，节点状态完全受其邻居和外部磁场影响，当 <code>$J = 0, H = 0$</code> 时，节点处于完全的随机状态。</p><p>对于 Ising 模型，我们利用蒙特卡罗方法进行模拟。初始化系统状态为 <code>$s_i^{\left(0\right)}$</code>，对于任意时刻 <code>$t$</code>，对其状态 <code>$s_i^{\left(t\right)}$</code>进行一个改变，将其中一个节点变为相反的状态，得到新的状态 <code>$s'_i$</code></p><p><code>$$ s_i^{\left(t+1\right)} = \begin{cases} s'_i & \text{with probablity of } \mu \\ s_i^{\left(t\right)} & \text{with probablity of } 1-\mu \end{cases} $$</code></p><p>其中 <code>$\mu = \min\left\lbrace\dfrac{e^{E\left(s_i^{\left(t\right)}\right) - E\left(s'_i\right)}}{kT}, 1\right\rbrace$</code> 表示接受转移的概率；<code>$k \approx 1.38 \times 10^{23}$</code> 为玻尔兹曼常数。我们利用蒙特卡罗方法对其进行模拟 <code>$T = 4J/k$</code>的情况，我们分别保留第 <code>$0, 1, 5, 50, 500, 5000$</code> 步的模拟结果</p><pre><code class=language-r># 每一轮状态转移
+each_round &lt;- function(current_matrix, ising_config) {
+    n_row &lt;- nrow(current_matrix)
+    n_col &lt;- ncol(current_matrix)
+    
+    for (i in 1:n_row) {
+        for (j in 1:n_col) {
+            current_row &lt;- sample(1:n_row, 1)
+            current_col &lt;- sample(1:n_col, 1)
+            s &lt;- current_matrix[current_row, current_col]
+            e &lt;- -(current_matrix[(current_row-1-1)%%n_row+1, current_col] +
+                current_matrix[current_row, (current_col-1-1)%%n_col+1] +
+                current_matrix[(current_row+1)%%n_row, current_col] +
+                current_matrix[current_row, (current_col+1)%%n_col]) *
+                s * ising_config$j
+            mu &lt;- min(exp((e + e) / (ising_config$k * ising_config$t)), 1)
+            mu_random &lt;- runif(1)
+            
+            if (mu_random &lt; mu) {
+                s &lt;- -1 * s
+            }
+            
+            current_matrix[current_row, current_col] &lt;- s
+        }
+    }
+    
+    current_matrix
+}
+
+# Ising 模拟
+ising_simulation &lt;- function(N, iter, ising_config, saved_steps) {
+    set.seed(112358)
+    current_matrix &lt;- matrix(sample(0:1, N^2, replace = T), N, N)*2-1
+    saved_matrix &lt;- list()
+    
+    if (0 %in% saved_steps) {
+        saved_matrix &lt;- c(saved_matrix, list(current_matrix))
+    }
+    
+    for (i in 1:iter) {
+        if (i %in% saved_steps) {
+            saved_matrix &lt;- c(saved_matrix, list(current_matrix))
+        }
+        
+        current_matrix &lt;- each_round(current_matrix, ising_config)
+        
+        if (i %% 1000 == 0) {
+            cat(paste0(&quot;Steps: &quot;, i, '\n'))
+        }
+    }
+    
+    saved_matrix
+}
+
+# T = 4J/K，方便模拟取 j = 1, k = 1, t = 4
+ising_config &lt;- list(j = 1, k = 1, t = 4)
+diff_steps_matrix &lt;- ising_simulation(100, 5000, ising_config,
+                                      c(0, 1, 5, 50, 500, 5000))
+</code></pre><p>模拟结果可视化效果如图所示</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/ising-different-steps.png alt></p><p>对于二维的 Ising 模型，存在一个相变点，在相变点上的温度 <code>$T_c$</code> 满足</p><p><code>$$ \sinh\left(\dfrac{2J_1}{kT_c}\right) \sinh\left(\dfrac{2J_2}{kT_c}\right) = 1 $$</code></p><p>若 <code>$J_1 = J_2$</code>，则</p><p><code>$$ T_c = \dfrac{2J}{k \ln\left(1 + \sqrt{2}\right)} \approx 2.27 \dfrac{J}{k} $$</code></p><p>称之为临界温度。当温度小于临界值的时候，Ising 模型中大多数节点状态相同，系统处于较为秩序的状态。当温度大于临界值的时候，大多数节点的状态较为混乱，系统处于随机的状态。而当温度接近临界的时候，系统的运行介于随机与秩序之间，也就是进入了混沌的边缘地带，这种状态称为临界状态。</p><p>我们模拟不同温度下，系统在运行 <code>$50$</code> 步时的状态</p><pre><code class=language-r>ising_config_t &lt;- c(1, 2, 2.27, 2.5, 3, 6)
+diff_t_matrix &lt;- lapply(ising_config_t, function(t) {
+    ising_config &lt;- list(j = 1, k = 1, t = t)
+    ising_simulation(100, 50, ising_config, c(50))
+})
+</code></pre><p>模拟结果可视化效果如图所示</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/ising-different-t.png alt></p><h2 id=hopfield-神经网络>Hopfield 神经网络</h2><p>Hopfield 神经网络 <sup id=fnref:4><a href=#fn:4 class=footnote-ref role=doc-noteref>4</a></sup> 是一种基于能量的反馈人工神经网络。Hopfield 神经网络分为离散型 (Discrete Hopfield Neural Network, DHNN) 和 连续性 (Continues Hopfield Neural Network, CHNN)。</p><h3 id=离散型-hopfield-神经网络>离散型 Hopfield 神经网络</h3><h4 id=网络结构>网络结构</h4><p>对于离散型 Hopfield 神经网络，其网络结果如下</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/hopfield-network.png alt></p><p>对于具有 <code>$n$</code> 个神经元的网络，我们设 <code>$t$</code> 时刻的网络状态为 <code>$\boldsymbol{X}^{\left(t\right)} = \left(x_1^{\left(t\right)}, x_2^{\left(t\right)}, ..., x_n^{\left(t\right)}\right)^T$</code>，对于 <code>$t+1$</code> 时刻网络的状态</p><p><code>$$ x_i^{\left(t+1\right)} = f \left(net_i\right) $$</code></p><p>其中，DHNN 中 <code>$f$</code> 多为符号函数，即</p><p><code>$$ x_i = \sign \left(net_i\right) = \begin{cases} 1, net_i \geq 0 \\ -1, net_i &lt; 0 \end{cases} $$</code></p><p><code>$net_i$</code> 为一个节点的输入，为</p><p><code>$$ net_i = \sum_{j=1}^{n}{\left(w_{ij}x_j - T_i\right)} $$</code></p><p>其中 <code>$T_i$</code> 为每个神经元的阈值，对于 DHNN，一般有 <code>$w_{ii} = 0, w_{ij} = w_{ji}$</code>，当反馈网络稳定后，稳定后的状态即为网络的输出。网络的更新主要有两种状态，<strong>异步方式</strong>和<strong>同步方式</strong>。</p><p>对于异步方式的更新方法，每一次仅改变一个神经元 <code>$j$</code> 的状态，即</p><p><code>$$ x_i^{\left(t+1\right)} = \begin{cases} \sign\left(net_i^{\left(t\right)}\right), i = j \\ x_i^{\left(t\right)}, i \neq j \end{cases} $$</code></p><p>对于同步方式的更新方法，每一次需改变所有神经元的状态，即</p><p><code>$$ x_i^{\left(t+1\right)} = \sign\left(net_i^{\left(t\right)}\right) $$</code></p><h4 id=网络稳定性>网络稳定性</h4><p>我们可以将反馈网络看做一个非线性动力学系统，因此这个系统最后可能会收敛到一个稳态，或在有限状态之间振荡，亦或是状态为无穷多个即混沌现象。对于 DHNN 因为其网络状态是有限的，因此不会出现混沌的现象。若一个反馈网络达到一个稳态状态 <code>$\boldsymbol{X}$</code> 时，即 <code>$\boldsymbol{X}^{\left(t+1\right)} = \boldsymbol{X}^{\left(t\right)}$</code> ，则称这个状态为一个吸引子。在 Hopfield 网络结构和权重确定的情况下，其具有 <code>$M$</code> 个吸引子，因此我们可以认为这个网络具有存储 <code>$M$</code> 个记忆的能力。</p><p>设 <code>$\boldsymbol{X}$</code> 为网络的一个吸引子，权重矩阵 <code>$\boldsymbol{W}$</code> 是一个对称阵，则定义 <code>$t$</code> 时刻网络的能量函数为</p><p><code>$$ E\left(t\right) = -\dfrac{1}{2} \boldsymbol{X}^{\left(t\right)T} \boldsymbol{W} \boldsymbol{X}^{\left(t\right)} + \boldsymbol{X}^{\left(t\right)T} \boldsymbol{T} $$</code></p><p>则定义网络能量的变化量</p><p><code>$$ \Delta E\left(t\right) = E\left(t+1\right) - E\left(t\right) $$</code></p><p>则以<strong>异步更新</strong>方式，不难推导得出</p><p><code>$$ \begin{equation} \begin{split} \Delta E\left(t\right) = -\Delta x_i^{\left(t\right)} \left(\sum_{j=1}^{n}{\left(w_{ij}x_j - T_j\right)}\right) - \dfrac{1}{2} \Delta x_i^{\left(t\right)2} w_{ii} \end{split} \end{equation} $$</code></p><p>由于网络中的神经元不存在自反馈，即 <code>$w_{ii} = 0$</code>，则上式可以化简为</p><p><code>$$ \Delta E\left(t\right) = -\Delta x_i^{\left(t\right)} net_i^{\left(t\right)} $$</code></p><p>因此，对于如上的能量变化，可分为 3 中情况：</p><ol><li>当 <code>$x_i^{\left(t\right)} = -1, x_i^{\left(t+1\right)} = 1$</code> 时，<code>$\Delta x_i^{\left(t\right)} = 2, net_i^{\left(t\right)} \geq 0$</code>，则可得 <code>$\Delta E \left(t\right) \leq 0$</code>。</li><li>当 <code>$x_i^{\left(t\right)} = 1, x_i^{\left(t+1\right)} = -1$</code> 时，<code>$\Delta x_i^{\left(t\right)} = -2, net_i^{\left(t\right)} &lt; 0$</code>，则可得 <code>$\Delta E \left(t\right) &lt; 0$</code>。</li><li>当 <code>$x_i^{\left(t\right)} = x_i^{\left(t+1\right)}$</code> 时，<code>$\Delta x_i^{\left(t\right)} = 0$</code>，则可得 <code>$\Delta E \left(t\right) = 0$</code>。</li></ol><p>则对于任何情况，<code>$\Delta E \left(t\right) \leq 0$</code>，也就是说在网络不断变化的过程中，网络的总能量是一直下降或保持不变的，因此网络的能量最终会收敛到一个常数。</p><p>设 <code>$\boldsymbol{X}'$</code> 为吸引子，对于异步更新方式，若<strong>存在</strong>一个变换顺序，使得网络可以从状态 <code>$\boldsymbol{X}$</code> 转移到 <code>$\boldsymbol{X}'$</code>，则称 <code>$\boldsymbol{X}$</code> 弱吸引到 <code>$\boldsymbol{X}'$</code>，这些 <code>$\boldsymbol{X}$</code> 的集合称之为 <code>$\boldsymbol{X}$</code> 的弱吸引域；若对于<strong>任意</strong>变换顺序，都能够使得网络可以从状态 <code>$\boldsymbol{X}$</code> 转移到 <code>$\boldsymbol{X}'$</code>，则称 <code>$\boldsymbol{X}$</code> 强吸引到 <code>$\boldsymbol{X}'$</code>，对于这些 <code>$\boldsymbol{X}$</code> 称之为 <code>$\boldsymbol{X}$</code> 的强吸引域。</p><p>对于 Hopfield 网络的权重，我们利用 Hebbian 规则进行设计。Hebbian 规则认为如果两个神经元同步激发，则它们之间的权重增加；如果单独激发，则权重减少。则对于给定的 <code>$p$</code> 个模式样本 <code>$\boldsymbol{X}^k, k = 1, 2, ..., p$</code>，其中 <code>$x \in \{-1, 1\}^n$</code> 且样本之间两两正交，则权重计算公式为</p><p><code>$$ w_{ij} = \dfrac{1}{n} \sum_{k=1}^{p}{x_i^k x_j^k} $$</code></p><p>则对于给定的样本 <code>$\boldsymbol{X}$</code> 确定为网络的吸引子，但对于有些非给定的样本也可能是网络的吸引子，这些吸引子称之为伪吸引子。以上权重的计算是基于两两正交的样本得到的，但真实情况下很难保证样本两两正交，对于非正交的模式，网络的存储能力则会大大下降。根据 Abu-Mostafa<sup id=fnref:5><a href=#fn:5 class=footnote-ref role=doc-noteref>5</a></sup> 的研究表明，当模式的数量 <code>$p$</code> 大于 <code>$0.15 n$</code> 时，网络的推断就很可能出错，也就是结果会收敛到伪吸引子上。</p><h4 id=示例>示例</h4><p>我们通过一个手写数字识别的例子介绍一些 Hopfield 网络的功能，我们存在如下 10 个数字的图片，每张为像素 16*16 的二值化图片，其中背景色为白色，前景色为黑色 (每个图片的名称为 <code>num.png</code>，图片位于 <code>/images/cn/2018-01-17-ising-hopfield-and-rbm</code> 目录)。</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/digits.png alt></p><p>首先我们载入每张图片的数据</p><pre><code class=language-r>library(EBImage)
+
+# 载入数据
+digits &lt;- lapply(0:9, function(num) {
+    readImage(paste0(num, '.png'))
+})
+
+# 转换图像为 16*16 的一维向量
+# 将 (0, 1) 转换为 (-1, 1)
+digits_patterns &lt;- lapply(digits, function(digit) {
+    pixels &lt;- c(digit)
+    pixels * 2 - 1
+})
+</code></pre><p>接下来利用这 10 个模式训练一个 Hopfield 网络</p><pre><code class=language-r>#' 训练 Hopfield 网络
+#' 
+#' @param n 网络节点个数
+#' @param pattern_list 模式列表
+#' @return 训练好的 Hopfield 网络
+train_hopfield &lt;- function(n, pattern_list) {
+    weights &lt;- matrix(rep(0, n*n), n, n)
+    n_patterns &lt;- length(pattern_list)
+    
+    for (i in 1:n_patterns) {
+        weights &lt;- weights + pattern_list[[i]] %o% pattern_list[[i]]
+    }
+    diag(weights) &lt;- 0
+    weights &lt;- weights / n_patterns
+    
+    list(weights = weights, n = n)
+}
+
+# 训练 Hopfield 网络
+digits_hopfield_network &lt;- train_hopfield(16*16, digits_patterns)
+</code></pre><p>为了测试 Hopfiled 网络的记忆能力，我们利用 10 个模式生成一些测试数据，我们分别去掉图像的右边或下边的 5 个像素，生成新的 20 张测试图片</p><pre><code class=language-r># 构造测试数据
+digits_test_remove_right &lt;- lapply(0:9, function(num) {
+    digit_test &lt;- digits[[num+1]]
+    digit_test[12:16, ] &lt;- 1
+    digit_test
+})
+digits_test_remove_bottom &lt;- lapply(0:9, function(num) {
+    digit_test &lt;- digits[[num+1]]
+    digit_test[, 12:16] &lt;- 1
+    digit_test
+})
+digits_test &lt;- c(digits_test_remove_right, digits_test_remove_bottom)
+
+# 转换图像为 16*16 的一维向量
+# 将 (0, 1) 转换为 (-1, 1)
+digits_test_patterns &lt;- lapply(digits_test, function(digit) {
+    pixels &lt;- c(digit)
+    pixels * 2 - 1
+})
+</code></pre><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/digits-test.png alt></p><p>我们利用训练好的 Hopfield 网络运行测试数据，我们迭代 300 次并保存最后的网络输出</p><pre><code class=language-r>#' 运行 Hopfiled 网络
+#' @param hopfield_network 训练好的 Hopfield 网络
+#' @param pattern 输入的模式
+#' @param max_iter 最大迭代次数
+#' @param save_history 是否保存状态变化历史
+#' @return 最终的模式 (以及历史模式)
+run_hopfield &lt;- function(hopfield_network, pattern,
+                         max_iter = 100, save_history = T) {
+    last_pattern &lt;- pattern
+    history_patterns &lt;- list()
+    
+    for (iter in 1:max_iter) {
+        current_pattern &lt;- last_pattern
+        
+        i &lt;- round(runif(1, 1, hopfield_network$n))
+        net_i &lt;- hopfield_network$weights[i, ] %*% current_pattern
+        current_pattern[i] &lt;- ifelse(net_i &lt; 0, -1, 1)
+        
+        if (save_history) {
+            history_patterns[[iter]] &lt;- last_pattern
+        }
+        
+        last_pattern &lt;- current_pattern
+    }
+    
+    list(history_patterns = history_patterns,
+         final_pattern = last_pattern)
+}
+
+# 运行 Hopfield 网络，获取测试数据结果
+digits_test_results_patterns &lt;- lapply(digits_test_patterns,
+                                       function(pattern) {
+    run_hopfield(digits_hopfield_network, pattern, max_iter = 300)
+})
+
+# 转换测试数据结果为图片
+digits_test_results &lt;- lapply(digits_test_results_patterns,
+                              function(result) {
+    each_dim &lt;- sqrt(digits_hopfield_network$n)
+    Image((result$final_pattern + 1) / 2,
+          dim = c(each_dim, each_dim),
+          colormode = 'Grayscale')
+})
+</code></pre><p>网络变换过程中，图像的变换如图所示</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/digits-test-results.gif alt></p><p>最终网络的输出如图所示</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/digits-test-results.png alt></p><p>从结果中可以看出，部分测试图片还是得到了比较好的恢复，但如上文所说，由于我们给定的模式之间并不是两两正交的，因此，网络的推断就很可能出错 (例如：数字 5 恢复的结果更像 9 多一些)，甚至结果会收敛到伪吸引子上。</p><h3 id=连续型-hopfield-神经网络>连续型 Hopfield 神经网络</h3><h4 id=网络结构-1>网络结构</h4><p>连续型 Hopfield 网络相比于离散型 Hopfield 网络的主要差别在于：</p><ol><li>网络中所有的神经元随时间 <code>$t$</code> 同时更新，网络状态随时间连续变化。</li><li>神经元的状态转移函数为一个 S 型函数，例如
+<code>$$ v_i = f\left(u_i\right) = \dfrac{1}{1 + e^{\dfrac{-2 u_i}{\gamma}}} = \dfrac{1}{2} \left(1 + \tanh \dfrac{u_i}{\gamma}\right) $$</code>
+其中，<code>$v_i$</code> 表示一个神经元的输出，<code>$u_i$</code> 表示一个神经元的输入。</li></ol><p>对于理想情况，网络的能量函数可以写为<sup id=fnref:6><a href=#fn:6 class=footnote-ref role=doc-noteref>6</a></sup></p><p><code>$$ E = -\dfrac{1}{2} \sum_{i=1}^{n}{\sum_{j=1}^{n}{w_{ij} v_i v_j}} - \sum_{i=1}^{n} v_i I_i $$</code></p><p>可以得出，随着网络的演变，网络的总能量是降低的，随着网络中节点的不断变化，网络最终收敛到一个稳定的状态。</p><h4 id=tsp-问题求解>TSP 问题求解</h4><p>旅行推销员问题 (Travelling salesman problem, TSP) 是指给定一系列城市和每对城市之间的距离，求解访问每一座城市一次并回到起始城市的最短路径 <sup id=fnref:7><a href=#fn:7 class=footnote-ref role=doc-noteref>7</a></sup>。TSP 问题是一个 NP-hard 问题 <sup id=fnref:8><a href=#fn:8 class=footnote-ref role=doc-noteref>8</a></sup>。</p><p>对于 TSP 问题，我们给定一个城市指之间的距离矩阵</p><p><code>$$ D = \left\lgroup \begin{array}{cccc} d_{11} & d_{12} & \cdots & d_{1n} \\ d_{21} & d_{22} & \cdots & d_{2n} \\ \vdots & \vdots & & \vdots \\ d_{n1} & d_{n2} & \cdots & d_{nn} \end{array} \right\rgroup $$</code></p><p>其中 <code>$d_{ij} = d_{ji}, i \neq j$</code> 表示城市 <code>$i$</code> 和城市 <code>$j$</code> 之间的距离，<code>$d_{ij} = 0, i = j$</code>。TSP 问题的优化目标是找到一条路径访问每一座城市一次并回到起始城市，我们利用一个矩阵表示访问城市的路径</p><p><code>$$ V = \left\lgroup \begin{array}{cccc} v_{11} & v_{12} & \cdots & v_{1n} \\ v_{21} & v_{22} & \cdots & v_{2n} \\ \vdots & \vdots & & \vdots \\ v_{n1} & v_{n2} & \cdots & v_{nn} \end{array} \right\rgroup $$</code></p><p>其中 <code>$v_{xi} = 1$</code> 表示第 <code>$i$</code> 次访问城市 <code>$x$</code>，因此对于矩阵 <code>$V$</code>，其每一行每一列仅有一个元素值为 <code>$1$</code>，其他元素值均为 <code>$0$</code>。</p><p>对于 TSP 问题，我们可以得到如下约束条件</p><ul><li>城市约束</li></ul><p>因为每个城市只能访问一次，因此对于第 <code>$x$</code> 行仅能有一个元素是 <code>$1$</code>，其他均为 <code>$0$</code>，即任意两个相邻元素的乘积为 <code>$0$</code></p><p><code>$$ \sum_{i=1}^{n-1}{\sum_{j=i+1}^{n}{v_{xi}v_{xj}}} = 0 $$</code></p><p>则对于城市约束，我们得到该约束对应的能量分量为</p><p><code>$$ E_1 = \dfrac{1}{2} A \sum_{x=1}^{n}{\sum_{i=1}^{n-1}{\sum_{j=i+1}^{n}{v_{xi}v_{xj}}}} $$</code></p><ul><li>时间约束</li></ul><p>因为每一时刻仅能够访问一个城市，因此对于第 <code>$i$</code> 行仅能有一个元素是 <code>$1$</code>，其他均为 <code>$0$</code>，即任意两个相邻元素的乘积为 <code>$0$</code></p><p><code>$$ \sum_{x=1}^{n-1}{\sum_{y=x+1}^{n}{v_{xi}v_{yi}}} = 0 $$</code></p><p>则对于时间约束，我们得到该约束对应的能量分量为</p><p><code>$$ E_2 = \dfrac{1}{2} B \sum_{i=1}^{n}{\sum_{x=1}^{n-1}{\sum_{y=x+1}^{n}{v_{xi}v_{yi}}}} $$</code></p><ul><li>有效性约束</li></ul><p>当矩阵 <code>$V$</code> 中所有的元素均为 <code>$0$</code> 的时候，可得 <code>$E_1 = 0, E_2 = 0$</code>，但显然这并不是一个有效的路径，因此我们需要保证矩阵 <code>$V$</code> 中元素值为 <code>$1$</code> 的个数为 <code>$n$</code>，即</p><p><code>$$ \sum_{x=1}^{n}{\sum_{i=1}^{n}{v_{xi}}} = n $$</code></p><p>则对于有效性约束，我们得到该约束对应的能量分量为</p><p><code>$$ E_3 = \dfrac{1}{2} C \left(\sum_{x=1}^{n}{\sum_{i=1}^{n}{v_{xi}}} - n\right)^2 $$</code></p><ul><li>路径长度约束</li></ul><p>如上三个约束仅能够保证我们的路径是有效的，但并不一定是最优的。根绝 TSP 问题的优化目标，我们需要引入一个反映路径长度的能量分量，并保证该能量分量随着路径长度的减小而减小。访问两个城市 <code>$x, y$</code> 有两种形式，<code>$x \to y$</code> 或 <code>$y \to x$</code>，如果城市 <code>$x$</code> 和城市 <code>$y$</code> 在旅行中顺序相邻，则 <code>$v_{xi}v_{y,i+1} = 1, v_{xi}v_{y,i-1} = 0$</code>，反之亦然。则反映路径长度的能量分量可以定义为</p><p><code>$$ E_4 = \dfrac{1}{2} D \sum_{x=1}^{n}{\sum_{y=1}^{n}{\sum_{i=1}^{n}{d_{xy}\left(v_{xi}v_{y,i+1} + v_{xi}v_{y,i-1}\right)}}} $$</code></p><p>综上所述，TSP 问题的能量函数定义为</p><p><code>$$ E = E_1 + E_2 + E_3 + E_4 $$</code></p><p>其中，<code>$A, B, C, D > 0$</code> 分别为每个能量分量的权重。针对这样的能量函数，我们可得对应神经元 <code>$x_i$</code> 和 <code>$y_i$</code> 之间的权重为</p><p><code>$$ \begin{equation} \begin{split} w_{x_i, y_i} = &-2A \delta_{xy} \left(1-\delta_{xy}\right) - 2B \delta_{ij} \left(1-\delta_{xy}\right) \\ &- 2C -2D d_{xy} \left(\delta_{j, i+1} + \delta_{i, j+1}\right) \end{split} \end{equation} $$</code></p><p>其中</p><p><code>$$ \delta_{xy} = \begin{cases} 1, x = y \\ 0, x \neq y \end{cases} , \delta_{ij} = \begin{cases} 1, i = j \\ 0, i \neq j \end{cases} $$</code></p><p>因此可以得到网络关于时间的导数</p><p><code>$$ \begin{equation} \begin{split} \dfrac{d u_{xi}}{d t} = &-2A \sum_{j \neq i}^{n}{v_{xj}} - 2B \sum_{y \neq x}^{n}{v_{yi}} - 2C \left(\sum_{x=1}^{n}{\sum_{j=1}^{n}{v_{xj}}} - n\right) \\ &- 2D \sum_{y \neq x}^{n}{d_{xy}\left(v_{y, i+1} + v_{y, i-1}\right)} - \dfrac{u_{xi}}{\tau} \end{split} \end{equation} $$</code></p><p>据此，我们以一个 10 个城市的数据为例，利用 CHNN 求解 TSP 问题，其中 10 个城市的座标为</p><table><thead><tr><th style=text-align:center>城市</th><th style=text-align:center>横座标</th><th style=text-align:center>纵座标</th></tr></thead><tbody><tr><td style=text-align:center>A</td><td style=text-align:center>0.4000</td><td style=text-align:center>0.4439</td></tr><tr><td style=text-align:center>B</td><td style=text-align:center>0.2439</td><td style=text-align:center>0.1463</td></tr><tr><td style=text-align:center>C</td><td style=text-align:center>0.1707</td><td style=text-align:center>0.2293</td></tr><tr><td style=text-align:center>D</td><td style=text-align:center>0.2293</td><td style=text-align:center>0.7610</td></tr><tr><td style=text-align:center>E</td><td style=text-align:center>0.5171</td><td style=text-align:center>0.9414</td></tr><tr><td style=text-align:center>F</td><td style=text-align:center>0.8732</td><td style=text-align:center>0.6536</td></tr><tr><td style=text-align:center>G</td><td style=text-align:center>0.6878</td><td style=text-align:center>0.5219</td></tr><tr><td style=text-align:center>H</td><td style=text-align:center>0.8488</td><td style=text-align:center>0.3609</td></tr><tr><td style=text-align:center>I</td><td style=text-align:center>0.6683</td><td style=text-align:center>0.2536</td></tr><tr><td style=text-align:center>J</td><td style=text-align:center>0.6195</td><td style=text-align:center>0.2634</td></tr></tbody></table><p>已知的最优路线为 <code>$A \to D \to E \to F \to G \to H \to I \to J \to B \to C \to A$</code>，最优路线的路径长度为 <code>$2.6907$</code>。我们使用如下参数求解 TSP 问题，初始化 <code>$u_{init} = -\dfrac{\gamma}{2} \ln\left(n - 1\right)$</code>，<code>$\gamma = 0.02$</code>，学习率 <code>$\alpha = 0.0001$</code>，神经元激活阈值 <code>$\theta = 0.7$</code>，<code>$\tau = 1$</code>，能量分量权重参数 <code>$A = 500, B = 500, C = 1000, D = 500$</code>，单次迭代最大次数为 1000，共模拟 100 次。</p><pre><code class=language-r># 城市座标
+cities &lt;- data.frame(
+    l = LETTERS[1:10],
+    x = c(0.4000, 0.2439, 0.1707, 0.2293, 0.5171,
+          0.8732, 0.6878, 0.8488, 0.6683, 0.6195),
+    y = c(0.4439, 0.1463, 0.2293, 0.7610, 0.9414,
+          0.6536, 0.5219, 0.3609, 0.2536, 0.2634)
+)
+
+# 通过城市座标构建距离矩阵
+distance_matrix &lt;- function(points) {
+    n &lt;- nrow(points)
+    d &lt;- matrix(rep(0, n^2), n, n)
+    
+    for (i in 1:n) {
+        for (j in i:n) {
+            distance &lt;- sqrt((points[i, ]$x - points[j, ]$x)^2 +
+                                 (points[i, ]$y - points[j, ]$y)^2)
+            d[i, j] &lt;- distance
+            d[j, i] &lt;- distance
+        }
+    }
+    
+    d
+}
+
+# 结果约束校验
+check_path_valid &lt;- function(v, n) {
+    # 城市约束
+    c1 &lt;- 0
+    for (x in 1:n) {
+        for (i in 1:(n-1)) {
+            for (j in (i+1):n) {
+                c1 &lt;- c1 + v[x, i] * v[x, j]
+            }
+        }
+    }
+    
+    # 时间约束
+    c2 &lt;- 0
+    for (i in 1:n) {
+        for (x in 1:(n-1)) {
+            for (y in (x+1):n) {
+                c2 &lt;- c2 + v[x, i] * v[y, i]
+            }
+        }
+    }
+    
+    # 有效性约束
+    c3 &lt;- sum(v)
+    
+    ifelse(c1 == 0 &amp; c2 == 0 &amp; c3 == n, T, F)
+}
+
+# 根据结果矩阵获取路径
+v_to_path &lt;- function(v, n) {
+    p &lt;- c()
+    
+    for (i in 1:n) {
+        for (x in 1:n) {
+            if (v[x, i] == 1) {
+                p &lt;- c(p, x)
+                break
+            }
+        }
+    }
+    
+    p
+}
+
+# 计算结果矩阵的路径长度
+path_distance &lt;- function(v, n, d) {
+    p &lt;- v_to_path(v, n)
+    p &lt;- c(p, p[1])
+    distance &lt;- 0 
+    for (i in 1:(length(p)-1)) {
+        distance &lt;- distance + d[p[i], p[i+1]]
+    }
+    
+    distance
+}
+
+# 构建 Hopfield 网络
+tsp_chnn &lt;- function(d, n, gamma = 0.02, alpha = 0.0001,
+                     theta = 0.7, tau = 1,
+                     A = 500, B = 500, C = 1000, D = 500,
+                     max_iter = 1000) {
+    v &lt;- matrix(runif(n^2), n, n)
+    u &lt;- matrix(rep(1, n^2), n, n) * (-gamma * log(n-1) / 2)
+    du &lt;- matrix(rep(0, n^2), n, n)
+    
+    for (iter in 1:max_iter) {
+        for (x in 1:n) {
+            for (i in 1:n) {
+                # E1
+                e1 &lt;- 0
+                for (j in 1:n) {
+                    if (j != i) {
+                        e1 &lt;- e1 + v[x, j]
+                    }
+                }
+                e1 &lt;- -A * e1
+                
+                # E2
+                e2 &lt;- 0
+                for (y in 1:n) {
+                    if (y != x) {
+                        e2 &lt;- e2 + v[y, i]
+                    }
+                }
+                e2 &lt;- -B * e2
+                
+                # E3
+                e3 &lt;- -C * (sum(v) - n)
+                
+                # E4
+                e4 &lt;- 0
+                for (y in 1:n) {
+                    if (y != x) {
+                        e4 &lt;- e4 + d[x, y] *
+                            (v[y, (i+1-1)%%n+1] + v[y, (i-1-1)%%n+1])
+                    }
+                }
+                e4 &lt;- -D * e4
+                
+                du[x, i] &lt;- e1 + e2 + e3 + e4 - u[x, i] / tau
+            }
+        }
+        
+        u &lt;- u + alpha * du
+        v &lt;- (1 + tanh(u / gamma)) / 2
+        v &lt;- ifelse(v &gt;= theta, 1, 0)
+    }
+    
+    v
+}
+
+# 利用 Hopfiled 网络求解 TSP 问题
+set.seed(112358)
+
+n &lt;- 10
+d &lt;- distance_matrix(cities)
+
+# 模拟 100 次并获取最终结果
+tsp_solutions &lt;- lapply(1:100, function(round) {
+    v &lt;- tsp_chnn(d, n)
+    valid &lt;- check_path_valid(v, n)
+    distance &lt;- ifelse(valid, path_distance(v, n, d), NA)
+    
+    list(round = round, valid = valid,
+         distance = distance, v = v)
+})
+
+# 获取最优结果
+best_tsp_solution &lt;- NA
+for (tsp_solution in tsp_solutions) {
+    if (tsp_solution$valid) {
+        if (!is.na(best_tsp_solution)) {
+            if (tsp_solution$distance &lt; best_tsp_solution$distance) {
+                best_tsp_solution &lt;- tsp_solution
+            }
+        } else {
+            best_tsp_solution &lt;- tsp_solution
+        }
+    }
+}
+
+# 可视化最优结果
+best_tsp_solution_path &lt;- v_to_path(best_tsp_solution$v, n)
+ordered_cities &lt;- cities[best_tsp_solution_path, ] %&gt;%
+    mutate(ord = seq(1:10))
+
+best_tsp_solution_path_p &lt;- ggplot(ordered_cities) +
+    geom_polygon(aes(x, y), color = 'black', fill = NA) +
+    geom_point(aes(x, y)) +
+    geom_text(aes(x, y, label = l), vjust = -1) +
+    geom_text(aes(x, y, label = ord), vjust = 2) +
+    coord_fixed() + ylim(c(0, 1)) + xlim(c(0, 1)) +
+    theme(axis.title = element_blank())
+print(best_tsp_solution_path_p)
+</code></pre><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/tsp-best-solution-path.png alt></p><h2 id=受限的玻尔兹曼机-rbm>受限的玻尔兹曼机 (RBM)</h2><h3 id=网络结构及其概率表示>网络结构及其概率表示</h3><p><strong>受限的玻尔兹曼机</strong> (Restricted Boltzmann Machine, RBM) 或<strong>簧风琴</strong> (harmonium) 是由 Smolensky 与 1986年在<strong>玻尔兹曼机</strong> (Boltzmann Machine, BM) 基础上提出的一种随机神经网络 (Stochastic Neural Networks) <sup id=fnref:9><a href=#fn:9 class=footnote-ref role=doc-noteref>9</a></sup>。受限的玻尔兹曼机对于原始的玻尔兹曼机做了相应的限制，在其网络结构中包含<strong>可见节点</strong>和<strong>隐藏节点</strong>，并且<strong>可见节点</strong>和<strong>隐藏节点</strong>内部不允许存在连接，更加形象的可以将其理解为一个二分图。</p><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/rbm-network.svg alt></p><p>对于二值版本的 RBM 而言，其中可见层 <code>$\mathbf{v} = \left(v_1, v_2, ..., v_{n_v}\right)^T$</code> 由 <code>$n_v$</code> 个二值随机变量构成；隐藏层 <code>$\mathbf{h} = \left(h_1, h_2, ..., h_{n_h}\right)^T$</code> 由 <code>$n_h$</code> 个二值随机变量构成。</p><p>RBM 同样作为一个基于能量的模型，其能量函数定义为：</p><p><code>$$ E \left(\boldsymbol{v}, \boldsymbol{h}\right) = -\sum_{i=1}^{n_v}{b_i v_i} -\sum_{j=1}^{n_h}{c_j h_j} - \sum_{i=1}^{n_v}{\sum_{j=1}^{n_h}{v_i w_{i,j} h_i}} $$</code></p><p>将其表示成矩阵向量的形式，可记为：</p><p><code>$$ E \left(\boldsymbol{v}, \boldsymbol{h}\right) = -\boldsymbol{b}^T \boldsymbol{v} - \boldsymbol{c}^T \boldsymbol{h} - \boldsymbol{v}^T \boldsymbol{W} \boldsymbol{h} $$</code></p><p>其中 <code>$\boldsymbol{b} \in \mathbb{R}^{n_v}$</code> 为可见层的偏置向量；<code>$\boldsymbol{c} \in \mathbb{R}^{n_h}$</code> 为隐含层的偏置向量；<code>$\boldsymbol{W} \in \mathbb{R}^{n_v \times n_h}$</code> 为可见层和隐含层之间的权重矩阵。根据能量函数，可得其联合概率分布为：</p><p><code>$$ P \left(\mathbf{v} = \boldsymbol{v}, \mathbf{h} = \boldsymbol{h}\right) = \dfrac{1}{Z} e^{-E \left(\boldsymbol{v}, \boldsymbol{h}\right)} $$</code></p><p>其中 <code>$Z$</code> 为归一化常数，成为配分函数：</p><p><code>$$ Z = \sum_{\boldsymbol{v}}{\sum_{\boldsymbol{h}}{e^{-E \left(\boldsymbol{v}, \boldsymbol{h}\right)}}} $$</code></p><p>对于 RBM 我们更加关注的的为边缘分布，即：</p><p><code>$$ P \left(\boldsymbol{v}\right) = \sum_{h}{P\left(\boldsymbol{v}, \boldsymbol{h}\right)} = \dfrac{1}{Z} \sum_{h}{e^{-E\left(\boldsymbol{v}, \boldsymbol{h}\right)}} $$</code></p><p>因为概率中包含归一化常数，我们需要计算 <code>$Z$</code>，从其定义可得，当穷举左右可能性的化，我们需要计算 <code>$2^{n_v + n_h}$</code> 个项，其计算复杂度很大。尽管 <code>$P\left(\boldsymbol{v}\right)$</code> 计算比较困难，但是其条件概率 <code>$P\left(\mathbf{h} | \mathbf{v}\right)$</code> 和 <code>$P\left(\mathbf{v} | \mathbf{h}\right)$</code> 计算和采样相对容易。为了便于推导，我们定义如下记号：</p><p><code>$$ \boldsymbol{h}_{-k} = \left(h_1, h_2, ..., h_{k-1}, h_{k+1}, ..., h_{n_h}\right)^T $$</code></p><p>则 <code>$P\left(h_k = 1 | \boldsymbol{v}\right)$</code> 定义如下：</p><p><code>$$ \begin{equation} \begin{split} &amp;P\left(h_k = 1 | \boldsymbol{v}\right) \\ = &amp;P\left(h_k = 1 | h_{-k}, \boldsymbol{v}\right) \\ = &\dfrac{P\left(h_k = 1, h_{-k}, \boldsymbol{v}\right)}{P\left(h_{-k}, \boldsymbol{v}\right)} \\ = &\dfrac{P\left(h_k = 1, h_{-k}, \boldsymbol{v}\right)}{P\left(h_k = 1 | h_{-k}, \boldsymbol{v}\right) + P\left(h_k = 0 | h_{-k}, \boldsymbol{v}\right)} \\ = &\dfrac{\dfrac{1}{Z} e^{-E\left(h_k = 1, h_{-k}, \boldsymbol{v}\right)}}{\dfrac{1}{Z} e^{-E\left(h_k = 1, h_{-k}, \boldsymbol{v}\right)} + \dfrac{1}{Z} e^{-E\left(h_k = 0, h_{-k}, \boldsymbol{v}\right)}} \\ = &\dfrac{e^{-E\left(h_k = 1, h_{-k}, \boldsymbol{v}\right)}}{e^{-E\left(h_k = 1, h_{-k}, \boldsymbol{v}\right)} + e^{-E\left(h_k = 0, h_{-k}, \boldsymbol{v}\right)}} \\ = &\dfrac{1}{1 + e^{E\left(h_k = 1, h_{-k}, \boldsymbol{v}\right) - E\left(h_k = 0, h_{-k}, \boldsymbol{v}\right)}} \\ \end{split} \end{equation} $$</code></p><p>其中：</p><p><code>$$ \begin{equation} \begin{split} &amp;E\left(h_k = 1, h_{-k}, \boldsymbol{v}\right) \\ = &amp;E\left(h_k = 1, \boldsymbol{v}\right) \\ = &-\sum_{i=1}^{n_v}{b_i v_i} - \sum_{j=1, j \neq k}^{n_h}{c_j h_j} - \sum_{i=1}^{n_v}{\sum_{j=1, j \neq k}^{n_h}{v_i W_{i, j} h_i}} - c_k - \sum_{i=1}^{n_v}{v_i W_{i, k}} \\ &amp;E\left(h_k = 0, h_{-k}, \boldsymbol{v}\right) \\ = &amp;E\left(h_k = 0, \boldsymbol{v}\right) \\ = &-\sum_{i=1}^{n_v}{b_i v_i} - \sum_{j=1, j \neq k}^{n_h}{c_j h_j} - \sum_{i=1}^{n_v}{\sum_{j=1, j \neq k}^{n_h}{v_i W_{i, j} h_i}} \end{split} \end{equation} $$</code></p><p>因此，<code>$P\left(h_k = 1 | \boldsymbol{v}\right)$</code> 可以化简为：</p><p><code>$$ \begin{equation} \begin{split} &amp;P\left(h_k = 1 | \boldsymbol{v}\right) \\ = &\dfrac{1}{1 + e^{-\left(c_k + \sum_{i=1}^{n_v}{v_i W_{i, k}}\right)}} \\ = &\sigma\left(c_k + \sum_{i=1}^{n_v}{v_i W_{i, k}}\right) \\ = &\sigma\left(c_k + \boldsymbol{v}^T \boldsymbol{W}_{:, k}\right) \end{split} \end{equation} $$</code></p><p>其中，<code>$\sigma$</code> 为 sigmoid 函数。因此，我们可以将条件分布表示为连乘的形式：</p><p><code>$$ \begin{equation} \begin{split} P\left(\boldsymbol{h} | \boldsymbol{v}\right) &= \prod_{j=1}^{n_h}{P\left(h_j | \boldsymbol{v}\right)} \\ &= \prod_{j=1}^{n_h}{\sigma\left(\left(2h - 1\right) \odot \left(\boldsymbol{c} + \boldsymbol{W}^T \boldsymbol{v}\right)\right)_j} \end{split} \end{equation} $$</code></p><p>同理可得：</p><p><code>$$ \begin{equation} \begin{split} P\left(\boldsymbol{v} | \boldsymbol{h}\right) &= \prod_{i=1}^{n_v}{P\left(v_i | \boldsymbol{h}\right)} \\ &= \prod_{i=1}^{n_v}{\sigma\left(\left(2v - 1\right) \odot \left(\boldsymbol{b} + \boldsymbol{W} \boldsymbol{h}\right)\right)_i} \end{split} \end{equation} $$</code></p><h3 id=模型训练>模型训练 <sup id=fnref:10><a href=#fn:10 class=footnote-ref role=doc-noteref>10</a></sup></h3><p>对于 RBM 模型的训练，假设训练样本集合为 <code>$S = \left\lbrace{\boldsymbol{v^1}, \boldsymbol{v^2}, ..., \boldsymbol{v^{n_s}}}\right\rbrace$</code>，其中 <code>$\boldsymbol{v^i} = \left(v_{1}^{i}, v_{2}^{i}, ..., v_{n_v}^{i}\right), i = 1, 2, ..., n_s$</code>。则训练 RBM 的目标可以定义为最大化如下似然：</p><p><code>$$ \mathcal{L}_{\theta, S} = \prod_{i=1}^{n_s}{P\left(\boldsymbol{v}^i\right)} $$</code></p><p>其中 <code>$\theta$</code> 为待优化的参数，为了方便计算，等价目标为最大化其对数似然：</p><p><code>$$ \ln\mathcal{L}_{\theta, S} = \ln\prod_{i=1}^{n_s}{P\left(\boldsymbol{v}^i\right)} = \sum_{i=1}^{n_s}{\ln P\left(\boldsymbol{v}^i\right)} $$</code></p><p>我们将其对数似然简写为 <code>$\ln\mathcal{L}_S$</code> ，通过梯度上升方法，我们可以得到参数的更新公式：</p><p><code>$$ \theta = \theta + \eta \dfrac{\partial \ln\mathcal{L}_S}{\partial \theta} $$</code></p><p>对于单个样本 <code>$\boldsymbol{\color{red}{v'}}$</code> ，有：</p><p><code>$$ \begin{equation} \begin{split} \dfrac{\partial \ln\mathcal{L}_S}{\partial \theta} &= \dfrac{\partial \ln P\left(\boldsymbol{\color{red}{v'}}\right)}{\partial \theta} = \dfrac{\partial \ln \left(\dfrac{1}{Z} \sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}}\right)}{\partial \theta} \\ &= \dfrac{\partial \left(\ln \sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}} - \ln Z\right)}{\partial \theta} = \dfrac{\partial \left(\ln \sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}} - \ln \sum_{\boldsymbol{v, h}}{e^{-E\left(\boldsymbol{v, h}\right)}}\right)}{\partial \theta} \\ &= \dfrac{\partial}{\partial \theta} \left(\ln \sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}}\right) - \dfrac{\partial}{\partial \theta} \left(\ln \sum_{\boldsymbol{v, h}}{e^{-E\left(\boldsymbol{v, h}\right)}}\right) \\ &= -\dfrac{1}{\sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}}} \sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)} \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial \theta}} + \dfrac{1}{\sum_{\boldsymbol{v, h}}{e^{-E\left(\boldsymbol{v, h}\right)}}} \sum_{\boldsymbol{v, h}}{e^{-E\left(\boldsymbol{v, h}\right)} \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}} \\ &= -\sum_{\boldsymbol{h}}{\dfrac{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}}{\sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}}} \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial \theta}} + \sum_{\boldsymbol{v, h}}{\dfrac{e^{-E\left(\boldsymbol{v, h}\right)}}{\sum_{\boldsymbol{v, h}}{e^{-E\left(\boldsymbol{v, h}\right)}}} \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}} \\ &= -\sum_{\boldsymbol{h}}{\dfrac{\dfrac{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}}{Z}}{\dfrac{\sum_{\boldsymbol{h}}{e^{-E\left(\boldsymbol{\color{red}{v'}, h}\right)}}}{Z}} \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial \theta}} + \sum_{\boldsymbol{v, h}}{\dfrac{e^{-E\left(\boldsymbol{v, h}\right)}}{\sum_{\boldsymbol{v, h}}{e^{-E\left(\boldsymbol{v, h}\right)}}} \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}} \\ &= -\sum_{\boldsymbol{h}}{\dfrac{P\left(\boldsymbol{\color{red}{v'}, h}\right)}{P\left(\boldsymbol{\color{red}{v'}}\right)} \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial \theta}} + \sum_{\boldsymbol{v, h}}{\dfrac{e^{-E\left(\boldsymbol{v, h}\right)}}{\sum_{\boldsymbol{v, h}}{e^{-E\left(\boldsymbol{v, h}\right)}}} \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}} \\ &= -\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h | \color{red}{v'}}\right) \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial \theta}} + \sum_{\boldsymbol{v, h}}{P\left(\boldsymbol{h | v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}} \end{split} \end{equation} $$</code></p><p>其中：</p><p><code>$$ \begin{equation} \begin{split} \sum_{\boldsymbol{v, h}}{P\left(\boldsymbol{h | v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}} &= \sum_{\boldsymbol{v}}{\sum_{\boldsymbol{h}}{P\left(\boldsymbol{v}\right) P\left(\boldsymbol{h | v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}}} \\ &= \sum_{\boldsymbol{v}}{P\left(\boldsymbol{v}\right) \sum_{\boldsymbol{h}}{P \left(\boldsymbol{h | v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial \theta}}} \end{split} \end{equation} $$</code></p><p>则对于参数 <code>$w_{i, j}$</code> 可得：</p><p><code>$$ \begin{equation} \begin{split} &\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h|v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial w_{i, j}}} \\ = &-\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h|v}\right) h_i v_j} \\ = &-\sum_{\boldsymbol{h}}{\prod_{k=1}^{n_h}{P\left(h_k | \boldsymbol{v}\right) h_i v_j}} \\ = &-\sum_{\boldsymbol{h}}{P\left(h_i | \boldsymbol{v}\right) P\left(h_{-i} | \boldsymbol{v}\right) h_i v_j} \\ = &-\sum_{\boldsymbol{h_i}}{\sum_{h_{-i}}{P\left(h_i | \boldsymbol{v}\right) P\left(\boldsymbol{h_{-i}} | \boldsymbol{v}\right) h_i v_j}} \\ = &-\sum_{\boldsymbol{h_i}}{P\left(h_i | \boldsymbol{v}\right) h_i v_j} \sum_{\boldsymbol{h_{-i}}}{P\left(h_{-i} | \boldsymbol{v}\right)} \\ = &-\sum_{\boldsymbol{h_i}}{P\left(h_i | \boldsymbol{v}\right) h_i v_j} \\ = &-\left(P\left(h_i = 0 | \boldsymbol{v}\right) \cdot 0 \cdot v_j + P\left(h_i = 1 | \boldsymbol{v}\right) \cdot 1 \cdot v_j\right) \\ = &-P\left(h_i = 1 | \boldsymbol{v}\right) v_j \end{split} \end{equation} $$</code></p><p>则对于参数 <code>$b_i$</code> 可得：</p><p><code>$$ \begin{equation} \begin{split} &\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h|v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial b_i}} \\ = &-\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h|v}\right) v_i} \\ = &-v_i \sum_{\boldsymbol{h}}{P\left(\boldsymbol{h|v}\right)} \\ = &-v_i \end{split} \end{equation} $$</code></p><p>则对于参数 <code>$c_j$</code> 可得：</p><p><code>$$ \begin{equation} \begin{split} &\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h|v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial c_j}} \\ = &-\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h|v}\right) h_j} \\ = &-\sum_{\boldsymbol{h}}{\prod_{k=1}^{n_h}{P\left(h_k | \boldsymbol{v}\right) h_j}} \\ = &-\sum_{\boldsymbol{h}}{P\left(h_j | \boldsymbol{v}\right) P\left(h_{-j} | \boldsymbol{v}\right) h_j} \\ = &-\sum_{h_j}{\sum_{h_{-j}}{P\left(h_i | \boldsymbol{v}\right) P\left(h_{-j} | \boldsymbol{v}\right) h_j}} \\ = &-\sum_{h_j}{P\left(h_i | \boldsymbol{v}\right) h_j} \sum_{h_{-j}}{P\left(h_{-j} | \boldsymbol{v}\right)} \\ = &-\sum_{h_j}{P\left(h_i | \boldsymbol{v}\right) h_j} \\ = &-\left(P\left(h_j = 0 | \boldsymbol{v}\right) \cdot 0 + P\left(h_j = 1 | \boldsymbol{v}\right) \cdot 1\right) \\ = &-P\left(h_j = 1 | \boldsymbol{v}\right) \end{split} \end{equation} $$</code></p><p>综上所述，可得：</p><p><code>$$ \begin{equation} \begin{split} \dfrac{\partial \ln P\left(\color{red}{\boldsymbol{v'}}\right)}{\partial w_{i, j}} &= -\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h | \color{red}{v'}}\right) \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial w_{i, j}}} + \sum_{\boldsymbol{v, h}}{P\left(\boldsymbol{h | v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial w_{i, j}}} \\ &= P\left(h_i = 1 | \boldsymbol{\color{red}{v'}}\right) \color{red}{v'_j} - \sum_{\boldsymbol{v}}{P\left(\boldsymbol{v}\right) P\left(h_i = 1 | \boldsymbol{v}\right) v_j}\\ \dfrac{\partial \ln P\left(\color{red}{\boldsymbol{v'}}\right)}{\partial b_i} &= -\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h | \color{red}{v'}}\right) \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial b_i}} + \sum_{\boldsymbol{v, h}}{P\left(\boldsymbol{h | v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial b_i}} \\ &= \color{red}{v'_i} - \sum_{\boldsymbol{v}}{P\left(\boldsymbol{v}\right) v_i} \\ \dfrac{\partial \ln P\left(\color{red}{\boldsymbol{v'}}\right)}{\partial c_j} &= -\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h | \color{red}{v'}}\right) \dfrac{\partial E\left(\boldsymbol{\color{red}{v'}, h}\right)}{\partial c_j}} + \sum_{\boldsymbol{v, h}}{P\left(\boldsymbol{h | v}\right) \dfrac{\partial E\left(\boldsymbol{v, h}\right)}{\partial c_j}} \\ &= P\left(h_j = 1 | \boldsymbol{\color{red}{v'}}\right) - \sum_{\boldsymbol{v}}{P\left(\boldsymbol{v}\right) P\left(h_j = 1 | \boldsymbol{v}\right)} \\ \end{split} \end{equation} $$</code></p><p>对于多个样本 <code>$S = \left\lbrace{\boldsymbol{v^1}, \boldsymbol{v^2}, ..., \boldsymbol{v^{n_s}}}\right\rbrace$</code>，有：</p><p><code>$$ \begin{equation} \begin{split} \dfrac{\partial \ln \mathcal{L}_S}{\partial w_{i, j}} &= \sum_{m=1}^{n_S}{\left[P\left(h_i = 1 | \boldsymbol{v^m}\right) v_j^m - \sum_{\boldsymbol{v}}{P\left(\boldsymbol{v}\right) P\left(h_i = 1 | \boldsymbol{v} v_j\right)}\right]} \\ \dfrac{\partial \ln \mathcal{L}_S}{\partial b_i} &= \sum_{m=1}^{n_S}{\left[v_i^m - \sum_{\boldsymbol{v}}{P\left(\boldsymbol{v}\right) v_i}\right]} \\ \dfrac{\partial \ln \mathcal{L}_S}{\partial c_j} &= \sum_{m=1}^{n_S}{\left[P\left(h_j = 1 | \boldsymbol{v^m}\right) - \sum_{\boldsymbol{v}}{P\left(\boldsymbol{v}\right) P\left(h_j = 1 | \boldsymbol{v}\right)}\right]} \end{split} \end{equation} $$</code></p><p>针对如上方法，我们需要计算 <code>$\sum_{\boldsymbol{v}}$</code> 相关项，如上文所述，其计算复杂度为 <code>$O\left(2^{n_v + n_h}\right)$</code>，因为其条件概率计算比较容易，因此我们可以用 Gibbs 采样的方法进行估计，但由于 Gibbs 采样方法存在 burn-in period，因此需要足够次数的状态转移后才能够收敛到目标分布，因此这就增大了利用这种方法训练 RBM 模型的时间。</p><p>针对这个问题，Hinton 于 2002 年提出了对比散度 (Contrastive Divergence, CD) 算法 <sup id=fnref:11><a href=#fn:11 class=footnote-ref role=doc-noteref>11</a></sup>，基本思想为将训练样本作为采样的初始值，因为目标就是让 RBM 去拟合这些样本的分布，因此这样则可以通过更少的状态转移就收敛到平稳分布。<code>$k$</code> 步 CD 算法大致步骤为：</p><ol><li>对 <code>$\forall \boldsymbol{v} \in \boldsymbol{S}$</code>，初始化 <code>$\boldsymbol{v}^{\left(0\right)} = \boldsymbol{v}$</code>。</li><li>执行 <code>$k$</code> 步 Gibbs 采样，对于第 <code>$t$</code> 步，分别利用 <code>$P\left(\boldsymbol{h} | \boldsymbol{v}^{\left(t-1\right)}\right)$</code> 和 <code>$P\left(\boldsymbol{v} | \boldsymbol{h}^{\left(t-1\right)}\right)$</code> 采样出 <code>$\boldsymbol{h}^{\left(t-1\right)}$</code> 和 <code>$\boldsymbol{v}^{\left(t\right)}$</code>。</li><li>利用采样得到的 <code>$\boldsymbol{v}^{\left(k\right)}$</code> <strong>近似估计</strong> <code>$\sum_{\boldsymbol{v}}$</code> 相关项：
+<code>$$ \begin{equation} \begin{split} \dfrac{\partial \ln P\left(\boldsymbol{v}\right)}{\partial w_{i, j}} &\approx P\left(h_i=1|\boldsymbol{v}^{\left(0\right)}\right) v_j^{\left(0\right)} - P\left(h_i=1|\boldsymbol{v}^{\left(k\right)}\right) v_j^{\left(k\right)} \\ \dfrac{\partial \ln P\left(\boldsymbol{v}\right)}{\partial b_i} &\approx v_i^{\left(0\right)} - v_i^{\left(k\right)} \\ \dfrac{\partial \ln P\left(\boldsymbol{v}\right)}{\partial c_j} &\approx P\left(h_j=1|\boldsymbol{v}^{\left(0\right)}\right) - P\left(h_j=1|\boldsymbol{v}^{\left(k\right)}\right) \end{split} \end{equation} $$</code></li></ol><p><strong>近似估计</strong>可以看做是利用</p><p><code>$$ CDK\left(\theta, \boldsymbol{v}\right) = -\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h} | \boldsymbol{v}^{\left(0\right)}\right) \dfrac{\partial E\left(\boldsymbol{v}^{\left(0\right)}, h\right)}{\partial \theta}} + \sum_{\boldsymbol{h}}{P\left(\boldsymbol{h} | \boldsymbol{v}^{\left(k\right)}\right) \dfrac{\partial E\left(\boldsymbol{v}^{\left(k\right)}, \boldsymbol{h}\right)}{\partial \theta}} $$</code></p><p>近似</p><p><code>$$ \dfrac{\partial \ln P\left(\boldsymbol{v}\right)}{\partial \theta} = -\sum_{\boldsymbol{h}}{P\left(\boldsymbol{h} | \boldsymbol{v}^{\left(0\right)}\right) \dfrac{\partial E\left(\boldsymbol{v}^{\left(0\right)}, h\right)}{\partial \theta}} + \sum_{\boldsymbol{v, h}}{P\left(\boldsymbol{v, h}\right) \dfrac{\partial E\left(\boldsymbol{v}, \boldsymbol{h}\right)}{\partial \theta}} $$</code></p><p>的过程。</p><p>基于对比散度的 RBM 训练算法可以描述为：</p><link rel=stylesheet type=text/css href=//cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.css><div><pre class=pseudocode>
+\begin{algorithm}
+\caption{CDK 算法}
+\begin{algorithmic}
+\REQUIRE $k, \boldsymbol{S}, \text{RBM}\left(\boldsymbol{W, b, c}\right)$
+\ENSURE $\Delta \boldsymbol{W}, \Delta \boldsymbol{b}, \Delta \boldsymbol{c}$
+\PROCEDURE{CDK}{$k, \boldsymbol{S}, \text{RBM}\left(\boldsymbol{W, b, c}\right)$}
+    \STATE $\Delta \boldsymbol{W} \gets 0, \Delta \boldsymbol{b} \gets 0, \Delta \boldsymbol{c} \gets 0$
+    \FORALL{$\boldsymbol{v \in S}$}
+        \STATE $\boldsymbol{v}^{\left(0\right)} \gets \boldsymbol{v}$
+        \FOR{$t = 0, 1, ..., k-1$}
+            \STATE $\boldsymbol{h}^{\left(t\right)} \gets \text{sample_h_given_v} \left(\boldsymbol{v}^{\left(t\right)}, \text{RBM}\left(W, b, c\right)\right)$
+            \STATE $\boldsymbol{v}^{\left(t+1\right)} \gets \text{sample_v_given_h} \left(\boldsymbol{h}^{\left(t\right)}, \text{RBM}\left(W, b, c\right)\right)$
+        \ENDFOR
+        \FOR{$i = 1, 2, ..., n_h; j = 1, 2, ..., n_v$}
+            \STATE $\Delta w_{i, j} \gets \Delta w_{i, j} + \left[P\left(h_i=1|\boldsymbol{v}^{\left(0\right)}\right) v_j^{\left(0\right)} - P\left(h_i=1|\boldsymbol{v}^{\left(k\right)}\right) v_j^{\left(k\right)}\right]$
+            \STATE $\Delta b_i \gets \Delta b_i = \left[v_i^{\left(0\right)} - v_i^{\left(k\right)}\right]$
+            \STATE $\Delta c_j \gets \Delta c_j = \left[P\left(h_j=1|\boldsymbol{v}^{\left(0\right)}\right) - P\left(h_j=1|\boldsymbol{v}^{\left(k\right)}\right)\right]$
+        \ENDFOR
+    \ENDFOR
+\ENDPROCEDURE
+\end{algorithmic}
+\end{algorithm}
+</pre></div><p>其中，<code>sample_h_given_v</code> 和 <code>sample_v_given_h</code> 分别表示在已知可见层时采样隐含层和在已知隐含层时采样可见层。对于 <code>sample_h_given_v</code> 其算法流程如下：</p><div><pre class=pseudocode>
+\begin{algorithm}
+\caption{sample\_h\_given\_v 算法}
+\begin{algorithmic}
+\FOR{$j = 1, 2, ..., n_h$}
+    \STATE sample $r_j \sim Uniform[0, 1]$
+    \IF{$r_j < P\left(h_j = 1 | \boldsymbol{v}\right)$}
+        \STATE $h_j \gets 1$
+    \ELSE
+        \STATE $h_j \gets 0$
+    \ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div><p>类似的，对于 <code>sample_v_given_h</code> 其算法流程如下：</p><div><pre class=pseudocode>
+\begin{algorithm}
+\caption{sample\_v\_given\_h 算法}
+\begin{algorithmic}
+\FOR{$j = 1, 2, ..., n_h$}
+    \STATE sample $r_j \sim Uniform[0, 1]$
+    \IF{$r_i < P\left(v_i = 1 | \boldsymbol{h}\right)$}
+        \STATE $v_i \gets 1$
+    \ELSE
+        \STATE $v_i \gets 0$
+    \ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div><p>至此，我们可以得到 RBM 模型训练的整个流程：</p><div><pre class=pseudocode>
+\begin{algorithm}
+\caption{RBM 训练算法}
+\begin{algorithmic}
+\FOR{$iter = 1, 2, ..., \text{max\_iter}$}
+    \STATE $\Delta \boldsymbol{W}, \Delta \boldsymbol{b}, \Delta \boldsymbol{c} \gets \text{CDK} \left(k, \boldsymbol{S}, \text{RBM}\left(\boldsymbol{W, b, c}\right)\right)$
+    \STATE $\boldsymbol{W} \gets \boldsymbol{W} + \eta \left(\dfrac{1}{n_s} \Delta \boldsymbol{W}\right)$
+    \STATE $\boldsymbol{b} \gets \boldsymbol{b} + \eta \left(\dfrac{1}{n_s} \Delta \boldsymbol{b}\right)$
+    \STATE $\boldsymbol{c} \gets \boldsymbol{c} + \eta \left(\dfrac{1}{n_s} \Delta \boldsymbol{c}\right)$
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div><p>其中，<code>$k$</code> 为 CDK 算法参数，<code>$\text{max_iter}$</code> 为最大迭代次数，<code>$\boldsymbol{S}$</code> 为训练样本，<code>$n_s = |\boldsymbol{S}|$</code>，<code>$\eta$</code> 为学习率。</p><p>对于模型的评估，最简单的是利用 RBM 模型的似然或对数似然，但由于涉及到归一化因子 <code>$Z$</code> 的计算，其复杂度太高。更常用的方式是利用<strong>重构误差</strong> (reconstruction error)，即输入数据和利用 RBM 模型计算得到隐含节点再重构回可见节点之间的误差。</p><h3 id=mnist-示例>MNIST 示例</h3><p>我们利用经典的 MNIST 数据作为示例，我们利用基于 tensorflow 的扩展包 tfrbm <sup id=fnref:12><a href=#fn:12 class=footnote-ref role=doc-noteref>12</a></sup>。tfrbm 实现了 Bernoulli-Bernoulli RBM 和 Gaussian-Bernoulli RBM 两种不同的 RBM，两者的比较详见 <sup id=fnref:13><a href=#fn:13 class=footnote-ref role=doc-noteref>13</a></sup> <sup id=fnref:14><a href=#fn:14 class=footnote-ref role=doc-noteref>14</a></sup>。</p><pre><code class=language-python>import numpy as np
+from matplotlib import pyplot as plt, gridspec
+from tfrbm import BBRBM, GBRBM
+from tensorflow.examples.tutorials.mnist import input_data
+
+# 读入训练数据和测试数据
+mnist = input_data.read_data_sets('MNIST', one_hot=True)
+mnist_train_images = mnist.train.images
+mnist_test_images = mnist.test.images
+mnist_test_labels = mnist.test.labels
+</code></pre><p>MNIST 数据集中，训练集共包含 55000 个样本，每个样本的维度为 784，我们构建 Bernoulli-Bernoulli RBM，设置隐含节点个数为 64，学习率为 0.01，epoches 为 30，batch size 为 10。</p><pre><code class=language-python>bbrbm = BBRBM(n_visible=784,
+              n_hidden=64,
+              learning_rate=0.01,
+              use_tqdm=True)
+
+bbrbm_errs = bbrbm.fit(mnist_train_images, n_epoches=30, batch_size=10)
+
+# Epoch: 0: 100%|##########| 5500/5500 [00:11&lt;00:00, 480.39it/s]
+# Train error: 0.1267
+# 
+# ......
+# 
+# Epoch: 29: 100%|##########| 5500/5500 [00:11&lt;00:00, 482.15it/s]
+# Train error: 0.0347
+</code></pre><p>训练误差变化如下</p><pre><code class=language-python>plt.style.use('ggplot')
+plt.plot(bbrbm_errs)
+</code></pre><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/bbrbm-mnist-errs.png alt></p><p>我们从 MNIST 的测试集中针对每个数字选取 10 个样本，共 100 个样本作为测试数据，利用训练好的 RBM 模型重构这 100 个样本</p><pre><code class=language-python>mnist_test_images_samples = np.zeros([10 * 10, 784])
+mnist_test_images_samples_rec = np.zeros([10 * 10, 784])
+mnist_test_images_samples_plt = np.zeros([10 * 10 * 2, 784])
+
+digits_current_counts = np.zeros(10, dtype=np.int32)
+digits_total_counts = np.ones(10, dtype=np.int32) * 10
+
+for idx in range(mnist_test_images.shape[0]):
+    image = mnist_test_images[idx, ]
+    label = mnist_test_labels[idx, ]
+
+    for digit in range(10):
+        digit_label = np.zeros(10)
+        digit_label[digit] = 1
+
+        if (label == digit_label).all() and
+               digits_current_counts[digit] &lt; 10:
+            nrow = digits_current_counts[digit]
+            sample_idx = nrow * 10 + digit
+            mnist_test_images_samples[sample_idx, ] = image
+            mnist_test_images_samples_rec[sample_idx, ] = \
+                bbrbm.reconstruct(image.reshape([1, -1]))
+            mnist_test_images_samples_plt[sample_idx * 2, ] = \
+                mnist_test_images_samples[sample_idx, ]
+            mnist_test_images_samples_plt[sample_idx * 2 + 1, ] = \
+                mnist_test_images_samples_rec[sample_idx, ]
+            digits_current_counts[digit] += 1
+
+    if (digits_current_counts == digits_total_counts).all():
+        break
+</code></pre><p>对比测试输入数据和重构结果，奇数列为输入数据，偶数列为重构数据</p><pre><code class=language-python>def plot_mnist(mnist_images, nrows, ncols, cmap='gray'):
+    fig = plt.figure(figsize=(ncols, nrows))
+    gs = gridspec.GridSpec(nrows, ncols)
+    gs.update(wspace=0.025, hspace=0.025)
+
+    for nrow in range(nrows):
+        for ncol in range(ncols):
+            ax = plt.subplot(gs[nrow, ncol])
+            idx = nrow * ncols + ncol
+            minist_image = mnist_images[idx, ].reshape([28, 28])
+            ax.imshow(minist_image, cmap=cmap)
+            ax.axis('off')
+
+    return fig
+    
+plot_mnist(mnist_test_images_samples_plt, 10, 20)
+</code></pre><p><img src=/images/cn/2018-01-17-ising-hopfield-and-rbm/bbrbm-mnist.png alt></p><p>测试集上的重构误差为</p><pre><code class=language-python>gbrbm.get_err(mnist_test_images_samples)
+
+# 0.035245348
+</code></pre><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>Ernest Ising, Beitrag zur Theorie des Ferround Paramagnetismus (1924) Contribution to the Theory of Ferromagnetism (English translation of &ldquo;Beitrag zur Theorie des Ferromagnetismus&rdquo;, 1925) Goethe as a Physicist (1950)&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p>Onsager, L. &ldquo;A two-dimensional model with an order–disorder transition (crystal statistics I).&rdquo; <em>Phys. Rev</em> 65 (1944): 117-49.&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:3><p><a href="http://wiki.swarma.net/index.php?title=ISING%E6%A8%A1%E5%9E%8B">http://wiki.swarma.net/index.php?title=ISING模型</a>&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:4><p>Hopfield, John J. &ldquo;Neural networks and physical systems with emergent collective computational abilities.&rdquo; <em>Spin Glass Theory and Beyond: An Introduction to the Replica Method and Its Applications.</em> 1987. 411-415.&#160;<a href=#fnref:4 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:5><p>Abu-Mostafa, Y. A. S. E. R., and J. St Jacques. &ldquo;Information capacity of the Hopfield model.&rdquo; <em>IEEE Transactions on Information Theory</em> 31.4 (1985): 461-464.&#160;<a href=#fnref:5 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:6><p>韩力群. 人工神经网络理论、设计及应用&#160;<a href=#fnref:6 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:7><p><a href=https://zh.wikipedia.org/zh-hans/%E6%97%85%E8%A1%8C%E6%8E%A8%E9%94%80%E5%91%98%E9%97%AE%E9%A2%98>https://zh.wikipedia.org/zh-hans/旅行推销员问题</a>&#160;<a href=#fnref:7 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:8><p><a href=https://zh.wikipedia.org/zh-hans/NP%E5%9B%B0%E9%9A%BE>https://zh.wikipedia.org/zh-hans/NP困难</a>&#160;<a href=#fnref:8 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:9><p>Smolensky, Paul. <em>Information processing in dynamical systems: Foundations of harmony theory.</em> No. CU-CS-321-86. COLORADO UNIV AT BOULDER DEPT OF COMPUTER SCIENCE, 1986.&#160;<a href=#fnref:9 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:10><p><a href=http://blog.csdn.net/itplus/article/details/19168937>http://blog.csdn.net/itplus/article/details/19168937</a>&#160;<a href=#fnref:10 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:11><p>Hinton, Geoffrey E. &ldquo;Training products of experts by minimizing contrastive divergence.&rdquo; <em>Neural computation</em> 14.8 (2002): 1771-1800.&#160;<a href=#fnref:11 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:12><p><a href=https://github.com/meownoid/tensorfow-rbm>https://github.com/meownoid/tensorfow-rbm</a>&#160;<a href=#fnref:12 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:13><p>Hinton, Geoffrey. &ldquo;A practical guide to training restricted Boltzmann machines.&rdquo; <em>Momentum</em> 9.1 (2010): 926.&#160;<a href=#fnref:13 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:14><p>Yamashita, Takayoshi, et al. &ldquo;To be Bernoulli or to be Gaussian, for a Restricted Boltzmann Machine.&rdquo; <em>Pattern Recognition (ICPR), 2014 22nd International Conference on. IEEE</em>, 2014.&#160;<a href=#fnref:14 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div><link rel=stylesheet href=/css/donate.css><div class=donate><div class=donate-header></div><div class=donate-slug id=donate-slug>ising-hopfield-and-rbm</div><button class=donate-button>赞 赏</button><div class=donate-footer>「真诚赞赏，手留余香」</div></div><div class=donate-modal-wrapper><div class=donate-modal><div class=donate-box><div class=donate-box-content><div class=donate-box-content-inner><div class=donate-box-header>「真诚赞赏，手留余香」</div><div class=donate-box-body><div class=donate-box-money><button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-2 data-v=2 data-unchecked="￥ 2" data-checked="2 元">￥ 2</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-5 data-v=5 data-unchecked="￥ 5" data-checked="5 元">￥ 5</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-10 data-v=10 data-unchecked="￥ 10" data-checked="10 元">￥ 10</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-50 data-v=50 data-unchecked="￥ 50" data-checked="50 元">￥ 50</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-100 data-v=100 data-unchecked="￥ 100" data-checked="100 元">￥ 100</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-custom data-v=custom data-unchecked=任意金额 data-checked=任意金额>任意金额</button></div><div class=donate-box-pay><img class=donate-box-pay-qrcode id=donate-box-pay-qrcode src></div></div><div class=donate-box-footer><div class="donate-box-pay-method donate-box-pay-method-checked" data-v=wechat-pay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-wechat-pay src></div><div class=donate-box-pay-method data-v=alipay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-alipay src></div></div></div></div></div><button type=button class=donate-box-close-button>
+<svg class="donate-box-close-button-icon" fill="#fff" viewBox="0 0 24 24" width="24" height="24"><path d="M13.486 12l5.208-5.207a1.048 1.048.0 00-.006-1.483 1.046 1.046.0 00-1.482-.005L12 10.514 6.793 5.305A1.048 1.048.0 005.31 5.31a1.046 1.046.0 00-.005 1.483L10.514 12l-5.208 5.207a1.048 1.048.0 00.006 1.483 1.046 1.046.0 001.482.005L12 13.486l5.207 5.208a1.048 1.048.0 001.483-.006 1.046 1.046.0 00.005-1.482L13.486 12z" fill-rule="evenodd"/></svg></button></div></div><script type=text/javascript src=/js/donate.js></script></script><footer><nav class=post-nav><span class=nav-prev>&larr; <a href=/cn/2017/12/mcmc-and-gibbs-sampling/>马尔科夫链蒙特卡洛方法和吉布斯采样 (MCMC and Gibbs Sampling)</a></span>
+<span class=nav-next><a href=/cn/2018/02/gan-introduction/>生成对抗网络简介 (GAN Introduction)</a> &rarr;</span></nav><script type=text/javascript>document.addEventListener("keyup",function(e){if(e.target.nodeName.toUpperCase()!="BODY")return;var t=!1;e.which==37?t="/cn/2017/12/mcmc-and-gibbs-sampling/":e.which==39&&(t="/cn/2018/02/gan-introduction/"),t&&(window.location=t)})</script><ins class=adsbygoogle style=display:block;text-align:center data-ad-layout=in-article data-ad-format=fluid data-ad-client=ca-pub-2608165017777396 data-ad-slot=1261604535></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({})</script><section class=comments><div id=disqus_thread></div><script>var disqus_config=function(){this.page.url="https://zeqiang.fun"+location.pathname};(function(){if(a=function(){var e=!0;try{e=window.self!==window.top}catch{}return e},a())return;var n,s,o,i,a,r="//.disqus.com/embed.js",e=document,t=e.createElement("script");if(t.src=r,t.async=!0,t.setAttribute("data-timestamp",+new Date),n=e.getElementById("disqus_thread"),s=!1,o=function(o){if(s)return;(e.head||e.body).appendChild(t),s=!0,o&&n.scrollIntoView()},t.onerror=function(){if(sessionStorage.getItem("failure-note"))return;n.innerText="Sorry, but you cannot make comments because Disqus failed to load for some reason. It is known to be blocked in China. If you are sure it is not blocked in your region, please refresh the page. 中国大陆地区读者需要翻墙才能发表评论。",sessionStorage.setItem("failure-note",!0)},location.hash.match(/^#comment-[0-9]+$/))return o(!0);i=function(){if(s)return;var e=n.getBoundingClientRect();e.top<window.innerHeight&&e.bottom>=0&&o()},window.addEventListener("load",i),e.addEventListener("scroll",i)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></section><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/show-language/prism-show-language.min.js></script><script>(function(){if(!self.Prism)return;Prism.languages.dos=Prism.languages.powershell,Prism.languages.gremlin=Prism.languages.groovy;var e={r:"R",python:"Python",xml:"XML",html:"HTML",yaml:"YAML",latex:"LaTeX",tex:"TeX",powershell:"PowerShell",javascript:"JavaScript",dos:"DOS",qml:"QML",json:"JSON",bash:"Bash",text:"Text",txt:"Text",sparql:"SPARQL",gremlin:"Gremlin",cypher:"Cypher",ngql:"nGQL",shell:"Shell",sql:"SQL",apacheconf:"Apache Configuration"};Prism.hooks.add("before-highlight",function(t){var n=e[t.language]||t.language;t.element.setAttribute("data-language",n)})})()</script><script async src=/js/fix-toc.js></script><script async src=/js/center-img.js></script><script async src=/js/right-quote.js></script><script async src=/js/fix-footnote.js></script><script async src=/js/external-link.js></script><script async src=/js/alt-title.js></script><script src=/js/no-highlight.js></script><script src=/js/math-code.js></script><script>window.MathJax={loader:{load:["[tex]/boldsymbol"]},tex:{tags:"all",inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"]],processEscapes:!0,processEnvironments:!0,packages:{"[+]":["boldsymbol"]}}}</script><script type=text/javascript id=MathJax-script async src=//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js crossorigin></script><script src=//cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.js></script><script type=text/javascript>$(document).ready(function(){var e=0;$(".pseudocode").each(function(){var t,n={indentSize:"1.2em",commentDelimiter:"//",lineNumber:!0,lineNumberPunc:":",noEnd:!1};n.captionCount=e,e+=1,t=$(this).get(0),pseudocode.render(t.textContent,t.parentElement,n)})})</script><script async src=/js/load-typekit.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js></script><script src=//cdn.jsdelivr.net/npm/vanilla-back-to-top@latest/dist/vanilla-back-to-top.min.js></script><script>addBackToTop({diameter:48})</script><hr><div class="copyright no-border-bottom"><div class=copyright-author-year><span>&copy; 2017-2021 Leo Van</span></div><div class=copyright-links><a href=https://github.com/leovan rel=noreferrer target=_blank>Github</a>
+<span>· </span><a href=https://orcid.org/0000-0002-9556-7821 rel=noreferrer target=_blank>ORCID</a>
+<span>· </span><span>I am Mr. Black.</span></div></div></footer></article></body></html>

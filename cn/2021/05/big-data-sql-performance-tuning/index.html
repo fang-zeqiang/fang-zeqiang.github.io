@@ -1,0 +1,292 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>大数据 SQL 性能调优 (Big Data SQL Performance Tuning) - Zeqiang Fang | 方泽强</title><meta name=referrer content="no-referrer"><meta property="og:title" content="大数据 SQL 性能调优 (Big Data SQL Performance Tuning) - Zeqiang Fang | 方泽强"><meta name=description property="og:description" content="在日常工作中，数据处理和分析在研发、产品和运营等多个领域起着重要的作用。在海量数据处理和分析中，SQL 是一项基础且重要的能力。一个优秀的 SQL Boy 和茶树姑的 SQL 代码除了保持简单、可读和易于维护的样式风格外，还需要具备良好的执行性能，准确且高效的计算出结果才能让你在工作中决胜于千里之外。"><meta property="og:type" content="article"><meta property="og:site_name" content="Zeqiang Fang | 方泽强"><meta property="og:url" content="https://zeqiang.fun/cn/2021/05/big-data-sql-performance-tuning/"><meta name=author property="article:author" content="范叶亮"><meta name=date property="article:published_time" content="2021-05-23" scheme=YYYY-MM-DD><meta name=date property="article:modified_time" content="2021-05-23" scheme=YYYY-MM-DD><meta name=keywords property="article:tag" content="SQL,计算资源量,计算数据量,计算复杂度,执行引擎,Hive,Hadoop,MapReduce,Work Count,Splitting,Mapping,Shuffling,Reducing,Spark,RDD,Resilient Distributed Dataset,弹性分布式数据集,DAG,Directed Acyclic Graph,有向无环图,Driver Program,SparkContext,Cluster Manager,Worker Node,Executor,Application,Task,Stage,Job,DAGScheduler,TaskScheduler,Presto,OLAP,数据分区,数据倾斜,Data Skew,Common Table Expressions,CTEs,参数调优,动态分区,Dynamic Partition,资源申请,动态分配,Dynamic Allocation,小文件合并,Shuffle,ORC,自适应执行,Adaptive Execution,推测执行,Speculation"><meta name=theme-color content="#0d0d0d"><link rel=icon type=image/png sizes=16x16 href=/images/web/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=/images/web/favicon-32x32.png><link rel=icon type=image/png sizes=48x48 href=/images/web/favicon-48x48.png><link rel=icon type=image/png sizes=62x62 href=/images/web/favicon-62x62.png><link rel=icon type=image/png sizes=192x192 href=/images/web/favicon-192x192.png><link rel=apple-touch-icon size=192x192 href=/images/web/icon-192x192.png><link rel=manifest href=/manifest.json><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://zeqiang.fun/cn"},"name":"大数据 SQL 性能调优 (Big Data SQL Performance Tuning)","headline":"大数据 SQL 性能调优 (Big Data SQL Performance Tuning)","description":"\u003cp\u003e在日常工作中，数据处理和分析在研发、产品和运营等多个领域起着重要的作用。在海量数据处理和分析中，SQL 是一项基础且重要的能力。一个优秀的 SQL Boy 和茶树姑的 SQL 代码除了保持简单、可读和易于维护的\u003ca href=\"/cn/2021/05/sql-style-guide/\"\u003e样式风格\u003c/a\u003e外，还需要具备良好的执行性能，准确且高效的计算出结果才能让你在工作中决胜于千里之外。\u003c/p\u003e","genre":["编程"],"datePublished":"2021-05-23","dateModified":"2021-05-23","wordCount":"5400","keywords":["SQL","计算资源量","计算数据量","计算复杂度","执行引擎","Hive","Hadoop","MapReduce","Work Count","Splitting","Mapping","Shuffling","Reducing","Spark","RDD","Resilient Distributed Dataset","弹性分布式数据集","DAG","Directed Acyclic Graph","有向无环图","Driver Program","SparkContext","Cluster Manager","Worker Node","Executor","Application","Task","Stage","Job","DAGScheduler","TaskScheduler","Presto","OLAP","数据分区","数据倾斜","Data Skew","Common Table Expressions","CTEs","参数调优","动态分区","Dynamic Partition","资源申请","动态分配","Dynamic Allocation","小文件合并","Shuffle","ORC","自适应执行","Adaptive Execution","推测执行","Speculation"],"image":["https://zeqiang.fun/images/cn/2021-05-23-big-data-sql-performance-tuning/word-count-mapreduce.png","https://zeqiang.fun/images/cn/2021-05-23-big-data-sql-performance-tuning/spark-architecture.png","https://zeqiang.fun/images/cn/2021-05-23-big-data-sql-performance-tuning/spark-scheduling.jpeg","https://zeqiang.fun/images/cn/2021-05-23-big-data-sql-performance-tuning/hive-vs-presto.png","https://zeqiang.fun/images/cn/2021-05-23-big-data-sql-performance-tuning/orc-file-layout.png"],"author":{"@type":"Person","name":"范叶亮"},"publisher":{"@type":"Organization","name":"范叶亮","logo":{"@type":"ImageObject","url":"https://zeqiang.fun/images/web/publisher-logo.png"}},"url":"https://zeqiang.fun/cn/2021/05/big-data-sql-performance-tuning/"}</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js></script><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/6.5.95/css/materialdesignicons.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-.min.css><script async src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js></script><link rel=stylesheet type=text/css href=/css/fonts.css><link rel=stylesheet type=text/css href=/css/style.css><link rel=stylesheet type=text/css href=/css/light.css><link rel=stylesheet type=text/css href=/css/dark.css id=dark-mode-style disabled><link rel=stylesheet type=text/css href=/css/icons.css><link rel=stylesheet type=text/css href=/css/print.css></head><body class=cn><header class=masthead><div class=logo></div><p class=slogan>优雅永不过时</p><nav class=menu><ul><li><a href=/>首页</a></li><li><a href=/cn/>博客</a></li><li><a href=/categories/>分类</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/about/>关于</a></li><li><a href=/cn/resume/>简历</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/index.xml target=_blank type=application/rss+xml title="RSS feed">订阅</a></li><li><a href=https://github.com/fang-zeqiang/fang-zeqiang.github.io/blob/master/LICENSE target=_blank title="Attribution-NonCommercial-ShareAlike 4.0 International">版权</a></li><li class="light-dark-mode no-border-bottom"><a id=light-dark-mode-action><span id=light-dark-mode-icon class="mdi mdi-weather-night"></span></a></li></ul></nav><script src=/js/toggle-theme.js></script></header><article class=main><header class=title><h1>大数据 SQL 性能调优 (Big Data SQL Performance Tuning)</h1><h3>范叶亮 /
+2021-05-23</h3><h3 class=post-meta><strong>分类: </strong><a href=/categories/%E7%BC%96%E7%A8%8B>编程</a>
+/
+<strong>标签: </strong><span>SQL</span>, <span>计算资源量</span>, <span>计算数据量</span>, <span>计算复杂度</span>, <span>执行引擎</span>, <span>Hive</span>, <span>Hadoop</span>, <span>MapReduce</span>, <span>Work Count</span>, <span>Splitting</span>, <span>Mapping</span>, <span>Shuffling</span>, <span>Reducing</span>, <span>Spark</span>, <span>RDD</span>, <span>Resilient Distributed Dataset</span>, <span>弹性分布式数据集</span>, <span>DAG</span>, <span>Directed Acyclic Graph</span>, <span>有向无环图</span>, <span>Driver Program</span>, <span>SparkContext</span>, <span>Cluster Manager</span>, <span>Worker Node</span>, <span>Executor</span>, <span>Application</span>, <span>Task</span>, <span>Stage</span>, <span>Job</span>, <span>DAGScheduler</span>, <span>TaskScheduler</span>, <span>Presto</span>, <span>OLAP</span>, <span>数据分区</span>, <span>数据倾斜</span>, <span>Data Skew</span>, <span>Common Table Expressions</span>, <span>CTEs</span>, <span>参数调优</span>, <span>动态分区</span>, <span>Dynamic Partition</span>, <span>资源申请</span>, <span>动态分配</span>, <span>Dynamic Allocation</span>, <span>小文件合并</span>, <span>Shuffle</span>, <span>ORC</span>, <span>自适应执行</span>, <span>Adaptive Execution</span>, <span>推测执行</span>, <span>Speculation</span>
+/
+<strong>字数: </strong>5400</h3><hr></header><p>在日常工作中，数据处理和分析在研发、产品和运营等多个领域起着重要的作用。在海量数据处理和分析中，SQL 是一项基础且重要的能力。一个优秀的 SQL Boy 和茶树姑的 SQL 代码除了保持简单、可读和易于维护的<a href=/cn/2021/05/sql-style-guide/>样式风格</a>外，还需要具备良好的执行性能，准确且高效的计算出结果才能让你在工作中决胜于千里之外。</p><p>影响 SQL 执行性能的主要因素可以总结为如下几项：</p><ol><li>计算资源量（CPU，内存，网络等）</li><li>计算数据量（输入和输出的记录数）</li><li>计算复杂度（业务逻辑复杂程度和对应的 SQL 实现和执行）</li></ol><p>计算资源量是一个前置制约因素，理论上更多的资源能够带来更快的计算效果。计算数据量也可以认为是一个前置制约因素，理论上更大的数据量会导致计算速度降低，但对于复杂的计算逻辑，通过合理的 SQL 可以更好的控制计算过程中的数据量，从而提升 SQL 性能。计算复杂度是影响 SQL 性能的关键因素，复杂的业务逻辑必然比简单的业务逻辑处理时间要长，相同业务逻辑的不同 SQL 实现也会影响运行效率，这就要求我们对业务逻辑进行全面的理解，对实现 SQL 进行合理优化，从而提升计算速度。</p><h2 id=执行引擎>执行引擎</h2><p>SQL 是用于一种用于数据定义和数据操纵的特定目的的编程语言 <sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>。SQL 虽然有 ISO 标准 <sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>，但大部分 SQL 代码在不同的数据库系统中并不具有完全的跨平台性。不同的执行引擎也会对 SQL 的语法有相应的改动和扩展，同时对于 SQL 的执行也会进行不同的适配和优化。因此，脱离执行引擎的 SQL 性能优化是不可取的。</p><h3 id=hive>Hive</h3><p>Apache Hive 是一个建立在 Hadoop 架构之上的数据仓库。可以将结构化的数据文件映射为一张数据库表，并提供简单的 SQL 查询功能，可以将 SQL 语句转换为 MapReduce 任务进行运行。因此 MapReduce 是 Hive SQL 运行的核心和根基。</p><p>我们以 Word Count 为例简单介绍一下 MapReduce 的原理和过程，Word Count 的 MapReduce 处理过程如下图所示：</p><p><img src=/images/cn/2021-05-23-big-data-sql-performance-tuning/word-count-mapreduce.png alt></p><ol><li><strong>Input</strong>：程序的输入数据。</li><li><strong>Splitting</strong>：讲输入数据分割为若干部分。</li><li><strong>Mapping</strong>：针对 Splitting 分割的每个部分，对应有一个 Map 程序处理。本例中将分割后的文本统计成 <code>&lt;K,V></code> 格式，其中 <code>K</code> 为单词，<code>V</code> 为该单词在这个 Map 中出现的次数。</li><li><strong>Shuffling</strong>：对 Mapping 的相关输出结果进行合并。本例中将具有相同 <code>K</code> 的统计结果合并到一起。</li><li><strong>Reducing</strong>：对 Shuffling 合并的结果进行汇总。本例中讲相同 <code>K</code> 的 <code>V</code> 值进行加和操作并返回单个统计结果。</li><li><strong>Merged</strong>：对 Reducing 的结果进行融合形成最终输出。</li></ol><h3 id=spark>Spark</h3><p>Apache Spark 是一个用于大规模数据处理的统一分析引擎，Spark SQL 则作为 Apache Spark 用于处理结构化数据的模块。</p><p>Spark 中常见的概念有：</p><ol><li><strong>RDD</strong>：Resilient Distributed Dataset，弹性分布式数据集，是分布式内存中一个抽象概念，提供了一种高度受限的共享内存模型。</li><li><strong>DAG</strong>：Directed Acyclic Graph，有向无环图，反应了 RDD 之间的依赖关系。</li><li><strong>Driver Program</strong>：控制程序，负责为 Application 创建 DAG，通常用 <code>SparkContext</code> 代表 Driver Program。</li><li><strong>Cluster Manager</strong>：集群管理器，负责分配计算资源。</li><li><strong>Worker Node</strong>：工作节点，负责具体计算。</li><li><strong>Executor</strong>：运行在 Worker Node 上的一个<a href=/cn/2021/04/process-thread-and-coroutine-theory/>进程</a>，负责运行 Task，并为 Application 存储数据。</li><li><strong>Application</strong>：Spark 应用程序，包含多个 Executor。</li><li><strong>Task</strong>：任务，运行在 Executor 上的工作单元，是 Executor 中的一个<a href=/cn/2021/04/process-thread-and-coroutine-theory/>线程</a>。</li><li><strong>Stage</strong>：一组并行的 Task，Spark 一般会根据 Shuffle 类算子（例如：<code>reduceByKey</code> 或 <code>join</code> 等）划分 Stage。</li><li><strong>Job</strong>：一组 Stage 的集合，一个 Job 包含多个 RDD 及作用于 RDD 上的操作。</li></ol><p>相关概念构成了 Spark 的整体架构，如下图所示：</p><p><img src=/images/cn/2021-05-23-big-data-sql-performance-tuning/spark-architecture.png alt></p><p>在 Spark 中，一个任务的执行过程大致分为 4 个阶段，如下图所示：</p><p><img src=/images/cn/2021-05-23-big-data-sql-performance-tuning/spark-scheduling.jpeg alt></p><ol><li>定义 RDD 的 Transformations 和 Actions 算子 <sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>，并根据这些算子形成 DAG。</li><li>根据形成的 DAG，DAGScheduler 将其划分为多个 Stage，每个 Stage 包含多个 Task。</li><li>DAGScheduler 将 TaskSet 交由 TaskScheduler 运行，并将执行完毕后的结果返回给 DAGScheduler。</li><li>TaskScheduler 将任务分发到每一个 Worker 去执行，并将执行完毕后的结果返回给 TaskScheduler。</li></ol><p>Spark 相比于 Hadoop 的主要改进有如下几点：</p><ol><li>Hadoop 的 MapReduce 的中间结果都会持久化到磁盘上，而 Spark 则采用基于内存的计算（内存不足时也可选持久化到磁盘上），从而减少 Shuffle 数据，进而提升计算速度。</li><li>Spark 采用的 DAG 相比于 Hadoop 的 MapReduce 具有更好的容错性和可恢复性，由于 Spark 预先计算出了整个任务的 DAG，相比于 MapReduce 中各个操作之间是独立的，这更有助于进行全局优化。</li></ol><h3 id=presto>Presto</h3><p>Presto 是一种用于大数据的高性能分布式 SQL 查询引擎。Presto 与 Hive 执行任务过程的差异如下图所示：</p><p><img src=/images/cn/2021-05-23-big-data-sql-performance-tuning/hive-vs-presto.png alt></p><p>Presto 的优点主要有如下几点：</p><ol><li>基于内存计算，减少了磁盘 IO，从而计算速度更快。</li><li>能够连接多个数据源，跨数据源连表查询。</li></ol><p>虽然 Presto 能够处理 PB 级数据，但并不代表 Presto 会把 PB 级别数据都放在内存中计算。而是根据场景，例如 <code>COUNT</code> 和 <code>AVG</code> 等聚合操作，是边读数据边计算，再清理内存，再读取数据计算，这种情况消耗的内存并不高。但是连表查询，可能产生大量的临时数据，从而速度会变慢。</p><h2 id=性能调优>性能调优</h2><p>本节关于 SQL 性能调优的建议主要针对 Hive，Spark 和 Presto 这类大数据 OLAP 执行引擎设计，其他执行引擎不一定完全适用。</p><p>下文性能调优中均以如下两张表为例进行说明：</p><pre><code class=language-sql>CREATE TABLE IF NOT EXISTS sku_order
+(
+  order_id STRING '订单 ID',
+  sku_id STRING '商品 ID',
+  sale_quantity BIGINT '销售数量' 
+)
+COMMENT '商品订单表'
+PARTITIONED BY
+(
+  dt STRING COMMENT '日期分区'
+)
+;
+</code></pre><pre><code class=language-sql>CREATE TABLE IF NOT EXISTS sku_info
+(
+  sku_id STRING '商品 ID',
+  sku_name STRING '商品名称',
+  category_id STRING '品类 ID',
+  category_name STRING '品类名称'
+)
+COMMENT '商品信息表'
+</code></pre><h3 id=减少数据量>减少数据量</h3><ul><li>限定查询分区。对于包含分区的数据表（例如：日期分区），通过合理限定分区来减少数据量，避免全表扫描。</li><li>限定查询字段。避免使用 <code>SELECT *</code>，仅选择需要的字段。<code>SELECT *</code> 会通过查询元数据获取字段信息，同时查询所有字段会造成更大的网络开销。</li><li>在关联前过滤数据。应在进行数据表关联之前按照业务逻辑进行数据过滤，从而提升执行效率。</li></ul><h3 id=数据倾斜>数据倾斜</h3><p>在 Shuffle 阶段，需要将各节点上相同的 Key 拉取到某个节点（Task）上处理，如果某个 Key 对应的数据量特别大则会产生数据倾斜。结果就是该 Task 运行的时间要远远大于其他 Task 的运行时间，从而造成作业整体运行缓慢，数据量过大甚至可能导致某个 Task 出现 OOM。</p><p>在 SQL 中主要有如下几种情况会产生数据倾斜：</p><ul><li><code>JOIN</code> 导致的数据倾斜：两表关联，关联字段的无效值（例如：<code>NULL</code>）或有效值过多，可能会导致数据倾斜。</li><li><code>GROUP BY</code> 导致的数据倾斜：当 <code>GROUP BY</code> 的字段（或字段组合）中，Key 分布不均，可能会导致数据倾斜。</li><li><code>DISTINCT</code> 导致的数据倾斜：当 <code>DISTINCT</code> 的字段（或字段组合）中，Key 分布不均，可能会导致数据倾斜。</li></ul><p>对于不同的数据倾斜情况，解决方案如下：</p><ul><li><p>对于 <code>JOIN</code> 中的无效值进行过滤。</p><pre><code class=language-sql>SELECT
+  category_name,
+  SUM(sale_quantity) AS sale_quantity
+FROM
+  (
+    SELECT
+      sku_id,
+      sale_quantity
+    FROM
+      sku_order
+    WHERE
+      dt = '20210523'
+      AND sku_id IS NOT NULL
+  ) AS sku_order_filtered
+LEFT JOIN
+  sku_info
+ON
+  sku_order_filtered.sku_id = sku_info.sku_id
+GROUP BY
+  category_name
+;
+</code></pre></li><li><p>对于 <code>JOIN</code> 开启 Map Join 或 Broadcast Join 策略，将小表广播到每个 Executor 上来避免产生 Shuffle，从而使得 <code>JOIN</code> 能够快速完成。</p></li></ul><pre><code class=language-shell>set spark.sql.autoBroadcastJoinThreshold=10485760;
+</code></pre><ul><li><p>对于 <code>JOIN</code> 中存在数据倾斜的 KEY 进行打散处理。</p><pre><code class=language-sql>SELECT
+  category_name,
+  SUM(sale_quantity) AS sale_quantity
+FROM
+  (
+    SELECT
+      IF(sku_id IN (0000, 9999), CONCAT(sku_id, '_', CEIL(RAND() * 10)), sku_id) AS sku_id,
+      sale_quantity
+    FROM
+      sku_order
+    WHERE
+      dt = '20210523'
+  ) AS sku_order_modified
+LEFT JOIN
+  (
+    SELECT
+      sku_id,
+      category_name,
+    FROM
+      sku_info
+    WHERE
+      sku_id NOT IN (0000, 9999)
+    UNION ALL
+    SELECT
+      CONCAT(sku_id, '_', suffix) AS sku_id,
+      category_name
+    FROM
+      (
+        SELECT
+          sku_id,
+          SPLIT('1,2,3,4,5,6,7,8,9,10', ',') AS suffix_list,
+          category_name
+        FROM
+          sku_info
+        WHERE
+          sku_id IN (0000, 9999)
+      ) sku_info_tmp LATERAL VIEW EXPLODE(suffix_list) sku_info_suffix AS suffix
+  ) sku_info_all
+ON
+  sku_order_modified.sku_id = sku_info_all.sku_id
+GROUP BY
+  category_name
+;
+</code></pre></li><li><p>对于 <code>GROUP BY</code> 导致的数据倾斜采用两步聚合。</p><pre><code class=language-sql>SELECT
+  IF(sku_is_null = 1, NULL, sku_id) AS sku_id,
+  SUM(sale_quantity) AS sale_quantity
+FROM
+  (
+    SELECT
+      sku_id,
+      sku_is_null,
+      SUM(sale_quantity) AS sale_quantity
+    FROM
+    (
+      SELECT
+        IF(sku_id IS NULL, CONCAT(sku_id, CEIL(RAND() * 10)), sku_id) AS sku_id,
+        IF(sku_id IS NULL, 1, 0) AS sku_is_null,
+        sale_quantity
+      FROM
+        sku_order
+      WHERE
+        dt = '20210523'
+    ) sku_order_modified
+    GROUP BY
+      sku_id,
+      sku_is_null
+  ) sku_order_group
+GROUP BY
+  IF(sku_is_null = 1, NULL, sku_id)
+;
+</code></pre></li><li><p>对于 <code>DISTINCT</code> 导致的数据倾斜，可以改写为 <code>GROUP BY</code> 实现，从而通过多个 Task 计算避免数据倾斜。</p><pre><code class=language-sql>/* COUNT DISTINCT */
+SELECT
+  COUNT(DISTINCT sku_id) AS cnt
+FROM
+  sku_order
+WHERE
+  dt = '20210523'
+;
+
+/* GROUP BY */
+SELECT
+  COUNT(1) AS cnt
+FROM
+  (
+    SELECT
+      sku_id
+    FROM
+      sku_order
+    WHERE
+      dt = '20210523'
+    GROUP BY
+      sku_id
+  ) AS sku_stats
+;
+</code></pre></li></ul><h3 id=其他建议>其他建议</h3><ul><li><p>使用 <a href=https://en.wikipedia.org/wiki/Hierarchical_and_recursive_queries_in_SQL#Common_table_expression>Common Table Expressions (CTEs)</a> 而非子查询。<code>WITH</code> 语句产生的结果类似临时表，可以重复使用，从而避免相同逻辑业务重复计算。</p></li><li><p>使用 <code>LEFT SEMI JOIN</code> 而非 <code>IN</code> 和子查询。Hive 在 0.13 后的版本中才在 <code>IN</code> 和 <code>NOT IN</code> 中支持子查询。</p><pre><code class=language-sql>/* BAD */
+SELECT
+  order_id,
+  sku_id,
+  sale_quantity
+FROM
+  sku_order
+WHERE
+  sku_id IN (SELECT sku_id FROM sku_info)
+;
+
+/* GOOD */
+SELECT
+  order_id,
+  sku_id,
+  sale_quantity
+FROM
+  sku_order
+LEFT SEMI JOIN
+  sku_info
+ON
+  sku_order.sku_id = sku_info.sku_id
+;
+</code></pre></li></ul><h2 id=参数调优>参数调优</h2><p>除了 SQL 本身逻辑的优化外，执行引擎的相关参数设置也会影响 SQL 的执行性能。本小节以 Spark 引擎为例，总结相关参数的设置及其影响。</p><h3 id=动态分区>动态分区</h3><pre><code class=language-shell>/* 以下 Hive 参数对 Spark 同样有效 */
+
+/* 是否启用动态分区功能 */
+set hive.exec.dynamic.partition=true;
+
+/* strict 表示至少需要指定一个分区，nonstrict 表示可以全部动态指定分区 */
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+/* 动态生成分区的最大数量 */
+set hive.exec.max.dynamic.partitions=1000;
+</code></pre><h3 id=资源申请>资源申请</h3><pre><code class=language-shell>/* 每个 Executor 中的核数 */
+set spark.executor.cores=2;
+
+/* Executor 的内存总量。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.executor.memory=4G;
+
+/* Executor 的堆外内存大小，由 YARN 控制，单位为 MB。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.yarn.executor.memoryOverhead=1024;
+
+/* Driver 的内存总量，主要用于存放任务执行过程中 Shuffle 元数据，以及任务中 Collect 的数据，Broadcast 的小表也会先存放在 Driver 中。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.driver.memory=8G;
+
+/* Driver 的堆外内存，由 YARN 控制，单位为 MB。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.yarn.driver.memoryOverhead=1024;
+
+/* storage memory + execution memory 占总内存（java heap-reserved memory）的比例。executor jvm 中内存分为 storage、execution 和 other 内存。storage 存放缓存 RDD 数据，execution 存放 Shuffle 过程的中间数据，other 存放用户定义的数据结构或 Spark 内部元数据。如果用户自定义数据结构较少，可以将该参数比例适当上调。 */
+set spark.memory.fraction=0.7;
+</code></pre><h3 id=动态分配>动态分配</h3><p>开启动态分配，Spark 可以根据当前作业负载动态申请和释放资源：</p><pre><code class=language-shell>set spark.dynamicAllocation.enabled=true;
+</code></pre><p>同时需要设置同一时刻可以申请的最小和最大 Executor 数量：</p><pre><code class=language-shell>set spark.dynamicAllocation.minExecutors=10;
+set spark.dynamicAllocation.maxExecutors=100;
+</code></pre><h3 id=小文件合并>小文件合并</h3><pre><code class=language-shell>/* 小文件合并阈值，如果生成的文件平均大小低于阈值会额外启动一轮 Stage 进行小文件的合并，默认不合并小文件。 */
+set spark.sql.mergeSmallFileSize=67108864;
+
+/* 	设置额外的合并 Job 时的 Map 端输入大小 */
+set spark.sql.targetBytesInPartitionWhenMerge=67108864;
+
+/* 设置 Map 端输入的合并文件大小 */
+set spark.hadoopRDD.targetBytesInPartition=67108864;
+</code></pre><p>在决定一个目录是否需要合并小文件时，会统计目录下的平均大小，然后和 <code>spark.sql.mergeSmallFileSize</code> 比较。在合并文件时，一个 Map Task 读取的数据量取决于下面三者的较大值：<code>spark.sql.mergeSmallFileSize</code>，<code>spark.sql.targetBytesInPartitionWhenMerge</code>，<code>spark.hadoopRDD.targetBytesInPartition</code>。</p><h3 id=shuffle-相关>Shuffle 相关</h3><p>当大表 <code>JOIN</code> 小表时，如果小表足够小，可以将小表广播到所有 Executor 中，在 Map 阶段完成 <code>JOIN</code>。如果该值设置太大，容易导致 Executor 出现 OOM。</p><pre><code class=language-shell>/* 10 * 1024 * 1024, 10MB */
+set spark.sql.autoBroadcastJoinThreshold=10485760;
+</code></pre><p>设置 Reduce 阶段的分区数：</p><pre><code class=language-shell>set spark.sql.shuffle.partitions=1000;
+</code></pre><p>设置过大可能导致很多 Reducer 同时向一个 Mapper 拉取数据，导致 Mapper 由于请求压力过大而挂掉或响应缓慢，从而 fetch failed。</p><p>一些其他 Shuffle 相关的配置如下：</p><pre><code class=language-shell>/* 同一时刻一个 Reducer 可以同时拉取的数据量大小 */
+set spark.reducer.maxSizeInFlight=25165824;
+
+/* 同一时刻一个 Reducer 可以同时产生的请求数 */
+set spark.reducer.maxReqsInFlight=10;
+
+/* 同一时刻一个 Reducer 向同一个上游 Executor 拉取的最多 Block 数 */
+set spark.reducer.maxBlocksInFlightPerAddress=1;
+
+/* Shufle 请求的 Block 超过该阈值就会强制落盘，防止一大堆并发请求将内存占满 */
+set spark.reducer.maxReqSizeShuffleToMem=536870911;
+
+/* Shuffle 中连接超时时间，超过该时间会 fetch failed */
+set spark.shuffle.io.connectionTimeout=120;
+
+/* Shuffle 中拉取数据的最大重试次数 */
+set spark.shuffle.io.maxRetries=3;
+
+/* Shuffle 重试的等待间隔 */
+set spark.shuffle.io.retryWait=5;
+</code></pre><h3 id=orc-相关>ORC 相关</h3><p>ORC 文件的格式如下图所示：</p><p><img src=/images/cn/2021-05-23-big-data-sql-performance-tuning/orc-file-layout.png alt></p><p>其中，Postscript 为文件描述信息，包括 File Footer 和元数据长度、文件版本、压缩格式等；File Footer 是文件的元数据信息，包括数据量、每列的统计信息等；文件中的数据为 Stripe，每个 Stripe 包括索引数据、行数据和 Stripe Footer。更多有关 ORC 文件格式的信息请参见 <a href=https://orc.apache.org/specification/ORCv1/>ORC Specification v1
+</a>。</p><p>在读取 ORC 压缩表时，可以控制生成 Split 的策略，包括：</p><ul><li><strong>BI</strong>：以文件为力度进行 Split 划分</li><li><strong>ETL</strong>：将文件进行切分，多个 Stripe 组成一个 Split</li><li><strong>HYBRID</strong>：当文件的平均大小大于 Hadoop 最大 Split 值时使用 ETL 策略，否则使用 BI 策略</li></ul><p>对于一些较大的 ORC 表，可能其 Footer 较大，ETL 策略可能会导致从 HDFS 拉取大量的数据来切分 Split，甚至会导致 Driver 端 OOM，因此这类表的读取建议采用 BI 策略。对于一些较小，尤其是有数据倾斜的表（即大量 Stripe 存储于少数文件中），建议使用 ETL 策略。</p><p>一些其他 ORC 相关的配置如下：</p><pre><code class=language-shell>/* ORC 谓词下推，默认是关闭 */
+set spark.sql.orc.filterPushdown=true;
+
+/* 	开启后，在 Split 划分时会使用 Footer 信息 */
+set spark.sql.orc.splits.include.file.footer=true;
+
+/* 设置每个 Stripe 可以缓存的大小 */
+set spark.sql.orc.cache.stripe.details.size=10000;
+
+/* 当为 true 时，Spark SQL 的谓语将被下推到 Hive Metastore 中，更早的消除不匹配的分区。 */
+set spark.sql.hive.metastorePartitionPruning=true;
+
+/* 读 ORC 表时，设置小文件合并的阈值，低于该值的 Split 会合并在一个 Task 中执行 */
+set spark.hadoop.mapreduce.input.fileinputformat.split.minsize=67108864;
+
+/* 读 ORC 表时，设置一个 Split 的最大阈值，大于该值的 Split 会切分成多个 Split。 */
+set spark.hadoop.mapreduce.input.fileinputformat.split.maxsize=268435456;
+
+/* 文件提交到HDFS上的算法：1. version=1 是按照文件提交。2. version=2 是批量按照目录进行提交，可以极大节约文件提交到 HDFS 的时间，减轻 NameNode 压力。 */
+set spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version=2;
+</code></pre><h3 id=自适应执行>自适应执行</h3><pre><code class=language-shell>/* 开启动态执行 */
+set spark.sql.adaptive.enabled=true;
+</code></pre><p>当自适应执行开启后，调整 <code>spark.sql.adaptive.shuffle.targetPostShuffleInputSize</code>，当 Mapper 端两个 Partition 的数据合并后小于该值时，Spark 会将两个 Partition 合并到一个 Reducer 进行处理。</p><pre><code class=language-shell>set spark.sql.adaptive.shuffle.targetPostShuffleInputSize=67108864;
+</code></pre><p>当自适应执行开启后，有时会导致过多分区被合并，为了防止分区过少影响性能，可以设置如下参数：</p><pre><code class=language-shell>set spark.sql.adaptive.minNumPostShufflePartitions=10;
+</code></pre><p>一些其他自适应执行相关的配置如下：</p><pre><code class=language-shell>/* 开启动态调整 Join */
+set spark.sql.adaptive.join.enabled=true;
+
+/* 设置 SortMergeJoin 转 BroadcastJoin 的阈值，如果不设置该参数，该阈值和 spark.sql.autoBroadcastJoinThreshold 值相等。 */
+set spark.sql.adaptiveBroadcastJoinThreshold=33554432;
+
+/* 是否允许为了优化 Join 而增加 Shuffle，默认是 false */
+set spark.sql.adaptive.allowAddititionalShuffle=false;
+
+/* 开启自动处理 Join 时的数据倾斜 */
+set spark.sql.adaptive.skewedJoin.enabled=true;
+
+/* 控制处理一个倾斜 Partition 的 Task 个数上限，默认值是 5 */
+set spark.sql.adaptive.skewedPartitionMaxSplits=100;
+
+/* 设置一个 Partition 被视为倾斜 Partition 的行数下限，行数低于该值的 Partition 不会被当做倾斜 Partition 处理。 */
+set spark.sql.adaptive.skewedPartitionRowCountThreshold=10000000;
+
+/* 设置一个 Partition 被视为倾斜 Partition 的大小下限，大小小于该值的 Partition 不会被当做倾斜 Partition 处理。 */
+set spark.sql.adaptive.skewedPartitionSizeThreshold=536870912;
+
+/* 设置倾斜因子，当一个 Partition 满足以下两个条件之一，就会被视为倾斜 Partition：1. 大小大于 spark.sql.adaptive.skewedPartitionSizeThreshold 的同时大于各 Partition 大小中位数与该因子的乘积。2. 行数大于 spark.sql.adaptive.skewedRowCountThreshold 的同时大于各 Partition 行数中位数与该因子的乘积。*/
+set spark.sql.adaptive.skewedPartitionFactor=10;
+</code></pre><h3 id=推测执行>推测执行</h3><pre><code class=language-shell>/* Spark 推测执行开关，默认是 true */
+set spark.speculation=true;
+
+/* 开启推测执行后，每隔该值时间会检测是否有需要推测执行的 Task */
+set spark.speculation.interval=1000ms;
+
+/* 当成功 Task 占总 Task 的比例超过 spark.speculation.quantile，统计成功 Task 运行时间中位数乘以 spark.speculation.multiplier 得到推测执行阈值，当在运行的任务超过这个阈值就会启动推测执行。当资源充足时，可以适当减小这两个值。 */
+set spark.speculation.quantile=0.99;
+set spark.speculation.multiplier=3;
+</code></pre><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p><a href=https://zh.wikipedia.org/wiki/SQL>https://zh.wikipedia.org/wiki/SQL</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p><a href=https://www.iso.org/committee/45342.html>https://www.iso.org/committee/45342.html</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:3><p><a href=https://spark.apache.org/docs/latest/rdd-programming-guide.html>https://spark.apache.org/docs/latest/rdd-programming-guide.html</a>&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div><link rel=stylesheet href=/css/donate.css><div class=donate><div class=donate-header></div><div class=donate-slug id=donate-slug>big-data-sql-performance-tuning</div><button class=donate-button>赞 赏</button><div class=donate-footer>「真诚赞赏，手留余香」</div></div><div class=donate-modal-wrapper><div class=donate-modal><div class=donate-box><div class=donate-box-content><div class=donate-box-content-inner><div class=donate-box-header>「真诚赞赏，手留余香」</div><div class=donate-box-body><div class=donate-box-money><button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-2 data-v=2 data-unchecked="￥ 2" data-checked="2 元">￥ 2</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-5 data-v=5 data-unchecked="￥ 5" data-checked="5 元">￥ 5</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-10 data-v=10 data-unchecked="￥ 10" data-checked="10 元">￥ 10</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-50 data-v=50 data-unchecked="￥ 50" data-checked="50 元">￥ 50</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-100 data-v=100 data-unchecked="￥ 100" data-checked="100 元">￥ 100</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-custom data-v=custom data-unchecked=任意金额 data-checked=任意金额>任意金额</button></div><div class=donate-box-pay><img class=donate-box-pay-qrcode id=donate-box-pay-qrcode src></div></div><div class=donate-box-footer><div class="donate-box-pay-method donate-box-pay-method-checked" data-v=wechat-pay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-wechat-pay src></div><div class=donate-box-pay-method data-v=alipay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-alipay src></div></div></div></div></div><button type=button class=donate-box-close-button>
+<svg class="donate-box-close-button-icon" fill="#fff" viewBox="0 0 24 24" width="24" height="24"><path d="M13.486 12l5.208-5.207a1.048 1.048.0 00-.006-1.483 1.046 1.046.0 00-1.482-.005L12 10.514 6.793 5.305A1.048 1.048.0 005.31 5.31a1.046 1.046.0 00-.005 1.483L10.514 12l-5.208 5.207a1.048 1.048.0 00.006 1.483 1.046 1.046.0 001.482.005L12 13.486l5.207 5.208a1.048 1.048.0 001.483-.006 1.046 1.046.0 00.005-1.482L13.486 12z" fill-rule="evenodd"/></svg></button></div></div><script type=text/javascript src=/js/donate.js></script></script><footer><nav class=post-nav><span class=nav-prev>&larr; <a href=/cn/2021/05/sql-style-guide/>SQL 样式指南 (SQL Style Guide)</a></span>
+<span class=nav-next><a href=/cn/2021/08/a-glimpse-of-design-language/>设计语言初探 (A Glimpse of Design Language)</a> &rarr;</span></nav><script type=text/javascript>document.addEventListener("keyup",function(e){if(e.target.nodeName.toUpperCase()!="BODY")return;var t=!1;e.which==37?t="/cn/2021/05/sql-style-guide/":e.which==39&&(t="/cn/2021/08/a-glimpse-of-design-language/"),t&&(window.location=t)})</script><ins class=adsbygoogle style=display:block;text-align:center data-ad-layout=in-article data-ad-format=fluid data-ad-client=ca-pub-2608165017777396 data-ad-slot=1261604535></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({})</script><section class=comments><div id=disqus_thread></div><script>var disqus_config=function(){this.page.url="https://zeqiang.fun"+location.pathname};(function(){if(a=function(){var e=!0;try{e=window.self!==window.top}catch{}return e},a())return;var n,s,o,i,a,r="//.disqus.com/embed.js",e=document,t=e.createElement("script");if(t.src=r,t.async=!0,t.setAttribute("data-timestamp",+new Date),n=e.getElementById("disqus_thread"),s=!1,o=function(o){if(s)return;(e.head||e.body).appendChild(t),s=!0,o&&n.scrollIntoView()},t.onerror=function(){if(sessionStorage.getItem("failure-note"))return;n.innerText="Sorry, but you cannot make comments because Disqus failed to load for some reason. It is known to be blocked in China. If you are sure it is not blocked in your region, please refresh the page. 中国大陆地区读者需要翻墙才能发表评论。",sessionStorage.setItem("failure-note",!0)},location.hash.match(/^#comment-[0-9]+$/))return o(!0);i=function(){if(s)return;var e=n.getBoundingClientRect();e.top<window.innerHeight&&e.bottom>=0&&o()},window.addEventListener("load",i),e.addEventListener("scroll",i)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></section><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/show-language/prism-show-language.min.js></script><script>(function(){if(!self.Prism)return;Prism.languages.dos=Prism.languages.powershell,Prism.languages.gremlin=Prism.languages.groovy;var e={r:"R",python:"Python",xml:"XML",html:"HTML",yaml:"YAML",latex:"LaTeX",tex:"TeX",powershell:"PowerShell",javascript:"JavaScript",dos:"DOS",qml:"QML",json:"JSON",bash:"Bash",text:"Text",txt:"Text",sparql:"SPARQL",gremlin:"Gremlin",cypher:"Cypher",ngql:"nGQL",shell:"Shell",sql:"SQL",apacheconf:"Apache Configuration"};Prism.hooks.add("before-highlight",function(t){var n=e[t.language]||t.language;t.element.setAttribute("data-language",n)})})()</script><script async src=/js/fix-toc.js></script><script async src=/js/center-img.js></script><script async src=/js/right-quote.js></script><script async src=/js/fix-footnote.js></script><script async src=/js/external-link.js></script><script async src=/js/alt-title.js></script><script src=/js/no-highlight.js></script><script src=/js/math-code.js></script><script async src=/js/load-typekit.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js></script><script src=//cdn.jsdelivr.net/npm/vanilla-back-to-top@latest/dist/vanilla-back-to-top.min.js></script><script>addBackToTop({diameter:48})</script><hr><div class="copyright no-border-bottom"><div class=copyright-author-year><span>&copy; 2017-2021 Leo Van</span></div><div class=copyright-links><a href=https://github.com/leovan rel=noreferrer target=_blank>Github</a>
+<span>· </span><a href=https://orcid.org/0000-0002-9556-7821 rel=noreferrer target=_blank>ORCID</a>
+<span>· </span><span>I am Mr. Black.</span></div></div></footer></article></body></html>

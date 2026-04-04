@@ -1,0 +1,154 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>马尔科夫链蒙特卡洛方法和吉布斯采样 (MCMC and Gibbs Sampling) - Zeqiang Fang | 方泽强</title><meta name=referrer content="no-referrer"><meta property="og:title" content="马尔科夫链蒙特卡洛方法和吉布斯采样 (MCMC and Gibbs Sampling) - Zeqiang Fang | 方泽强"><meta name=description property="og:description" content="蒙特卡罗方法 (Monte Carlo, MC)
+蒙特卡罗方法 (Monte Carlo) 也称为统计模拟方法，是于 20 世纪 40 年代由冯·诺伊曼，斯塔尼斯拉夫·乌拉姆和尼古拉斯·梅特罗波利斯在洛斯阿拉莫斯国家实验室为核武器计划工作时 (曼哈顿计划) 发明。因为乌拉姆的叔叔经常在摩纳哥的蒙特卡罗赌场输钱，该方法被定名为蒙特卡罗方法。蒙特卡罗方法是以概率为基础的方法，与之对应的是确定性算法。"><meta property="og:type" content="article"><meta property="og:site_name" content="Zeqiang Fang | 方泽强"><meta property="og:url" content="https://zeqiang.fun/cn/2017/12/mcmc-and-gibbs-sampling/"><meta name=author property="article:author" content="范叶亮"><meta name=date property="article:published_time" content="2017-12-17" scheme=YYYY-MM-DD><meta name=date property="article:modified_time" content="2017-12-17" scheme=YYYY-MM-DD><meta name=keywords property="article:tag" content="马尔科夫链蒙特卡洛方法,MCMC,吉布斯采样,Gibbs Sampling"><meta name=theme-color content="#0d0d0d"><link rel=icon type=image/png sizes=16x16 href=/images/web/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=/images/web/favicon-32x32.png><link rel=icon type=image/png sizes=48x48 href=/images/web/favicon-48x48.png><link rel=icon type=image/png sizes=62x62 href=/images/web/favicon-62x62.png><link rel=icon type=image/png sizes=192x192 href=/images/web/favicon-192x192.png><link rel=apple-touch-icon size=192x192 href=/images/web/icon-192x192.png><link rel=manifest href=/manifest.json><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://zeqiang.fun/cn"},"name":"马尔科夫链蒙特卡洛方法和吉布斯采样 (MCMC and Gibbs Sampling)","headline":"马尔科夫链蒙特卡洛方法和吉布斯采样 (MCMC and Gibbs Sampling)","description":"\u003ch2 id=\"蒙特卡罗方法-monte-carlo-mc\"\u003e蒙特卡罗方法 (Monte Carlo, MC)\u003c/h2\u003e\n\u003cp\u003e蒙特卡罗方法 (Monte Carlo) 也称为统计模拟方法，是于 20 世纪 40 年代由冯·诺伊曼，斯塔尼斯拉夫·乌拉姆和尼古拉斯·梅特罗波利斯在洛斯阿拉莫斯国家实验室为核武器计划工作时 (曼哈顿计划) 发明。因为乌拉姆的叔叔经常在摩纳哥的蒙特卡罗赌场输钱，该方法被定名为蒙特卡罗方法。蒙特卡罗方法是以概率为基础的方法，与之对应的是确定性算法。\u003c/p\u003e","genre":["机器学习"],"datePublished":"2017-12-17","dateModified":"2017-12-17","wordCount":"3496","keywords":["马尔科夫链蒙特卡洛方法","MCMC","吉布斯采样","Gibbs Sampling"],"image":["https://zeqiang.fun/images/cn/2017-12-17-mcmc-and-gibbs-sampling/markov-chain-demo.png","https://zeqiang.fun/images/cn/2017-12-17-mcmc-and-gibbs-sampling/mc-pi.png","https://zeqiang.fun/images/cn/2017-12-17-mcmc-and-gibbs-sampling/mc-pi-simulation.png","https://zeqiang.fun/images/cn/2017-12-17-mcmc-and-gibbs-sampling/gibbs-sampling-bivariate-guassian-distribution.gif"],"author":{"@type":"Person","name":"范叶亮"},"publisher":{"@type":"Organization","name":"范叶亮","logo":{"@type":"ImageObject","url":"https://zeqiang.fun/images/web/publisher-logo.png"}},"url":"https://zeqiang.fun/cn/2017/12/mcmc-and-gibbs-sampling/"}</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js></script><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/6.5.95/css/materialdesignicons.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-.min.css><script async src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js></script><link rel=stylesheet type=text/css href=/css/fonts.css><link rel=stylesheet type=text/css href=/css/style.css><link rel=stylesheet type=text/css href=/css/light.css><link rel=stylesheet type=text/css href=/css/dark.css id=dark-mode-style disabled><link rel=stylesheet type=text/css href=/css/icons.css><link rel=stylesheet type=text/css href=/css/print.css></head><body class=cn><header class=masthead><div class=logo></div><p class=slogan>优雅永不过时</p><nav class=menu><ul><li><a href=/>首页</a></li><li><a href=/cn/>博客</a></li><li><a href=/categories/>分类</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/about/>关于</a></li><li><a href=/cn/resume/>简历</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/index.xml target=_blank type=application/rss+xml title="RSS feed">订阅</a></li><li><a href=https://github.com/fang-zeqiang/fang-zeqiang.github.io/blob/master/LICENSE target=_blank title="Attribution-NonCommercial-ShareAlike 4.0 International">版权</a></li><li class="light-dark-mode no-border-bottom"><a id=light-dark-mode-action><span id=light-dark-mode-icon class="mdi mdi-weather-night"></span></a></li></ul></nav><script src=/js/toggle-theme.js></script></header><article class=main><header class=title><h1>马尔科夫链蒙特卡洛方法和吉布斯采样 (MCMC and Gibbs Sampling)</h1><h3>范叶亮 /
+2017-12-17</h3><h3 class=post-meta><strong>分类: </strong><a href=/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0>机器学习</a>
+/
+<strong>标签: </strong><span>马尔科夫链蒙特卡洛方法</span>, <span>MCMC</span>, <span>吉布斯采样</span>, <span>Gibbs Sampling</span>
+/
+<strong>字数: </strong>3496</h3><hr></header><h2 id=蒙特卡罗方法-monte-carlo-mc>蒙特卡罗方法 (Monte Carlo, MC)</h2><p>蒙特卡罗方法 (Monte Carlo) 也称为统计模拟方法，是于 20 世纪 40 年代由冯·诺伊曼，斯塔尼斯拉夫·乌拉姆和尼古拉斯·梅特罗波利斯在洛斯阿拉莫斯国家实验室为核武器计划工作时 (曼哈顿计划) 发明。因为乌拉姆的叔叔经常在摩纳哥的蒙特卡罗赌场输钱，该方法被定名为蒙特卡罗方法。蒙特卡罗方法是以概率为基础的方法，与之对应的是确定性算法。</p><p>蒙特卡罗方法最早可以追述到 18 世纪的<a href=https://zh.wikipedia.org/zh-hans/%E5%B8%83%E4%B8%B0%E6%8A%95%E9%92%88%E9%97%AE%E9%A2%98>布丰投针问题</a>，该方法通过一个平行且等距木纹铺成的地板，随意抛一支长度比木纹之间距离小的针，求针和其中一条木纹相交的概率的方法得出了一个求 <code>$\pi$</code> 的蒙特卡罗方法。我们通过另一种方式使用蒙特卡罗方法计算圆周率 <code>$\pi$</code>，对于一个边长为 <code>$2r$</code> 的正方形，其内切圆的半径即为 <code>$r$</code>，因此圆形的面积 <code>$A_c$</code> 与正方形的面积 <code>$A_s$</code> 的比值为</p><p><code>$$ \dfrac{A_c}{A_s} = \dfrac{\pi r^2}{\left(2r\right)^2} = \dfrac{\pi}{4} $$</code></p><p><img src=/images/cn/2017-12-17-mcmc-and-gibbs-sampling/mc-pi.png alt></p><p>如果我们在矩形内随机的生成均匀分布的点，则在圆内的点的个数的占比即为 <code>$\dfrac{\pi}{4}$</code>，因此通过模拟即可求出 <code>$\pi$</code> 的近似值</p><pre><code class=language-r>library(tidyverse)
+
+# 圆的中心点和半径
+r &lt;- 2
+center_x &lt;- r
+center_y &lt;- r
+
+# 距离公式
+distance &lt;- function(point_x, point_y, center_x, center_y) {
+    sqrt((point_x - center_x)^2 + (point_y - center_y)^2)
+}
+
+# 点生成器
+points_generator &lt;- function(size) {
+    set.seed(112358)
+    points_x &lt;- runif(size, min = 0, max = 2*r)
+    points_y &lt;- runif(size, min = 0, max = 2*r)
+    
+    tibble(
+        x = points_x,
+        y = points_y,
+        in_cycle = ifelse(
+            distance(points_x, points_y, center_x, center_y) &gt; r, 0, 1)
+    )
+}
+
+# 点的个数
+sizes &lt;- c(1000, 10000, 100000, 1000000, 10000000)
+
+# 估计的 PI 值
+estimated_pi &lt;- sapply(sizes, function(size) {
+    points &lt;- points_generator(size)
+    sum(points$in_cycle) * 4 / size
+})
+print(estimated_pi)
+# [1] 3.184000 3.146400 3.137880 3.143140 3.141889
+</code></pre><p>模拟 <code>$1000$</code> 个随机点的结果如图所示</p><p><img src=/images/cn/2017-12-17-mcmc-and-gibbs-sampling/mc-pi-simulation.png alt></p><p>对于简单的分布 <code>$p\left(x\right)$</code>，我们可以相对容易的生成其样本，但对于复杂的分布或高维的分布，样本的生成就比较困难了<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>，例如：</p><ol><li><code>$p\left(x\right) = \dfrac{\tilde{p}\left(x\right)}{\int\tilde{p}\left(x\right) dx}$</code>，其中 <code>$\tilde{p}\left(x\right)$</code> 是可以计算的，而分母中的积分是无法显式计算的。</li><li><code>$p\left(x, y\right)$</code> 是一个二维分布函数，函数本身计算很困难，但其条件分布 <code>$p\left(x | y\right)$</code> 和 <code>$p\left(y | x\right)$</code> 计算相对简单。对于高维情况 <code>$p\left(\boldsymbol{x}\right)$</code>，这种情况则更加明显。</li></ol><p>这时候则需要更加复杂的模拟方法来生成样本了。</p><h2 id=马尔科夫链-markov-chain-mc>马尔科夫链 (Markov Chain, MC)</h2><p>马尔可夫过程 (Markov Process) 是因俄国数学家安德雷·安德耶维齐·马尔可夫 (Андрей Андреевич Марков) 而得名一个随机过程，在该随机过程中，给定当前状态和过去所有状态的条件下，其下一个状态的条件概率分布仅依赖于当前状态，通常具备离散状态的马尔科夫过程称之为马尔科夫链 (Markov Chain)。因此，马尔科夫链可以理解为一个有限状态机，给定了当前状态为 <code>$s_i$</code> 时，下一时刻状态为 <code>$s_j$</code> 的概率，不同状态之间变换的概率称之为转移概率。下图描述了 3 个状态 <code>$S_a, S_b, S_c$</code> 之间转换状态的马尔科夫链。</p><p><img src=/images/cn/2017-12-17-mcmc-and-gibbs-sampling/markov-chain-demo.png alt></p><p>对于马尔科夫链，我们设 <code>$X_t$</code> 表示 <code>$t$</code> 时刻随机变量 <code>$X$</code> 的取值，则马尔科夫链可以表示为</p><p><code>$$ P\left(X_{t+1} = s_j | X_0 = s_{i0}, X_1 = s_{i1}, ..., X_t = s_i\right) = P\left(X_{t+1} | X_t = s_i\right) $$</code></p><p>其中，<code>$s_{i0}, s_{i1}, ..., s_i, s_j$</code> 为随机变量 <code>$X$</code> 可能的状态。则定义从一个状态 <code>$s_i$</code> 到另一个状态 <code>$s_j$</code> 的转移概率为</p><p><code>$$ P\left(i \to j\right) = P_{ij} = P\left(X_{t+1} | X_t = s_i\right) $$</code></p><p>设 <code>$\pi_{k}^{\left(t\right)}$</code> 表示随机变量 <code>$X$</code> 在 <code>$t$</code> 时刻取值为 <code>$s_k$</code> 的概率，则 <code>$X$</code> 在 <code>$t+1$</code> 时刻取值为 <code>$s_i$</code> 的概率为</p><p><code>$$ \begin{equation} \begin{split} \pi_{i}^{\left(t+1\right)} &= P\left(X_{t+1} = s_i\right) \\ &= \sum_{k}{P\left(X_{t+1} = s_i | X_t = s_k\right) \cdot P\left(X_t = s_k\right)} \\ &= \sum_{k}{P_{ki} \cdot \pi_{k}^{\left(t\right)}} \end{split} \end{equation} $$</code></p><p>我们通过一个例子来理解一下马尔科夫链，我们使用 LDA 数学八卦<sup id=fnref1:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>一文中的例子，对于人口，我们将其经济状况分为 3 类：下层，中层和上层，其父代到子代收入阶层的转移情况如表所示</p><table><thead><tr><th style=text-align:center>父代阶层\子代阶层</th><th style=text-align:center>下层</th><th style=text-align:center>中层</th><th style=text-align:center>下层</th></tr></thead><tbody><tr><td style=text-align:center>下层</td><td style=text-align:center>0.65</td><td style=text-align:center>0.28</td><td style=text-align:center>0.07</td></tr><tr><td style=text-align:center>中层</td><td style=text-align:center>0.15</td><td style=text-align:center>0.67</td><td style=text-align:center>0.18</td></tr><tr><td style=text-align:center>上层</td><td style=text-align:center>0.12</td><td style=text-align:center>0.36</td><td style=text-align:center>0.52</td></tr></tbody></table><p>我们利用矩阵的形式表示转移概率</p><p><code>$$ P = \left\lgroup \begin{array}{cccc} P_{11} & P_{12} & \cdots & P_{1n} \\ P_{21} & P_{22} & \cdots & P_{2n} \\ \vdots & \vdots & & \vdots \\ P_{n1} & P_{n2} & \cdots & P_{nn} \end{array} \right\rgroup $$</code></p><p>则</p><p><code>$$ \pi^{\left(t+1\right)} = \pi^{\left(t\right)} P $$</code></p><p>假设初始概率分布为 <code>$\pi_0 = \left(0.21, 0.68, 0.11\right)$</code>，则计算前 <code>$n$</code> 代人的阶层分布情况如下</p><pre><code class=language-r># 转移矩阵
+p &lt;- matrix(c(0.65, 0.28, 0.07,
+              0.15, 0.67, 0.18,
+              0.12, 0.36, 0.52),
+            3, 3, byrow = T)
+# 初始概率
+pi &lt;- matrix(c(0.21, 0.68, 0.11), 1, 3, byrow = T)
+
+# 迭代变化
+for (i in 1:10) {
+    pi_current &lt;- pi[i, ]
+    pi_next &lt;- pi_current %*% p
+    pi &lt;- rbind(pi, pi_next)
+}
+
+colnames(pi) &lt;- c('下层', '中层', '上层')
+rownames(pi) &lt;- 0:10
+print(pi)
+#         下层      中层      上层
+# 0  0.2100000 0.6800000 0.1100000
+# 1  0.2517000 0.5540000 0.1943000
+# 2  0.2700210 0.5116040 0.2183750
+# 3  0.2784592 0.4969956 0.2245452
+# 4  0.2824933 0.4917919 0.2257148
+# 5  0.2844752 0.4898560 0.2256688
+# 6  0.2854675 0.4890974 0.2254351
+# 7  0.2859707 0.4887828 0.2252465
+# 8  0.2862280 0.4886450 0.2251270
+# 9  0.2863602 0.4885817 0.2250581
+# 10 0.2864283 0.4885515 0.2250201
+</code></pre><p>可以看出，从第 7 代人开始，分布就基本稳定下来了，如果将初值概率换成 <code>$\pi_0 = \left(0.75, 0.15, 0.1\right)$</code>，结果会是如何呢？</p><pre><code class=language-r>pi &lt;- matrix(c(0.75, 0.15, 0.1), 1, 3, byrow = T)
+
+for (i in 1:10) {
+    pi_current &lt;- pi[i, ]
+    pi_next &lt;- pi_current %*% p
+    pi &lt;- rbind(pi, pi_next)
+}
+
+colnames(pi) &lt;- c('下层', '中层', '上层')
+rownames(pi) &lt;- 0:10
+print(pi)
+#         下层      中层      上层
+# 0  0.7500000 0.1500000 0.1000000
+# 1  0.5220000 0.3465000 0.1315000
+# 2  0.4070550 0.4256550 0.1672900
+# 3  0.3485088 0.4593887 0.1921025
+# 4  0.3184913 0.4745298 0.2069789
+# 5  0.3030363 0.4816249 0.2153388
+# 6  0.2950580 0.4850608 0.2198812
+# 7  0.2909326 0.4867642 0.2223032
+# 8  0.2887972 0.4876223 0.2235805
+# 9  0.2876912 0.4880591 0.2242497
+# 10 0.2871181 0.4882830 0.2245989
+</code></pre><p>可以看出从第 9 代人开始，分布又变得稳定了，这也就是说分布收敛情况是不随初始概率分布 <code>$\pi_0$</code> 的变化而改变的。则对于具有如下特征的马尔科夫链</p><ol><li>非周期性，可以简单理解为如果一个状态有自环，或者与一个非周期的状态互通，则是非周期的。</li><li>不可约性，即任意两个状态都是互通的。</li></ol><p>则这样的马尔科夫链，无论 <code>$\pi_0$</code> 取值如何，最终随机变量的分布都会收敛于 <code>$\pi^*$</code>，即</p><p><code>$$ \pi^* = \lim_{t \to \infty}{\pi^{\left(0\right)} \boldsymbol{P}^t} $$</code></p><p><code>$\pi^*$</code> 称之为这个马尔科夫链的平稳分布。</p><h2 id=马尔科夫链蒙特卡洛方法-mcmc>马尔科夫链蒙特卡洛方法 (MCMC)</h2><p>构造一个转移矩阵为 <code>$P$</code> 的马尔科夫链，如果其能收敛到平稳分布 <code>$p\left(x\right)$</code>，则可以从任意一个状态 <code>$x_0$</code> 出发，得到一个状态转移序列 <code>$x_0, x_1, ..., x_n, x_{n+1}, ...$</code>，如果马尔科夫链在第 <code>$n$</code> 部收敛，我们就可以得到服从分布 <code>$p\left(x\right)$</code> 的样本 <code>$x_n, x_{n+1}, ...$</code>。因此，利用马尔科夫链的平稳性生成数据的样本的关键就在于如何构造一个状态转移矩阵 <code>$P$</code>，使得其平稳分布为 <code>$p\left(x\right)$</code>。</p><p>如果对于任意的 <code>$i, j$</code>，马尔科夫链的转移矩阵 <code>$P$</code> 和分布 <code>$\pi\left(x\right)$</code> 满足</p><p><code>$$ \pi\left(i\right) P_{ij} = \pi\left(j\right) P_{ji} $$</code></p><p>则称 <code>$\pi\left(x\right)$</code> 为马尔科夫链的平稳分布，这称为<strong>细致平稳条件</strong>。对于一个马尔科夫链，通常情况下</p><p><code>$$ p\left(i\right) q\left(i, j\right) \neq p\left(j\right) q\left(j, i\right) $$</code></p><p>其中 <code>$p\left(i, j\right)$</code> 表示状态从 <code>$i$</code> 转移到 <code>$j$</code> 的概率。因此，为了构造满足细致平稳条件，我们引入一个<strong>接受概率</strong> <code>$\alpha\left(i, j\right)$</code>，使得</p><p><code>$$ p\left(i\right) q\left(i, j\right) \alpha\left(i, j\right) = p\left(j\right) q\left(j, i\right) \alpha\left(j, i\right) $$</code></p><p>最简单的，我们取</p><p><code>$$ \alpha\left(i, j\right) = p\left(j\right) q\left(j, i\right), \alpha\left(j, i\right) = p\left(i\right) q\left(i, j\right) $$</code></p><p>即可保证细致平稳性。通过引入接受概率，我们将原始的马尔科夫链改造为具有新的转移矩阵的马尔科夫链。在原始马尔科夫链上以概率 <code>$q\left(i, j\right)$</code> 从状态 <code>$i$</code> 转移到状态 <code>$j$</code> 时，我们以概率 <code>$\alpha\left(i, j\right)$</code> 接受这个转移，因此在新的马尔科夫链上的转移概率为 <code>$q\left(i, j\right) \alpha\left(i, j\right)$</code>。在新的马尔科夫链转移的过程中，如果接受概率 <code>$\alpha\left(i, j\right)$</code> 过小，则可能导致存在大量的拒绝转移，马尔科夫链则很难收敛到平稳分布 <code>$p\left(x\right)$</code>，因此我们对 <code>$\alpha\left(i, j\right), \alpha\left(j, i\right)$</code> 进行同比例放大，将其中较大的数放大至 <code>$1$</code>，则可以增加接受跳转的概率，从而更快的收敛到平稳分布。因此，我们可以取</p><p><code>$$ \alpha\left(i, j\right) = \min \left\lbrace\dfrac{p\left(j\right) q\left(j, i\right)}{p\left(i\right) q\left(i, j\right)}, 1\right\rbrace $$</code></p><p>这样我们就得到了 Metropolis-Hastings 算法</p><link rel=stylesheet type=text/css href=//cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.css><div><pre class=pseudocode>
+\begin{algorithm}
+\caption{Metropolis-Hastings 算法}
+\begin{algorithmic}
+\STATE $X_0 \gets x_0$
+\FOR{$t = 0, 1, 2, ...$}
+    \STATE $X_t = x_t$
+    \STATE sample $y \sim q\left(x | x_t\right)$
+    \STATE sample $u \sim Uniform[0, 1]$
+    \IF{$u < \alpha\left(x_t, y\right) = \min\left\lbrace\dfrac{p\left(j\right) q\left(j, i\right)}{p\left(i\right) q\left(i, j\right)}, 1\right\rbrace$}
+        \STATE $X_{t+1} \gets y$
+    \ELSE
+        \STATE $X_{t+1} \gets x_t$
+    \ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div><h2 id=吉布斯采样-gibbs-sampling>吉布斯采样 (Gibbs Sampling)</h2><p>对于 Metropolis-Hastings 算法，由于存在接受跳转概率 <code>$\alpha &lt; 1$</code>，因此为了提高算法效率，我们尝试构建一个转移矩阵，使得 <code>$\alpha = 1$</code>。以二维情形为例，对于概率分布 <code>$p\left(x, y\right)$</code>，考虑两个点 <code>$A\left(x_1, y_1\right)$</code> 和 <code>$B\left(x_1, y_2\right)$</code></p><p><code>$$ \begin{equation} \begin{split} p\left(x_1, y_1\right) p\left(y_2 | x_1\right) &= p\left(x_1\right) p\left(y_1 | x_1\right) p\left(y_2 | x_1\right) \\ p\left(x_1, y_2\right) p\left(y_1 | x_1\right) &= p\left(x_1\right) p\left(y_2 | x_1\right) p\left(y_1 | x_1\right) \end{split} \end{equation} $$</code></p><p>可得</p><p><code>$$ \begin{equation} \begin{split} p\left(x_1, y_1\right) p\left(y_2 | x_1\right) &= p\left(x_1, y_2\right) p\left(y_1 | x_1\right) \\ p\left(A\right) p\left(y_2 | x_1\right) &= p\left(B\right) p\left(y_1 | x_1\right) \end{split} \end{equation} $$</code></p><p>可以得出在 <code>$x = x_1$</code> 上任意两点之间进行转移均满足细致平稳条件，同理可得在 <code>$y = y_1$</code>上也满足。因此，对于二维情况，我们构建满足如下调价的概率转移矩阵 <code>$Q$</code></p><p><code>$$ \begin{equation} \begin{split} &amp;Q\left(A \to B\right) = p\left(y_B | x_1\right), \text{for} \ x_A = x_B = x_1 \\ &amp;Q\left(A \to C\right) = p\left(x_C | y_1\right), \text{for} \ y_A = y_C = y_1 \\ &amp;Q\left(A \to D\right) = 0, \text{others} \end{split} \end{equation} $$</code></p><p>则对于平面上任意两点 <code>$X, Y$</code> 满足细致平稳条件</p><p><code>$$ p\left(X\right) Q\left(X \to Y\right) = p\left(Y\right) Q\left(Y \to X\right) $$</code></p><p>对于如上过程，我们不难推广到多维情况，将 <code>$x_1$</code> 变为多维情形 <code>$\boldsymbol{x_1}$</code>，容易验证细致平稳条件依旧成立。</p><p><code>$$ p\left(\boldsymbol{x_1}, y_1\right) p\left(y_2 | \boldsymbol{x_1}\right) = p\left(\boldsymbol{x_1}, y_2\right) p\left(y_1 | \boldsymbol{x_1}\right) $$</code></p><p>对于 <code>$n$</code> 维的情况，通过不断的转移得到样本 <code>$\left(x_1^{\left(1\right)}, x_2^{\left(1\right)}, ..., x_n^{\left(1\right)}\right)$</code>, <code>$\left(x_1^{\left(2\right)}, x_2^{\left(2\right)}, ..., x_n^{\left(2\right)}\right)$</code>, &mldr;，当马尔科夫链收敛后，后续得到的样本即为 <code>$p\left(x_1, x_2, ..., x_n\right)$</code> 的样本，收敛之前的这一阶段我们称之为 <strong>burn-in period</strong>。在进行转移的时候，坐标轴轮换的采样方法并不是必须的，可以在坐标轴轮换中引入随机性。至此，我们就得到了吉布斯采样算法</p><div><pre class=pseudocode>
+\begin{algorithm}
+\caption{Gibbs Sampling 算法}
+\begin{algorithmic}
+\STATE initialize $x^{\left(0\right)}, \text{for} \ i = 1, 2, ..., n$
+\FOR{$t = 0, 1, 2, ...$}
+    \STATE $x_1^{\left(t+1\right)} \sim p\left(x_1 | x_2^{\left(t\right)}, x_3^{\left(t\right)}, ..., x_n^{\left(t\right)}\right)$
+    \STATE $x_2^{\left(t+1\right)} \sim p\left(x_2 | x_1^{\left(t\right)}, x_3^{\left(t\right)}, ..., x_n^{\left(t\right)}\right)$
+    \STATE $...$
+    \STATE $x_n^{\left(t+1\right)} \sim p\left(x_n | x_1^{\left(t\right)}, x_2^{\left(t\right)}, ..., x_{n-1}^{\left(t\right)}\right)$
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div><p>我们以二元高斯分布为例，演示如何用 Gibbs Sampling 方法进行采样，二元高斯分布定义为</p><p><code>$$ \left(X, Y\right) \sim \mathcal{N}\left(\boldsymbol{\mu}, \boldsymbol{\Sigma}\right) $$</code></p><p>其中</p><p><code>$$ \boldsymbol{\mu} = \left\lgroup \begin{array}{c} \mu_X \\ \mu_Y \end{array} \right\rgroup, \boldsymbol{\Sigma} = \left\lgroup \begin{array}{cc} \sigma_X^2 & \rho \sigma_X \sigma_Y \\ \rho \sigma_X \sigma_Y & \sigma_Y^2 \end{array} \right\rgroup $$</code></p><p>因此可得</p><p><code>$$ \begin{equation} \begin{split} \mu_{x|y} &= \mu_x + \sigma_x \rho_x\left(\dfrac{y - \mu_y}{\sigma_y}\right), \sigma_{x|y}^2 = \sigma_x^2 \left(1 - \rho^2\right) \\ \mu_{y|x} &= \mu_y + \sigma_y \rho_y\left(\dfrac{y - \mu_x}{\sigma_x}\right), \sigma_{y|x}^2 = \sigma_y^2 \left(1 - \rho^2\right) \end{split} \end{equation} $$</code></p><p>则</p><p><code>$$ \begin{equation} \begin{split} X|Y &= \mu_{x|y} + \sigma_{x|y} \mathcal{N}\left(0, 1\right) \\ Y|X &= \mu_{y|x} + \sigma_{y|x} \mathcal{N}\left(0, 1\right) \end{split} \end{equation} $$</code></p><p>对于 <code>$\mu_x = 0, \mu_y = 0, \sigma_x = 10, \sigma_y = 1, \rho = 0.8$</code>，采样过程如下</p><pre><code class=language-r>mu_x &lt;- 0
+mu_y &lt;- 0
+sigma_x &lt;- 10
+sigma_y &lt;- 1
+rho &lt;- 0.8
+
+iter &lt;- 1000
+samples &lt;- matrix(c(mu_x, mu_y), 1, 2, byrow = T)
+
+set.seed(112358)
+for (i in 1:iter) {
+    sample_x &lt;- mu_x +
+        sigma_x * rho * (samples[i, 2] - mu_y) / sigma_y +
+        sigma_x * sqrt(1 - rho^2) * rnorm(1)
+    sample_y &lt;- mu_y +
+        sigma_y * rho * (sample_x - mu_x) / sigma_x +
+        sigma_y * sqrt(1 - rho^2) * rnorm(1)
+    samples &lt;- rbind(samples, c(sample_x, sample_y))
+}
+</code></pre><p>可视化结果如下</p><p><img src=/images/cn/2017-12-17-mcmc-and-gibbs-sampling/gibbs-sampling-bivariate-guassian-distribution.gif alt></p><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>LDA 数学八卦，靳志辉，2013&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a>&#160;<a href=#fnref1:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div><link rel=stylesheet href=/css/donate.css><div class=donate><div class=donate-header></div><div class=donate-slug id=donate-slug>mcmc-and-gibbs-sampling</div><button class=donate-button>赞 赏</button><div class=donate-footer>「真诚赞赏，手留余香」</div></div><div class=donate-modal-wrapper><div class=donate-modal><div class=donate-box><div class=donate-box-content><div class=donate-box-content-inner><div class=donate-box-header>「真诚赞赏，手留余香」</div><div class=donate-box-body><div class=donate-box-money><button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-2 data-v=2 data-unchecked="￥ 2" data-checked="2 元">￥ 2</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-5 data-v=5 data-unchecked="￥ 5" data-checked="5 元">￥ 5</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-10 data-v=10 data-unchecked="￥ 10" data-checked="10 元">￥ 10</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-50 data-v=50 data-unchecked="￥ 50" data-checked="50 元">￥ 50</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-100 data-v=100 data-unchecked="￥ 100" data-checked="100 元">￥ 100</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-custom data-v=custom data-unchecked=任意金额 data-checked=任意金额>任意金额</button></div><div class=donate-box-pay><img class=donate-box-pay-qrcode id=donate-box-pay-qrcode src></div></div><div class=donate-box-footer><div class="donate-box-pay-method donate-box-pay-method-checked" data-v=wechat-pay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-wechat-pay src></div><div class=donate-box-pay-method data-v=alipay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-alipay src></div></div></div></div></div><button type=button class=donate-box-close-button>
+<svg class="donate-box-close-button-icon" fill="#fff" viewBox="0 0 24 24" width="24" height="24"><path d="M13.486 12l5.208-5.207a1.048 1.048.0 00-.006-1.483 1.046 1.046.0 00-1.482-.005L12 10.514 6.793 5.305A1.048 1.048.0 005.31 5.31a1.046 1.046.0 00-.005 1.483L10.514 12l-5.208 5.207a1.048 1.048.0 00.006 1.483 1.046 1.046.0 001.482.005L12 13.486l5.207 5.208a1.048 1.048.0 001.483-.006 1.046 1.046.0 00.005-1.482L13.486 12z" fill-rule="evenodd"/></svg></button></div></div><script type=text/javascript src=/js/donate.js></script></script><footer><nav class=post-nav><span class=nav-prev>&larr; <a href=/cn/2017/12/evd-svd-and-pca/>特征值分解，奇异值分解和主成份分析 (EVD, SVD and PCA)</a></span>
+<span class=nav-next><a href=/cn/2018/01/ising-hopfield-and-rbm/>Ising 模型，Hopfield 网络和受限的玻尔兹曼机 (Ising, Hopfield and RBM)</a> &rarr;</span></nav><script type=text/javascript>document.addEventListener("keyup",function(e){if(e.target.nodeName.toUpperCase()!="BODY")return;var t=!1;e.which==37?t="/cn/2017/12/evd-svd-and-pca/":e.which==39&&(t="/cn/2018/01/ising-hopfield-and-rbm/"),t&&(window.location=t)})</script><ins class=adsbygoogle style=display:block;text-align:center data-ad-layout=in-article data-ad-format=fluid data-ad-client=ca-pub-2608165017777396 data-ad-slot=1261604535></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({})</script><section class=comments><div id=disqus_thread></div><script>var disqus_config=function(){this.page.url="https://zeqiang.fun"+location.pathname};(function(){if(a=function(){var e=!0;try{e=window.self!==window.top}catch{}return e},a())return;var n,s,o,i,a,r="//.disqus.com/embed.js",e=document,t=e.createElement("script");if(t.src=r,t.async=!0,t.setAttribute("data-timestamp",+new Date),n=e.getElementById("disqus_thread"),s=!1,o=function(o){if(s)return;(e.head||e.body).appendChild(t),s=!0,o&&n.scrollIntoView()},t.onerror=function(){if(sessionStorage.getItem("failure-note"))return;n.innerText="Sorry, but you cannot make comments because Disqus failed to load for some reason. It is known to be blocked in China. If you are sure it is not blocked in your region, please refresh the page. 中国大陆地区读者需要翻墙才能发表评论。",sessionStorage.setItem("failure-note",!0)},location.hash.match(/^#comment-[0-9]+$/))return o(!0);i=function(){if(s)return;var e=n.getBoundingClientRect();e.top<window.innerHeight&&e.bottom>=0&&o()},window.addEventListener("load",i),e.addEventListener("scroll",i)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></section><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/show-language/prism-show-language.min.js></script><script>(function(){if(!self.Prism)return;Prism.languages.dos=Prism.languages.powershell,Prism.languages.gremlin=Prism.languages.groovy;var e={r:"R",python:"Python",xml:"XML",html:"HTML",yaml:"YAML",latex:"LaTeX",tex:"TeX",powershell:"PowerShell",javascript:"JavaScript",dos:"DOS",qml:"QML",json:"JSON",bash:"Bash",text:"Text",txt:"Text",sparql:"SPARQL",gremlin:"Gremlin",cypher:"Cypher",ngql:"nGQL",shell:"Shell",sql:"SQL",apacheconf:"Apache Configuration"};Prism.hooks.add("before-highlight",function(t){var n=e[t.language]||t.language;t.element.setAttribute("data-language",n)})})()</script><script async src=/js/fix-toc.js></script><script async src=/js/center-img.js></script><script async src=/js/right-quote.js></script><script async src=/js/fix-footnote.js></script><script async src=/js/external-link.js></script><script async src=/js/alt-title.js></script><script src=/js/no-highlight.js></script><script src=/js/math-code.js></script><script>window.MathJax={loader:{load:["[tex]/boldsymbol"]},tex:{tags:"all",inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"]],processEscapes:!0,processEnvironments:!0,packages:{"[+]":["boldsymbol"]}}}</script><script type=text/javascript id=MathJax-script async src=//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js crossorigin></script><script src=//cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.js></script><script type=text/javascript>$(document).ready(function(){var e=0;$(".pseudocode").each(function(){var t,n={indentSize:"1.2em",commentDelimiter:"//",lineNumber:!0,lineNumberPunc:":",noEnd:!1};n.captionCount=e,e+=1,t=$(this).get(0),pseudocode.render(t.textContent,t.parentElement,n)})})</script><script async src=/js/load-typekit.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js></script><script src=//cdn.jsdelivr.net/npm/vanilla-back-to-top@latest/dist/vanilla-back-to-top.min.js></script><script>addBackToTop({diameter:48})</script><hr><div class="copyright no-border-bottom"><div class=copyright-author-year><span>&copy; 2017-2021 Leo Van</span></div><div class=copyright-links><a href=https://github.com/leovan rel=noreferrer target=_blank>Github</a>
+<span>· </span><a href=https://orcid.org/0000-0002-9556-7821 rel=noreferrer target=_blank>ORCID</a>
+<span>· </span><span>I am Mr. Black.</span></div></div></footer></article></body></html>

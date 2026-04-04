@@ -1,0 +1,156 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>基于 PyQt5/PySide2 和 QML 的跨平台 GUI 程序开发 - Zeqiang Fang | 方泽强</title><meta name=referrer content="no-referrer"><meta property="og:title" content="基于 PyQt5/PySide2 和 QML 的跨平台 GUI 程序开发 - Zeqiang Fang | 方泽强"><meta name=description property="og:description" content="先聊聊写界面化程序的目的，在 B/S 结构软件盛行的今天，C/S 结构的软件还有人用吗？答案是肯定的，至少你想用 B/S 结构的软件的时候你得有个 C/S 结构的浏览器，对吧？这样说显得有点抬杠，当然，我认为最重要的还是“简单”，或者说“用户友好”。再 Geek 的人应该也喜欢有的时候偷懒，虽然我称不上 Geek，但也经常在黑框框中不用鼠标敲着各种代码，但是还是希望能够有些小工具只要能够点个几下就能帮忙干些事情的。至于对于更普通的用户而言，就应该更加希望能够用最“简单，清晰，明了”的方式“快速”的完成一项任务，有点像 Windows 用户把桌面上的快捷方式拖到回收站，然后和我说：好了，程序卸载了，我只能回答说：或许你该换个 MAC。"><meta property="og:type" content="article"><meta property="og:site_name" content="Zeqiang Fang | 方泽强"><meta property="og:url" content="https://zeqiang.fun/cn/2018/05/cross-platform-gui-application-based-on-pyqt/"><meta name=author property="article:author" content="范叶亮"><meta name=date property="article:published_time" content="2018-05-27" scheme=YYYY-MM-DD><meta name=date property="article:modified_time" content="2018-05-27" scheme=YYYY-MM-DD><meta name=keywords property="article:tag" content="Qt,PyQt,PyQt5,PySide2,QML,GUI,Cross-Platform,跨平台"><meta name=theme-color content="#0d0d0d"><link rel=icon type=image/png sizes=16x16 href=/images/web/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=/images/web/favicon-32x32.png><link rel=icon type=image/png sizes=48x48 href=/images/web/favicon-48x48.png><link rel=icon type=image/png sizes=62x62 href=/images/web/favicon-62x62.png><link rel=icon type=image/png sizes=192x192 href=/images/web/favicon-192x192.png><link rel=apple-touch-icon size=192x192 href=/images/web/icon-192x192.png><link rel=manifest href=/manifest.json><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://zeqiang.fun/cn"},"name":"基于 PyQt5/PySide2 和 QML 的跨平台 GUI 程序开发","headline":"基于 PyQt5/PySide2 和 QML 的跨平台 GUI 程序开发","description":"\u003cp\u003e先聊聊写界面化程序的目的，在 B/S 结构软件盛行的今天，C/S 结构的软件还有人用吗？答案是肯定的，至少你想用 B/S 结构的软件的时候你得有个 C/S 结构的浏览器，对吧？这样说显得有点抬杠，当然，我认为最重要的还是“简单”，或者说“用户友好”。再 Geek 的人应该也喜欢有的时候偷懒，虽然我称不上 Geek，但也经常在黑框框中不用鼠标敲着各种代码，但是还是希望能够有些小工具只要能够点个几下就能帮忙干些事情的。至于对于更普通的用户而言，就应该更加希望能够用最“简单，清晰，明了”的方式“快速”的完成一项任务，有点像 Windows 用户把桌面上的快捷方式拖到回收站，然后和我说：好了，程序卸载了，我只能回答说：或许你该换个 MAC。\u003c/p\u003e","genre":["编程"],"datePublished":"2018-05-27","dateModified":"2018-05-27","wordCount":"4081","keywords":["Qt","PyQt","PyQt5","PySide2","QML","GUI","Cross-Platform","跨平台"],"image":["https://zeqiang.fun/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/app.png","https://zeqiang.fun/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/preferences.png","https://zeqiang.fun/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/dmg.png","https://zeqiang.fun/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/nsis.png"],"author":{"@type":"Person","name":"范叶亮"},"publisher":{"@type":"Organization","name":"范叶亮","logo":{"@type":"ImageObject","url":"https://zeqiang.fun/images/web/publisher-logo.png"}},"url":"https://zeqiang.fun/cn/2018/05/cross-platform-gui-application-based-on-pyqt/"}</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js></script><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/6.5.95/css/materialdesignicons.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-.min.css><script async src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js></script><link rel=stylesheet type=text/css href=/css/fonts.css><link rel=stylesheet type=text/css href=/css/style.css><link rel=stylesheet type=text/css href=/css/light.css><link rel=stylesheet type=text/css href=/css/dark.css id=dark-mode-style disabled><link rel=stylesheet type=text/css href=/css/icons.css><link rel=stylesheet type=text/css href=/css/print.css></head><body class=cn><header class=masthead><div class=logo></div><p class=slogan>优雅永不过时</p><nav class=menu><ul><li><a href=/>首页</a></li><li><a href=/cn/>博客</a></li><li><a href=/categories/>分类</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/about/>关于</a></li><li><a href=/cn/resume/>简历</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/index.xml target=_blank type=application/rss+xml title="RSS feed">订阅</a></li><li><a href=https://github.com/fang-zeqiang/fang-zeqiang.github.io/blob/master/LICENSE target=_blank title="Attribution-NonCommercial-ShareAlike 4.0 International">版权</a></li><li class="light-dark-mode no-border-bottom"><a id=light-dark-mode-action><span id=light-dark-mode-icon class="mdi mdi-weather-night"></span></a></li></ul></nav><script src=/js/toggle-theme.js></script></header><article class=main><header class=title><h1>基于 PyQt5/PySide2 和 QML 的跨平台 GUI 程序开发</h1><h3>范叶亮 /
+2018-05-27</h3><h3 class=post-meta><strong>分类: </strong><a href=/categories/%E7%BC%96%E7%A8%8B>编程</a>
+/
+<strong>标签: </strong><span>Qt</span>, <span>PyQt</span>, <span>PyQt5</span>, <span>PySide2</span>, <span>QML</span>, <span>GUI</span>, <span>Cross-Platform</span>, <span>跨平台</span>
+/
+<strong>字数: </strong>4081</h3><hr></header><p>先聊聊写界面化程序的目的，在 B/S 结构软件盛行的今天，C/S 结构的软件还有人用吗？答案是肯定的，至少你想用 B/S 结构的软件的时候你得有个 C/S 结构的浏览器，对吧？这样说显得有点抬杠，当然，我认为最重要的还是“简单”，或者说“用户友好”。再 Geek 的人应该也喜欢有的时候偷懒，虽然我称不上 Geek，但也经常在黑框框中不用鼠标敲着各种代码，但是还是希望能够有些小工具只要能够点个几下就能帮忙干些事情的。至于对于更普通的用户而言，就应该更加希望能够用最“简单，清晰，明了”的方式“快速”的完成一项任务，有点像 Windows 用户把桌面上的快捷方式拖到回收站，然后和我说：好了，程序卸载了，我只能回答说：或许你该换个 MAC。</p><h2 id=exclamation-更新-exclamation>&#x2757; 更新 &#x2757;</h2><p><a href=https://github.com/leovan/SciHubEVA>SciHubEVA</a> 最新版本已经采用 <a href=https://wiki.qt.io/Qt_for_Python>PySide2</a> 进行改写，Windows 版本安装包构建工作迁移至 <a href=http://www.jrsoftware.org/isinfo.php>Inno Setup 6</a>，更多变更请参见 <a href=https://github.com/leovan/SciHubEVA/blob/master/CHANGELOG.md>CHANGELOG</a>。</p><h2 id=跨平台-gui-程序开发方案选型>跨平台 GUI 程序开发方案选型</h2><p>所以，写个带界面的小工具就是把你的想法更好的服务自己和别人的一个好途径，那么问题来了，对于我这做算法的种业余编程选手，怎么搞定界面化应用呢？虽然是业余编程选手，也也一路从 Logo，Basic，VB，C/C++，Java，R，Python 等等走来，当然很多都是从入门到放弃，总之对于同时需要兼顾一定美感的我，总结了几种跨平台界面化的解决方案。</p><ol><li><a href=http://www.oracle.com/technetwork/java/javafx/overview/index.html>JavaFX</a>，基于 JVM，一次编译处处运行，配合 Material Design 风格的 <a href=https://github.com/jfoenixadmin/JFoenix>JFoenix</a>，应该是能写出很漂亮的界面的。</li><li><a href=https://www.qt.io/>Qt</a>，一次编写处处编译，配合 <a href=http://doc.qt.io/qt-5/qtquick-index.html>Qt Quick</a> 和 <a href=http://doc.qt.io/qt-5/qtqml-index.html>QML</a>，可以把前后端分离。原生 C++ 语言支持，同时有 Python 绑定，对于 Python 比较熟的同学相对友好。界面风格上在较新的 Qt Quick 中也支持了 <a href=http://doc.qt.io/Qt-5/qtquickcontrols2-material.html>Material Design 风格</a>。</li><li><a href=https://electronjs.org/>Electron</a>，使用 JavaScript, HTML 和 CSS 等 Web 技术创建原生程序的框架，很多优秀的应用都是用这个来搞的，例如：<a href=https://github.com/Microsoft/vscode>Visual Studio Code</a>，<a href=https://github.com/zeit/hyper>Hyper</a> 等。</li></ol><p>我不认为这 3 种方法孰优孰劣，因为毕竟我们的目的是快速的搞定一个漂亮的小工具，因此到底选哪个完全取决于个人对相关技术的熟悉程度。因此，对于我这个搞算法的，最终选择了 Qt 的 Python 绑定 <a href=https://riverbankcomputing.com/software/pyqt/intro>PyQt</a>。作为 R 的忠实用户，实在是没找到特别好的解决方案，只能找个借口说我们 R 就不是干这个用的&mldr;&mldr;</p><h2 id=环境配置>环境配置</h2><p>当然选择 PyQt 也是有些个人的倾向在里面的，写 C++ 的年代就用过 Qt，对于原理多少有些了解。不过针对 PyQt，以及其与 Qt Quick 和 QML 的结合使用在后面开发时发现相关文档比较少，只能一步一步地趟雷了。毕竟要做跨平台的 GUI 程序开发，因此本文会针对 macOS 和 Windows 两个系统做相关说明，Linux 系统由于发行版本太多就不做说明了，大部分情况应该和 macOS 类似。</p><ul><li>Python (开发语言)</li></ul><p>Python 的版本选择了 3.5，因为在后面选择 3.6 时发现编译打包的时候会有些错误，没有细究，简单 Google 了此类问题，发现回退到 3.5 版本就没问题了，可能需要相关打包工具的更新才能有对 3.6 更好的支持。如果使用 Conda 建立虚拟环境，建议新建一个干净的 Python 3.5 的环境。</p><ul><li>Qt 和 PyQt (界面化)</li></ul><p>Qt 和 PyQt 均采用比较新的版本，版本号需大于 5.10。Qt 直接从官网下载安装即可，理论上不需要安装 Qt，因为 PyQt 中包含了运行时环境，安装 Qt 的目的是为了使用其可视化的 Qt Creator，设计界面的时候会比较方便。如果使用 Conda 建立 Python 虚拟环境，请使用 pip 安装 PyQt 的对应版本，Conda 中的 PyQt 的版本相对较低，一些新的 Qt 特性不支持。</p><ul><li>PyInstaller (编译打包)</li></ul><p><a href=https://www.pyinstaller.org/>PyInstaller</a> 是一个用于打包 Python 代码到一个本地化可执行程序的工具，安装其最新版本即可：<code>pip install PyInstaller</code>。</p><ul><li>appdmg 和 NSIS (安装包制作)</li></ul><p><a href=https://github.com/LinusU/node-appdmg>appdmg</a> 是 macOS 下一个用于制作 DMG 镜像的工具，使用前先安装 <a href=https://nodejs.org>Node.js</a>，再通过 <code>npm install -g appdmg</code> 安装最新版即可。<a href=https://sourceforge.net/projects/nsis/>NSIS</a> 是 Windows 下一个用于制作安装包的工具，NSIS 的一个问题是不支持 Unicode，因此对于包含中文字符的脚本需要以 GBK 编码格式保存。Unicode 版本的 NSIS 为 <a href=http://www.scratchpaper.com>Unicode NSIS</a>，不过 Unicode NSIS 已经长时间未更新，因此本文依旧将 NSIS 作为安装包制作工具。</p><h2 id=界面设计>界面设计</h2><p>通过需求分析，整个工具最核心的两个界面为程序主界面和配置信息界面：</p><p><img src=/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/app.png alt=APP></p><p>程序主界面包含了待搜索的信息，保存的路径，相关的按钮和日志输出。</p><p><img src=/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/preferences.png alt=PREFERENCES></p><p>配置信息界面以配置项的分组不同分别包括通用，网络和代理等相关的配置信息更改。</p><p>整个界面设计采用了 Google 的 <a href=https://material.io/design/>Material Design</a> 风格，尤其是在没有 UI 支援的情况下，使用这个风格至少不会让你的应用太丑。在 PyQt 中，可以通过 <a href=http://doc.qt.io/Qt-5/qtquickcontrols2-styles.html>多种方式</a> 启用 Material Design 风格。</p><h2 id=程序开发>程序开发</h2><p>本文以 <a href=https://github.com/leovan/SciHubEVA>Sci-Hub EVA</a> 作为示例介绍 PyQt 的跨平台 GUI 程序开发。Sci-Hub EVA 是一个利用 Sci-Hub API 下载论文的界面化小工具，功能相对简单。首先介绍一下工程的目录：</p><pre><code class=language-txt>docs\
+images\
+translations\
+ui\
+BUILDING.md
+Info.plist
+LICENSE
+README.md
+SciHubEVA.conf
+SciHubEVA.cpp
+SciHubEVA.dmg.json
+SciHubEVA.nsi
+SciHubEVA.pro
+SciHubEVA.qrc
+SciHubEVA.win.version
+requirements.txt
+scihub_add_scihub_url.py
+scihub_api.py
+scihub_conf.py
+scihub_eva.py
+scihub_preferences.py
+scihub_resources.py
+scihub_utils.py
+version_updater.py
+</code></pre><p>其中，<code>docs</code> 目录为项目的一些文档，<code>images</code> 目录为项目的相关图片文件，<code>translations</code> 目录为项目的 i18n 翻译文件，<code>ui</code> 目录为相关的界面文件 (QML 文件)，<code>Info.plist</code> 为 macOS 程序信息文件，<code>SciHubEVA.conf</code> 为程序配置文件，<code>SciHubEVA.cpp</code> 为 Qt 生成的 C++ 主文件，<code>SciHubEVA.dmg.json</code> 为利用 appdmg 制作 DMG 镜像的配置文件，<code>SciHubEVA.nsi</code> 为利用 NSIS 制作 Windows 安装包的脚本文件，<code>SciHubEVA.pro</code> 为程序的 Qt 主项目文件，，<code>SciHubEVA.qrc</code> 为程序的资源文件，<code>SciHubEVA.win.version</code> 为打包 Windows 的版本信息文件，<code>requirements.txt</code> 为 Python 依赖包信息文件，<code>scihu_*.py</code> 为程序实现相关 Python 代码，<code>version_updater.py</code> 为版本更新的小工具。</p><p>下文中不会介绍具体的业务逻辑代码，而是对开发过程中的一些核心点和注意事项进行简单的介绍。</p><h3 id=python-与-qml-通信>Python 与 QML 通信</h3><p>首先，对于每一个界面 (QML 文件)，我们都有一个与之对应 Python 文件 (除非该页面没有具体的业务逻辑，例如：<code>ui\SciHubEVAAbout.qml</code> 为关于页面，<code>ui\SciHubEVAMenuBar.qml</code> 为菜单栏)，以主页面 (<code>ui\SciHubEVA.qml</code> 和 <code>scihub_eva.py</code>) 为例，我们为每个界面创建一个类，同时该类集成自 Qt 的一个基类：</p><pre><code class=language-python>class SciHubEVA(QObject):
+    pass
+</code></pre><p>Python 代码同界面交互的核心是通过 Qt 的 <a href=http://doc.qt.io/qt-5/signalsandslots.html><strong>信号与槽</strong></a>，同样在 PyQt 中也是利用 <a href=http://pyqt.sourceforge.net/Docs/PyQt5/signals_slots.html>相同的机制</a>。简单的理解 PyQt 与 QML 的信号与槽，可以认为<strong>信号</strong>就是<strong>函数的定义</strong>，<strong>槽</strong>就是<strong>函数的实现</strong>。同时，信号和槽往往会位于不同的地方，例如：信号定义在 Python 中，则对应的槽会在 QML 中，反之亦然，当然这并不是一定的。两者通过 <code>connect()</code> 函数连接起来，当触发一个信号时，槽就会接受到信号传递的参数，并执行槽里面相应的逻辑。</p><h3 id=i18n>i18n</h3><p>Qt 对于多语言支持比较完善，在 QML 中对于需要翻译的地方利用 <code>qsTr()</code> 函数处理待翻译的文本即可，例如：</p><pre><code class=language-qml>Label {
+    id: labelQuery
+    text: qsTr(&quot;Query: &quot;)
+}
+</code></pre><p>在 Python 代码中，对于继承自 <code>QObject</code> 的类，可以利用基类中的 <code>tr()</code> 函数处理待翻译的文本即可，例如：</p><pre><code class=language-python>self.tr('Saved PDF as: ')
+</code></pre><p>同时将具有待翻译文本的文件加入到 <code>SciHubEVA.pro</code> 的主工程文件中，用于后续翻译处理：</p><pre><code class=language-text>lupdate_only {
+SOURCES += \
+    ui/SciHubEVA.qml \
+    ui/SciHubEVAAbout.qml \
+    ui/SciHubEVAMenuBar.qml \
+    ui/SciHubEVAPreferences.qml \
+    ui/SciHubEVAAddSciHubURL.qml \
+    scihub_api.py
+}
+
+TRANSLATIONS += \
+    translations/SciHubEVA_zh_CN.ts
+</code></pre><p>因为 Python 代码中也有需要翻译的文件，因此我们需要运行如下命令生成翻译的源文件：</p><pre><code class=language-bash>lupdate SciHubEVA.pro
+pylupdate5 SciHubEVA.pro
+</code></pre><p>这样在 <code>translations</code> 目录即可生成待翻译的源文件 (ts 文件)，利用 Qt 自带的 Liguist 可以对其进行编辑，翻译并保存后，利用如下命令生成翻译的结果文件：</p><pre><code class=language-bash}>lrelease SciHubEVA.pro
+</code></pre><p>在 <code>translations</code> 目录即可生成待翻译的结果文件 (qm 文件)。</p><h3 id=资源文件>资源文件</h3><p>在 GUI 编程中，我们不可避免的会使用到各种各样的资源，例如：图片，音频，字体等等。Qt 中提供了一种<a href=http://doc.qt.io/qt-5/resources.html>资源管理方案</a>，可以在不同场景下使用 (Python 和 QML 中均可)。<code>SciHubEVA.qrc</code> 定义了所有使用到的资源：</p><pre><code class=language-xml>&lt;RCC&gt;
+    &lt;qresource prefix=&quot;/&quot;&gt;
+        &lt;file&gt;ui/SciHubEVA.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAMenuBar.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAAbout.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAPreferences.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAAddSciHubURL.qml&lt;/file&gt;
+        &lt;file&gt;images/about.png&lt;/file&gt;
+    &lt;/qresource&gt;
+&lt;/RCC&gt;
+</code></pre><p>在 QML 中使用示例如下：</p><pre><code class=language-qml}>Image {
+    id: imageAboutLogo
+    source: &quot;qrc:/images/about.png&quot;
+}
+</code></pre><p>在 Python 中使用示例如下：</p><pre><code class=language-python>self._engine = QQmlApplicationEngine()
+self._engine.load('qrc:/ui/SciHubEVA.qml')
+</code></pre><p>使用 <code>qrc</code> 文件管理资源文件的一个好处就是不需要担心各种相对路径和绝对路径带来的找不到文件的错误，但同时一个缺点是当资源文件更新后，需要运行 <code>pyrcc5 SciHubEVA.qrc -o scihub_resources.py</code> 更新资源，同时还需要在主程序代码中引入生成的 Python 资源代码。</p><h3 id=界面线程分离>界面线程分离</h3><p>写 GUI 应用的一个重要问题就是界面线程的分离，需要把耗时的业务逻辑摘出来，单独作为一个线程运行，这样才不会造成界面的“假死”情况。<code>scihub_api.py</code> 中的 <code>SciHubAPI</code> 作为下载文章的主类，下载过程相对耗时。因为其既需要 Qt 中的 <code>tr()</code> 函数，也需要线程，通过 Python 的多继承，<code>SciHubAPI</code> 类构造如下：</p><pre><code class=language-python>class SciHubAPI(QObject, threading.Thread):
+    pass
+</code></pre><h2 id=编译打包>编译打包</h2><p>PyInstaller 是一个用于打包 Python 代码到一个本地化可执行程序的工具，详细的使用方法请参见<a href=https://www.pyinstaller.org/documentation.html>官方文档</a>。同样，我们在此仅说明打包过程中遇到的一些问题。</p><h3 id=macos>macOS</h3><p>macOS 下的编译打包命令如下：</p><pre><code class=language-bash># 清理相关目录和文件
+rm -rf build
+rm -rf dist
+rm -f SciHubEVA.spec
+
+# 重新生成资源文件
+rm -f scihub_resources.py
+pyrcc5 SciHubEVA.qrc -o scihub_resources.py
+
+# 编译打包
+pyinstaller -w scihub_eva.py \
+  --hidden-import &quot;PyQt5.Qt&quot; \
+  --hidden-import &quot;PyQt5.QtQuick&quot; \
+  --add-data &quot;LICENSE:.&quot; \
+  --add-data &quot;SciHubEVA.conf:.&quot; \
+  --add-data &quot;images/SciHubEVA.png:images&quot; \
+  --add-data &quot;translations/SciHubEVA_zh_CN.qm:translations&quot; \
+  --name &quot;SciHubEVA&quot; \
+  --icon &quot;images/SciHubEVA.icns&quot;
+
+# 拷贝程序信息
+cp Info.plist dist/SciHubEVA.app/Contents
+</code></pre><p>编译打包过程中的 <code>--hidden-import</code> 参数是因为我们使用了 Qt Quick 和 QML 相关框架，但是在 Python 代码中我们并没有显式的引入这两个包，因此我们需要告知 PyInstaller 我们使用了这两个包，这样 PyInstaller 才会把相关的动态链接库拷贝到打包的程序中。</p><p>打包好的程序 <code>SciEvaHub.app</code> 会保存在 <code>dist</code> 目录中。由于目前无论是 macOS 还是 Windows 系统，高分辨率已经比较常见，为了适应高分辨率，我们需要在代码中添加相应的支持，在入口 Python 文件中，我们需要在头部添加如下信息：</p><pre><code class=language-python>if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+    QGuiApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+    QGuiApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+</code></pre><p>同时针对 macOS 系统，我们需要在 <code>Info.plist</code> 中添加如下信息以支持高分辨率：</p><pre><code class=language-xml>&lt;key&gt;NSHighResolutionCapable&lt;/key&gt;
+&lt;string&gt;True&lt;/string&gt;
+&lt;key&gt;NSSupportsAutomaticGraphicsSwitching&lt;/key&gt;
+&lt;string&gt;True&lt;/string&gt;
+</code></pre><p><code>Info.plist</code> 中的其他信息针对性进行修改即可，最后将其拷贝到打包好的程序中。</p><h3 id=windows>Windows</h3><p>Windows 下的编译打包命令如下：</p><pre><code class=language-dos>rem 清理相关目录和文件
+rd /s /Q build
+rd /s /Q dist
+del /Q SciHubEVA.spec
+
+rem 重新生成资源文件
+del /Q scihub_resources.py
+pyrcc5 SciHubEVA.qrc -o scihub_resources.py
+
+rem 编译打包
+pyinstaller -w scihub_eva.py ^
+  --hidden-import &quot;PyQt5.Qt&quot; ^
+  --hidden-import &quot;PyQt5.QtQuick&quot; ^
+  --add-data &quot;LICENSE;.&quot; ^
+  --add-data &quot;SciHubEVA.conf;.&quot; ^
+  --add-data &quot;images/SciHubEVA.png;images&quot; ^
+  --add-data &quot;translations/SciHubEVA_zh_CN.qm;translations&quot; ^
+  --name &quot;SciHubEVA&quot; ^
+  --icon &quot;images/SciHubEVA.ico&quot; ^
+  --version-file &quot;SciHubEVA.win.version&quot;
+</code></pre><p>编译打包过程中的 <code>--version-file</code> 参数是 Windows 程序的相关版本信息，具体请参见微软的 <a href="http://msdn.microsoft.com/en-us/library/ff468916(v=vs.85).aspx">Version Information Structures</a>。</p><p>打包好的程序会在 <code>dist\SciHubEVA</code> 目录中，该目录还包含了所有运行时所需的文件。</p><h2 id=安装包制作>安装包制作</h2><h3 id=macos-1>macOS</h3><p>macOS 下我们使用 appdmg 工具将编译打包好的程序制作成 DMG 镜像文件。DMG 镜像文件可以对原始的程序进行压缩，便于分发。appdmg 通过一个 JSON 文件控制 DMG 镜像的制作，详细的 JSON 格式和相关参数请参见 <a href=https://github.com/LinusU/node-appdmg>官方文档</a>，Sci-Hub EVA 的 DMG 制作 JSON 文件如下：</p><pre><code class=language-json>{
+    &quot;title&quot;: &quot;Sci-Hub EVA&quot;,
+    &quot;icon&quot;: &quot;images/SciHubEVA.icns&quot;,
+    &quot;icon-size&quot;: 100,
+    &quot;background&quot;: &quot;images/SciHubEVA-dmg-backgroud.png&quot;,
+    &quot;format&quot;: &quot;UDZO&quot;,
+    &quot;window&quot;: {
+        &quot;size&quot;: {
+            &quot;width&quot;: 600,
+            &quot;height&quot;: 400
+        }
+    },
+    &quot;contents&quot;: [
+        {
+            &quot;x&quot;: 100,
+            &quot;y&quot;: 150,
+            &quot;type&quot;: &quot;file&quot;,
+            &quot;path&quot;: &quot;dist/SciHubEVA.app&quot;
+        },
+        {
+            &quot;x&quot;: 300,
+            &quot;y&quot;: 150,
+            &quot;type&quot;: &quot;link&quot;,
+            &quot;path&quot;: &quot;/Applications&quot;
+        }
+    ]
+}
+</code></pre><p>打包好后的 DMG 镜像效果如下：</p><p><img src=/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/dmg.png alt=DMG></p><h3 id=windows-1>Windows</h3><p>Windows 下我们使用 NSIS 构建安装包，同样 NSIS 也支持多语言安装包构建，但请注意，NSIS 程序本身并不支持 Unicode，因此 NSIS 安装包的脚本需使用 GBK 编码保存。构建好的安装包的安装界面如下：</p><p><img src=/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/nsis.png alt=NSIS></p><p>整个 Sci-Hub EVA 的编译打包和安装包制作过程请参见 <a href=https://github.com/leovan/SciHubEVA/tree/master/building>构建说明文档</a>。</p><link rel=stylesheet href=/css/donate.css><div class=donate><div class=donate-header></div><div class=donate-slug id=donate-slug>cross-platform-gui-application-based-on-pyqt</div><button class=donate-button>赞 赏</button><div class=donate-footer>「真诚赞赏，手留余香」</div></div><div class=donate-modal-wrapper><div class=donate-modal><div class=donate-box><div class=donate-box-content><div class=donate-box-content-inner><div class=donate-box-header>「真诚赞赏，手留余香」</div><div class=donate-box-body><div class=donate-box-money><button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-2 data-v=2 data-unchecked="￥ 2" data-checked="2 元">￥ 2</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-5 data-v=5 data-unchecked="￥ 5" data-checked="5 元">￥ 5</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-10 data-v=10 data-unchecked="￥ 10" data-checked="10 元">￥ 10</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-50 data-v=50 data-unchecked="￥ 50" data-checked="50 元">￥ 50</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-100 data-v=100 data-unchecked="￥ 100" data-checked="100 元">￥ 100</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-custom data-v=custom data-unchecked=任意金额 data-checked=任意金额>任意金额</button></div><div class=donate-box-pay><img class=donate-box-pay-qrcode id=donate-box-pay-qrcode src></div></div><div class=donate-box-footer><div class="donate-box-pay-method donate-box-pay-method-checked" data-v=wechat-pay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-wechat-pay src></div><div class=donate-box-pay-method data-v=alipay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-alipay src></div></div></div></div></div><button type=button class=donate-box-close-button>
+<svg class="donate-box-close-button-icon" fill="#fff" viewBox="0 0 24 24" width="24" height="24"><path d="M13.486 12l5.208-5.207a1.048 1.048.0 00-.006-1.483 1.046 1.046.0 00-1.482-.005L12 10.514 6.793 5.305A1.048 1.048.0 005.31 5.31a1.046 1.046.0 00-.005 1.483L10.514 12l-5.208 5.207a1.048 1.048.0 00.006 1.483 1.046 1.046.0 001.482.005L12 13.486l5.207 5.208a1.048 1.048.0 001.483-.006 1.046 1.046.0 00.005-1.482L13.486 12z" fill-rule="evenodd"/></svg></button></div></div><script type=text/javascript src=/js/donate.js></script></script><footer><nav class=post-nav><span class=nav-prev>&larr; <a href=/cn/2018/03/manifold-learning/>流形学习 (Manifold Learning)</a></span>
+<span class=nav-next><a href=/cn/2018/06/play-safe-smart-choice-and-yuppie/>Play Safe, Smart Choice & Yuppie</a> &rarr;</span></nav><script type=text/javascript>document.addEventListener("keyup",function(e){if(e.target.nodeName.toUpperCase()!="BODY")return;var t=!1;e.which==37?t="/cn/2018/03/manifold-learning/":e.which==39&&(t="/cn/2018/06/play-safe-smart-choice-and-yuppie/"),t&&(window.location=t)})</script><ins class=adsbygoogle style=display:block;text-align:center data-ad-layout=in-article data-ad-format=fluid data-ad-client=ca-pub-2608165017777396 data-ad-slot=1261604535></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({})</script><section class=comments><div id=disqus_thread></div><script>var disqus_config=function(){this.page.url="https://zeqiang.fun"+location.pathname};(function(){if(a=function(){var e=!0;try{e=window.self!==window.top}catch{}return e},a())return;var n,s,o,i,a,r="//.disqus.com/embed.js",e=document,t=e.createElement("script");if(t.src=r,t.async=!0,t.setAttribute("data-timestamp",+new Date),n=e.getElementById("disqus_thread"),s=!1,o=function(o){if(s)return;(e.head||e.body).appendChild(t),s=!0,o&&n.scrollIntoView()},t.onerror=function(){if(sessionStorage.getItem("failure-note"))return;n.innerText="Sorry, but you cannot make comments because Disqus failed to load for some reason. It is known to be blocked in China. If you are sure it is not blocked in your region, please refresh the page. 中国大陆地区读者需要翻墙才能发表评论。",sessionStorage.setItem("failure-note",!0)},location.hash.match(/^#comment-[0-9]+$/))return o(!0);i=function(){if(s)return;var e=n.getBoundingClientRect();e.top<window.innerHeight&&e.bottom>=0&&o()},window.addEventListener("load",i),e.addEventListener("scroll",i)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></section><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/show-language/prism-show-language.min.js></script><script>(function(){if(!self.Prism)return;Prism.languages.dos=Prism.languages.powershell,Prism.languages.gremlin=Prism.languages.groovy;var e={r:"R",python:"Python",xml:"XML",html:"HTML",yaml:"YAML",latex:"LaTeX",tex:"TeX",powershell:"PowerShell",javascript:"JavaScript",dos:"DOS",qml:"QML",json:"JSON",bash:"Bash",text:"Text",txt:"Text",sparql:"SPARQL",gremlin:"Gremlin",cypher:"Cypher",ngql:"nGQL",shell:"Shell",sql:"SQL",apacheconf:"Apache Configuration"};Prism.hooks.add("before-highlight",function(t){var n=e[t.language]||t.language;t.element.setAttribute("data-language",n)})})()</script><script async src=/js/fix-toc.js></script><script async src=/js/center-img.js></script><script async src=/js/right-quote.js></script><script async src=/js/fix-footnote.js></script><script async src=/js/external-link.js></script><script async src=/js/alt-title.js></script><script src=/js/no-highlight.js></script><script src=/js/math-code.js></script><script>window.MathJax={loader:{load:["[tex]/boldsymbol"]},tex:{tags:"all",inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"]],processEscapes:!0,processEnvironments:!0,packages:{"[+]":["boldsymbol"]}}}</script><script type=text/javascript id=MathJax-script async src=//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js crossorigin></script><script async src=/js/load-typekit.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js></script><script src=//cdn.jsdelivr.net/npm/vanilla-back-to-top@latest/dist/vanilla-back-to-top.min.js></script><script>addBackToTop({diameter:48})</script><hr><div class="copyright no-border-bottom"><div class=copyright-author-year><span>&copy; 2017-2021 Leo Van</span></div><div class=copyright-links><a href=https://github.com/leovan rel=noreferrer target=_blank>Github</a>
+<span>· </span><a href=https://orcid.org/0000-0002-9556-7821 rel=noreferrer target=_blank>ORCID</a>
+<span>· </span><span>I am Mr. Black.</span></div></div></footer></article></body></html>

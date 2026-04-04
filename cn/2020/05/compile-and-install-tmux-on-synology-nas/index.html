@@ -1,0 +1,186 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>在群晖 NAS 上编译安装 tmux - Zeqiang Fang | 方泽强</title><meta name=referrer content="no-referrer"><meta property="og:title" content="在群晖 NAS 上编译安装 tmux - Zeqiang Fang | 方泽强"><meta name=description property="og:description" content="工具链安装
+登录 NAS 控制台，在系统根目录创建 toolkit 目录：
+sudo mkdir /toolkit
+sudo chown -R username:users /toolkit
+
+其中 username 为使用的用户名，如果后续使用过程中出现磁盘空间不足的问题，可以在其他具有较大容量的分区建立 toolkit，再在根目录建立软链进行使用："><meta property="og:type" content="article"><meta property="og:site_name" content="Zeqiang Fang | 方泽强"><meta property="og:url" content="https://zeqiang.fun/cn/2020/05/compile-and-install-tmux-on-synology-nas/"><meta name=author property="article:author" content="范叶亮"><meta name=date property="article:published_time" content="2020-05-07" scheme=YYYY-MM-DD><meta name=date property="article:modified_time" content="2020-05-07" scheme=YYYY-MM-DD><meta name=keywords property="article:tag" content="群晖,Synology,NAS,tmux,编译,构建"><meta name=theme-color content="#0d0d0d"><link rel=icon type=image/png sizes=16x16 href=/images/web/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=/images/web/favicon-32x32.png><link rel=icon type=image/png sizes=48x48 href=/images/web/favicon-48x48.png><link rel=icon type=image/png sizes=62x62 href=/images/web/favicon-62x62.png><link rel=icon type=image/png sizes=192x192 href=/images/web/favicon-192x192.png><link rel=apple-touch-icon size=192x192 href=/images/web/icon-192x192.png><link rel=manifest href=/manifest.json><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://zeqiang.fun/cn"},"name":"在群晖 NAS 上编译安装 tmux","headline":"在群晖 NAS 上编译安装 tmux","description":"\u003ch2 id=\"工具链安装\"\u003e工具链安装\u003c/h2\u003e\n\u003cp\u003e登录 NAS 控制台，在系统根目录创建 \u003ccode\u003etoolkit\u003c/code\u003e 目录：\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"language-shell\"\u003esudo mkdir /toolkit\nsudo chown -R username:users /toolkit\n\u003c/code\u003e\u003c/pre\u003e\n\u003cp\u003e其中 \u003ccode\u003eusername\u003c/code\u003e 为使用的用户名，如果后续使用过程中出现磁盘空间不足的问题，可以在其他具有较大容量的分区建立 \u003ccode\u003etoolkit\u003c/code\u003e，再在根目录建立软链进行使用：\u003c/p\u003e","genre":["编程"],"datePublished":"2020-05-07","dateModified":"2020-05-07","wordCount":"1153","keywords":["群晖","Synology","NAS","tmux","编译","构建"],"image":["https://zeqiang.fun/images/cn/2020-05-07-compile-and-install-tmux-on-synology-nas/tmux-installed.png"],"author":{"@type":"Person","name":"范叶亮"},"publisher":{"@type":"Organization","name":"范叶亮","logo":{"@type":"ImageObject","url":"https://zeqiang.fun/images/web/publisher-logo.png"}},"url":"https://zeqiang.fun/cn/2020/05/compile-and-install-tmux-on-synology-nas/"}</script><script src=//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js></script><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/6.5.95/css/materialdesignicons.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css><link rel=stylesheet type=text/css href=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-.min.css><script async src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js></script><link rel=stylesheet type=text/css href=/css/fonts.css><link rel=stylesheet type=text/css href=/css/style.css><link rel=stylesheet type=text/css href=/css/light.css><link rel=stylesheet type=text/css href=/css/dark.css id=dark-mode-style disabled><link rel=stylesheet type=text/css href=/css/icons.css><link rel=stylesheet type=text/css href=/css/print.css></head><body class=cn><header class=masthead><div class=logo></div><p class=slogan>优雅永不过时</p><nav class=menu><ul><li><a href=/>首页</a></li><li><a href=/cn/>博客</a></li><li><a href=/categories/>分类</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/about/>关于</a></li><li><a href=/cn/resume/>简历</a></li><li class=menu-separator><span>&nbsp;</span></li><li><a href=/cn/index.xml target=_blank type=application/rss+xml title="RSS feed">订阅</a></li><li><a href=https://github.com/fang-zeqiang/fang-zeqiang.github.io/blob/master/LICENSE target=_blank title="Attribution-NonCommercial-ShareAlike 4.0 International">版权</a></li><li class="light-dark-mode no-border-bottom"><a id=light-dark-mode-action><span id=light-dark-mode-icon class="mdi mdi-weather-night"></span></a></li></ul></nav><script src=/js/toggle-theme.js></script></header><article class=main><header class=title><h1>在群晖 NAS 上编译安装 tmux</h1><h3>范叶亮 /
+2020-05-07</h3><h3 class=post-meta><strong>分类: </strong><a href=/categories/%E7%BC%96%E7%A8%8B>编程</a>
+/
+<strong>标签: </strong><span>群晖</span>, <span>Synology</span>, <span>NAS</span>, <span>tmux</span>, <span>编译</span>, <span>构建</span>
+/
+<strong>字数: </strong>1153</h3><hr></header><h2 id=工具链安装>工具链安装</h2><p>登录 NAS 控制台，在系统根目录创建 <code>toolkit</code> 目录：</p><pre><code class=language-shell>sudo mkdir /toolkit
+sudo chown -R username:users /toolkit
+</code></pre><p>其中 <code>username</code> 为使用的用户名，如果后续使用过程中出现磁盘空间不足的问题，可以在其他具有较大容量的分区建立 <code>toolkit</code>，再在根目录建立软链进行使用：</p><pre><code class=language-shell>mkdir /xxx/toolkit
+sudo ln -s /xxx/toolkit /toolkit
+sudo chown -R username:users /toolkit
+</code></pre><p>之后下载相关工具脚本：</p><pre><code class=language-shell>cd /toolkit
+git clone https://github.com/SynologyOpenSource/pkgscripts-ng.git
+</code></pre><p>工具脚本使用 Python 3 实现，请确保 NAS 已经安装 Python 3，后续使用过程中如果提示相关 Python 扩展包未安装的情况请自行安装后重试。实验的 Synology NAS 为 DS418play，系统版本为 <strong>DSM 6.2.2</strong> 系统，处理器为 INTEL Celeron J3355 处理器（产品代号：<strong>Apollo Lake</strong>），首先利用 <code>EnvDeploy</code> 下载所需的编译环境：</p><pre><code class=language-shell>cd /toolkit/pkgscripts-ng
+sudo ./EnvDeploy -v 6.2 -p apollolake
+</code></pre><p>请根据自己机器的系统版本和处理器类型自行调整 <code>-v</code> 和 <code>-p</code> 参数。如果下载速度较慢可以手动从 <a href=https://sourceforge.net/projects/dsgpl/files/toolkit/DSM6.2/>https://sourceforge.net/projects/dsgpl/files/toolkit/DSM6.2/</a> 下载下列文件：</p><pre><code>base_env-6.2.txz
+ds.apollolake-6.2.dev.txz
+ds.apollolake-6.2.env.txz
+</code></pre><p>将其放置到 <code>/toolkit/toolkit_tarballs</code> 目录中，然后通过如下命令进行部署安装：</p><pre><code class=language-shell>sudo ./EnvDeploy -v 6.2 -p apollolake -t /toolkit/toolkit_tarballs
+</code></pre><h2 id=编译-tmux>编译 tmux</h2><p>在 <code>/toolkit</code> 目录下建立 <code>source</code> 文件夹，并将 tmux 源代码（本文以 3.1b 版本为例）下载到该文件夹中：</p><pre><code class=language-shell>cd /toolkit
+mkdir source
+cd source
+wget https://github.com/tmux/tmux/releases/download/3.1b/tmux-3.1b.tar.gz
+tar -zxvf tmux-3.1b.tar.gz
+mv tmux-3.1b tmux
+</code></pre><p>在 tmux 源代码根目录中建立 <code>SynoBuildConf</code> 文件夹，并在文件夹中创建如下文件：</p><pre><code class=language-shell>cd /toolkit/source/tmux
+mkdir SynoBuildConf
+</code></pre><p><code>build</code></p><pre><code class=language-bash>#!/bin/bash
+
+case ${MakeClean} in
+	[Yy][Ee][Ss])
+		make distclean
+		;;
+esac
+
+NCURSES_INCS=&quot;$(pkg-config ncurses --cflags)&quot;
+NCURSES_LIBS=&quot;$(pkg-config ncurses --libs)&quot;
+
+CFLAGS=&quot;${CFLAGS} ${NCURSES_INCS}&quot;
+LDFLAGS=&quot;${LDFLAGS} ${NCURSES_LIBS}&quot;
+
+env CC=&quot;${CC}&quot; AR=&quot;${AR}&quot; CFLAGS=&quot;${CFLAGS}&quot; LDFLAGS=&quot;${LDFLAGS}&quot; \
+./configure ${ConfigOpt}
+
+make ${MAKE_FLAGS}
+</code></pre><p><code>depends</code></p><pre><code class=language-bash>[default]
+all=&quot;6.2&quot;
+</code></pre><p><code>install</code></p><pre><code class=language-bash>#!/bin/bash
+
+PKG_NAME=&quot;tmux&quot;
+TGZ_DIR=&quot;/tmp/_${PKG_NAME}_tgz&quot;
+PKG_DIR=&quot;/tmp/_${PKG_NAME}_pkg&quot;
+PKG_DEST=&quot;/image/packages&quot;
+
+source /pkgscripts-ng/include/pkg_util.sh
+
+create_package_tgz() {
+	### clear destination directory
+	for dir in $TGZ_DIR $PKG_DIR; do
+		rm -rf &quot;$dir&quot;
+	done
+	for dir in $TGZ_DIR $PKG_DIR; do
+		mkdir -p &quot;$dir&quot;
+	done
+
+	### install needed file into TGZ_DIR
+	DESTDIR=&quot;${TGZ_DIR}&quot; make install
+
+	### create package.tgz
+	pkg_make_package $TGZ_DIR $PKG_DIR
+}
+
+create_package_spk(){
+	### Copy package center scripts to PKG_DIR
+	cp -r synology/scripts/ $PKG_DIR
+
+	### Copy package icon
+	cp -av synology/PACKAGE_ICON*.PNG $PKG_DIR
+
+	### Generate INFO file
+	synology/INFO.sh &gt; INFO
+	cp INFO $PKG_DIR
+
+	### Create the final spk.
+	mkdir -p $PKG_DEST
+	pkg_make_spk $PKG_DIR $PKG_DEST
+}
+
+main() {
+	create_package_tgz
+	create_package_spk
+}
+
+main &quot;$@&quot;
+</code></pre><p>在 tmux 源代码根目录中建立 <code>synology</code> 文件夹，并在文件夹中创建如下文件：</p><pre><code class=language-shell>cd /toolkit/source/tmux
+mkdir synology
+</code></pre><p><code>INFO.sh</code></p><pre><code class=language-bash>#!/bin/sh
+
+. /pkgscripts-ng/include/pkg_util.sh
+
+package=&quot;tmux&quot;
+version=&quot;3.1b&quot;
+displayname=&quot;tmux&quot;
+arch=&quot;$(pkg_get_platform) &quot;
+maintainer=&quot;tmux&quot;
+maintainer_url=&quot;https://github.com/tmux&quot;
+distributor=&quot;Leo Van&quot;
+distributor_url=&quot;https://leovan.me&quot;
+description=&quot;tmux is a terminal multiplexer: it enables a number of terminals to be created, accessed, and controlled from a single screen. tmux may be detached from a screen and continue running in the background, then later reattached.&quot;
+support_url=&quot;https://github.com/tmux/tmux&quot;
+thirdparty=&quot;yes&quot;
+startable=&quot;no&quot;
+silent_install=&quot;yes&quot;
+silent_upgrade=&quot;yes&quot;
+silent_uninstall=&quot;yes&quot;
+
+[ &quot;$(caller)&quot; != &quot;0 NULL&quot; ] &amp;&amp; return 0
+
+pkg_dump_info
+</code></pre><p>并为其添加运行权限：</p><pre><code class=language-shell>cd /toolkit/source/tmux/scripts
+chmod u+x INFO.sh
+</code></pre><p>下载 tmux 图标并将其重命名：</p><pre><code class=language-shell>cd /toolkit/source/tmux/synology
+wget https://raw.githubusercontent.com/tmux/tmux/master/logo/tmux-logo-huge.png
+convert tmux-logo-huge.png -crop 480x480+0+0 -resize 72x PACKAGE_ICON.PNG
+convert tmux-logo-huge.png -crop 480x480+0+0 -resize 256x PACKAGE_ICON_256.PNG
+</code></pre><p>此处需要使用 <a href=https://www.imagemagick.org/>ImageMagick</a> 对图标进行裁剪和缩放，请自行安装，或在本地对图片进行处理后上传到指定目录。在 <code>/toolkit/source/tmux/synology</code> 目录中建立 <code>scripts</code> 文件夹，并在文件夹中创建如下文件：</p><pre><code class=language-shell>cd /toolkit/source/tmux/synology
+mkdir scripts
+</code></pre><p><code>postinst</code></p><pre><code class=language-bash>#!/bin/sh
+
+ln -sf &quot;$SYNOPKG_PKGDEST/usr/local/bin/tmux&quot; /usr/bin/
+</code></pre><p><code>postuninst</code></p><pre><code class=language-bash>#!/bin/sh
+
+rm -f /usr/local/bin/tmux
+rm -f /usr/bin/tmux
+</code></pre><p><code>postupgrade</code></p><pre><code class=language-bash>#!/bin/sh
+
+exit 0
+</code></pre><p><code>preinst</code></p><pre><code class=language-bash>#!/bin/sh
+
+exit 0
+</code></pre><p><code>preuninst</code></p><pre><code class=language-bash>#!/bin/sh
+
+exit 0
+</code></pre><p><code>preupgrade</code></p><pre><code class=language-bash>#!/bin/sh
+
+exit 0
+</code></pre><p><code>start-stop-status</code></p><pre><code class=language-bash>#!/bin/sh
+
+case $1 in
+	start)
+		exit 0
+	;;
+	stop)
+		exit 0
+	;;
+	status)
+		if [ -h &quot;/usr/bin/tmux&quot; ]; then
+			exit 0
+		else
+			exit 1
+		fi
+	;;
+	killall)
+        ;;
+	log)
+		exit 0
+	;;
+esac
+</code></pre><p>为所有文件添加运行权限：</p><pre><code class=language-shell>cd /toolkit/source/tmux/synology/scripts
+chmod u+x *
+</code></pre><p>利用 <code>PkgCreate.py</code> 构建 <code>tmux</code> 扩展包：</p><pre><code class=language-shell>sudo ./PkgCreate.py -v 6.2 -p apollolake tmux
+</code></pre><p>最终构建完毕的扩展包位于 <code>/toolkit/build_env/ds.apollolake-6.2/image/packages</code> 中。</p><h2 id=安装-tmux>安装 tmux</h2><p>在 <code>/toolkit/build_env/ds.apollolake-6.2/image/packages</code> 目录中有两个编译好的扩展包，分别是 <code>tmux-apollolake-3.1b_debug.spk</code> 和 <code>tmux-apollolake-3.1b.spk</code>。其中 <code>tmux-apollolake-3.1b.spk</code> 为 Release 版本，传输到本地，通过 NAS 的套件中心手动安装即可。安装完毕后，套件中心的“已安装”会出现 tmux，如下图所示：</p><p><img src=/images/cn/2020-05-07-compile-and-install-tmux-on-synology-nas/tmux-installed.png alt></p><p>进入 NAS 控制台，运行 <code>tmux -V</code> 可以得到安装好的 tmux 版本信息：</p><pre><code class=language-shell>tmux 3.1b
+</code></pre><p>在此放出编译好的 <a href=https://cdn.leovan.me/packages/synology/tmux-apollolake-3.1b.spk>tmux 扩展包</a>，方便和 DS418play 具有相同系统的 CPU 架构的小伙伴直接使用。</p><blockquote><p>本文主要参考了 Synology 官方的扩展包构建指南：https://help.synology.com/developer-guide/create_package/index.html</p></blockquote><link rel=stylesheet href=/css/donate.css><div class=donate><div class=donate-header></div><div class=donate-slug id=donate-slug>compile-and-install-tmux-on-synology-nas</div><button class=donate-button>赞 赏</button><div class=donate-footer>「真诚赞赏，手留余香」</div></div><div class=donate-modal-wrapper><div class=donate-modal><div class=donate-box><div class=donate-box-content><div class=donate-box-content-inner><div class=donate-box-header>「真诚赞赏，手留余香」</div><div class=donate-box-body><div class=donate-box-money><button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-2 data-v=2 data-unchecked="￥ 2" data-checked="2 元">￥ 2</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-5 data-v=5 data-unchecked="￥ 5" data-checked="5 元">￥ 5</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-10 data-v=10 data-unchecked="￥ 10" data-checked="10 元">￥ 10</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-50 data-v=50 data-unchecked="￥ 50" data-checked="50 元">￥ 50</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-100 data-v=100 data-unchecked="￥ 100" data-checked="100 元">￥ 100</button>
+<button class="donate-box-money-button donate-box-money-button-unchecked" id=donate-box-money-button-custom data-v=custom data-unchecked=任意金额 data-checked=任意金额>任意金额</button></div><div class=donate-box-pay><img class=donate-box-pay-qrcode id=donate-box-pay-qrcode src></div></div><div class=donate-box-footer><div class="donate-box-pay-method donate-box-pay-method-checked" data-v=wechat-pay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-wechat-pay src></div><div class=donate-box-pay-method data-v=alipay><img class=donate-box-pay-method-image id=donate-box-pay-method-image-alipay src></div></div></div></div></div><button type=button class=donate-box-close-button>
+<svg class="donate-box-close-button-icon" fill="#fff" viewBox="0 0 24 24" width="24" height="24"><path d="M13.486 12l5.208-5.207a1.048 1.048.0 00-.006-1.483 1.046 1.046.0 00-1.482-.005L12 10.514 6.793 5.305A1.048 1.048.0 005.31 5.31a1.046 1.046.0 00-.005 1.483L10.514 12l-5.208 5.207a1.048 1.048.0 00.006 1.483 1.046 1.046.0 001.482.005L12 13.486l5.207 5.208a1.048 1.048.0 001.483-.006 1.046 1.046.0 00.005-1.482L13.486 12z" fill-rule="evenodd"/></svg></button></div></div><script type=text/javascript src=/js/donate.js></script></script><footer><nav class=post-nav><span class=nav-prev>&larr; <a href=/cn/2020/05/hmm-crf-and-sequence-labeling/>隐马尔可夫 (Hidden Markov Model, HMM)，条件随机场 (Conditional Random Fields, CRF) 和序列标注 (Sequence Labeling)</a></span>
+<span class=nav-next><a href=/cn/2020/05/introduction-of-reinforcement-learning/>强化学习简介 (Introduction of Reinforcement Learning)</a> &rarr;</span></nav><script type=text/javascript>document.addEventListener("keyup",function(e){if(e.target.nodeName.toUpperCase()!="BODY")return;var t=!1;e.which==37?t="/cn/2020/05/hmm-crf-and-sequence-labeling/":e.which==39&&(t="/cn/2020/05/introduction-of-reinforcement-learning/"),t&&(window.location=t)})</script><ins class=adsbygoogle style=display:block;text-align:center data-ad-layout=in-article data-ad-format=fluid data-ad-client=ca-pub-2608165017777396 data-ad-slot=1261604535></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({})</script><section class=comments><div id=disqus_thread></div><script>var disqus_config=function(){this.page.url="https://zeqiang.fun"+location.pathname};(function(){if(a=function(){var e=!0;try{e=window.self!==window.top}catch{}return e},a())return;var n,s,o,i,a,r="//.disqus.com/embed.js",e=document,t=e.createElement("script");if(t.src=r,t.async=!0,t.setAttribute("data-timestamp",+new Date),n=e.getElementById("disqus_thread"),s=!1,o=function(o){if(s)return;(e.head||e.body).appendChild(t),s=!0,o&&n.scrollIntoView()},t.onerror=function(){if(sessionStorage.getItem("failure-note"))return;n.innerText="Sorry, but you cannot make comments because Disqus failed to load for some reason. It is known to be blocked in China. If you are sure it is not blocked in your region, please refresh the page. 中国大陆地区读者需要翻墙才能发表评论。",sessionStorage.setItem("failure-note",!0)},location.hash.match(/^#comment-[0-9]+$/))return o(!0);i=function(){if(s)return;var e=n.getBoundingClientRect();e.top<window.innerHeight&&e.bottom>=0&&o()},window.addEventListener("load",i),e.addEventListener("scroll",i)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></section><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/show-language/prism-show-language.min.js></script><script>(function(){if(!self.Prism)return;Prism.languages.dos=Prism.languages.powershell,Prism.languages.gremlin=Prism.languages.groovy;var e={r:"R",python:"Python",xml:"XML",html:"HTML",yaml:"YAML",latex:"LaTeX",tex:"TeX",powershell:"PowerShell",javascript:"JavaScript",dos:"DOS",qml:"QML",json:"JSON",bash:"Bash",text:"Text",txt:"Text",sparql:"SPARQL",gremlin:"Gremlin",cypher:"Cypher",ngql:"nGQL",shell:"Shell",sql:"SQL",apacheconf:"Apache Configuration"};Prism.hooks.add("before-highlight",function(t){var n=e[t.language]||t.language;t.element.setAttribute("data-language",n)})})()</script><script async src=/js/fix-toc.js></script><script async src=/js/center-img.js></script><script async src=/js/right-quote.js></script><script async src=/js/fix-footnote.js></script><script async src=/js/external-link.js></script><script async src=/js/alt-title.js></script><script src=/js/no-highlight.js></script><script src=/js/math-code.js></script><script>window.MathJax={loader:{load:["[tex]/boldsymbol"]},tex:{tags:"all",inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"]],processEscapes:!0,processEnvironments:!0,packages:{"[+]":["boldsymbol"]}}}</script><script type=text/javascript id=MathJax-script async src=//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js crossorigin></script><script async src=/js/load-typekit.js></script><script src=//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js></script><script src=//cdn.jsdelivr.net/npm/vanilla-back-to-top@latest/dist/vanilla-back-to-top.min.js></script><script>addBackToTop({diameter:48})</script><hr><div class="copyright no-border-bottom"><div class=copyright-author-year><span>&copy; 2017-2021 Leo Van</span></div><div class=copyright-links><a href=https://github.com/leovan rel=noreferrer target=_blank>Github</a>
+<span>· </span><a href=https://orcid.org/0000-0002-9556-7821 rel=noreferrer target=_blank>ORCID</a>
+<span>· </span><span>I am Mr. Black.</span></div></div></footer></article></body></html>

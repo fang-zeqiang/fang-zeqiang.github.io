@@ -1,0 +1,62 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>数学 on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/categories/%E6%95%B0%E5%AD%A6/</link><description>Recent content in 数学 on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 19 Feb 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/categories/%E6%95%B0%E5%AD%A6/" rel="self" type="application/rss+xml"/><item><title>贝塞尔曲线 (Bézier Curve)</title><link>https://zeqiang.fun/cn/2019/02/bezier-curve/</link><pubDate>Tue, 19 Feb 2019 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2019/02/bezier-curve/</guid><description><![CDATA[
+        <p>知道<strong>贝塞尔曲线 (Bézier Curve)</strong> 这个名字已经有很长一段时间了，但一直没有去详细了解一番。直到最近想要绘制一个比较复杂的曲线，才发现很多工具都以贝塞尔曲线为基础的，这包括 Adobe 全家桶中的钢笔工具，还有 OmniGraffle 中的曲线。迫于仅靠猜其是如何工作的但一直没猜透的无奈，只能去详细了解一下其原理再使用了。</p>
+<h1 id="数学表示">数学表示</h1>
+<p>贝塞尔曲线 (Bézier Curve) 是由法国工程师<a href="https://zh.wikipedia.org/wiki/%E7%9A%AE%E5%9F%83%E5%B0%94%C2%B7%E8%B4%9D%E5%A1%9E%E5%B0%94">皮埃尔·贝兹 (Pierre Bézier)</a> 于 1962 年所广泛发表，他运用贝塞尔曲线来为汽车的主体进行设计 <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>。贝塞尔曲线最初由<a href="https://en.wikipedia.org/wiki/Paul_de_Casteljau">保尔·德·卡斯特里奥 (Paul de Casteljau)</a> 于 1959 年运用<a href="https://zh.wikipedia.org/wiki/%E5%BE%B7%E5%8D%A1%E6%96%AF%E7%89%B9%E9%87%8C%E5%A5%A5%E7%AE%97%E6%B3%95">德卡斯特里奥算法 (De Casteljau&rsquo;s Algorithm)</a> 开发，以稳定数值的方法求出贝塞尔曲线。</p>
+<h2 id="线性贝塞尔曲线">线性贝塞尔曲线</h2>
+<p>给定点 <code>$P_0, P_1$</code>，线性贝塞尔曲线定义为：</p>
+<p><code>$$ B \left(t\right) = \left(1 - t\right) P_0 + t P_1, t \in \left[0, 1\right] $$</code></p>
+<p>不难看出，线性贝塞尔曲线即为点 <code>$P_0$</code> 和 <code>$P_1$</code> 之间的线段。</p>
+<p>对于 <code>$P_0 = \left(4, 6\right), P_1 = \left(10, 0\right)$</code>，当 <code>$t = 0.25$</code> 时，线性贝塞尔曲线如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/1st-power-bezier-curve.png" alt="线性贝塞尔曲线"></p>
+<p>整个线性贝塞尔曲线生成过程如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/1st-power-bezier-curve.gif" alt="线性贝塞尔曲线生成过程"></p>
+<h2 id="二次贝塞尔曲线">二次贝塞尔曲线</h2>
+<p>给定点 <code>$P_0, P_1, P_2$</code>，二次贝塞尔曲线定义为：</p>
+<p><code>$$ B \left(t\right) = \left(1 - t\right)^2 P_0 + 2 t \left(1 - t\right) P_1 + t^2 P_2, t \in \left[0, 1\right] $$</code></p>
+<p>对于 <code>$P_0 = \left(0, 0\right), P_1 = \left(4, 6\right), P_2 = \left(10, 0\right)$</code>，当 <code>$t = 0.25$</code> 时，二次贝塞尔曲线如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/2nd-power-bezier-curve.png" alt="二次贝塞尔曲线"></p>
+<p>整个二次贝塞尔曲线生成过程如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/2nd-power-bezier-curve.gif" alt="二次贝塞尔曲线生成过程"></p>
+<h2 id="三次贝塞尔曲线">三次贝塞尔曲线</h2>
+<p>给定点 <code>$P_0, P_1, P_2, P_3$</code>，三次贝塞尔曲线定义为：</p>
+<p><code>$$ B \left(t\right) = \left(1 - t\right)^3 P_0 + 3 t \left(1 - t\right)^2 P_1 + 3 t^2 \left(1 - t\right) P_2 + t^3 P_3, t \in \left[0, 1\right] $$</code></p>
+<p>对于 <code>$P_0 = \left(0, 0\right), P_1 = \left(-1, 6\right), P_2 = \left(6, 6\right), P_3 = \left(12, 0\right)$</code>，当 <code>$t = 0.25$</code> 时，三次贝塞尔曲线如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/3rd-power-bezier-curve.png" alt="三次贝塞尔曲线"></p>
+<p>整个三次贝塞尔曲线生成过程如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/3rd-power-bezier-curve.gif" alt="三次贝塞尔曲线生成过程"></p>
+<h2 id="一般化的贝塞尔曲线">一般化的贝塞尔曲线</h2>
+<p>对于一般化的贝塞尔曲线，给定点 <code>$P_0, P_1, \cdots, P_n$</code>， <code>$n$</code> 次贝塞尔曲线定义为：</p>
+<p><code>$$ B \left(t\right) =  \sum_{i=0}^{n}{\binom{n}{i} \left(1 - t\right)^{n - i} t^{i} P_i}, t \in \left[0, 1\right] $$</code></p>
+<p>其中，</p>
+<p><code>$$ b_{i, n} \left(t\right) = \binom{n}{i} \left(1 - t\right)^{n - i} t^{i} $$</code></p>
+<p>称之为 <code>$n$</code> 阶 <a href="https://en.wikipedia.org/wiki/Bernstein_polynomial">Bernstein 多项式</a>，点 <code>$P_i$</code> 称为贝塞尔曲线的控制点。从生成过程来看，贝塞尔曲线是通过 <code>$n$</code> 次<strong>中介点</strong> (<code>$Q_j, R_k, S_l$</code>) 生成的，一个更加复杂的四次贝塞尔曲线 (<code>$t = 0.25$</code>) 如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/4th-power-bezier-curve.png" alt="四次贝塞尔曲线"></p>
+<p>整个四次贝塞尔曲线生成过程如下图所示：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/4th-power-bezier-curve.gif" alt="四次贝塞尔曲线生成过程"></p>
+<p>其中，<code>$Q_0 = \left(1 - t\right) P_0 + t P_1$</code>，<code>$R_0 = \left(1 - t\right) Q_0 + t Q_1$</code>，<code>$S_0 = \left(1 - t\right) R_0 + t R_1$</code>，<code>$B = \left(1 - t\right) S_0 + t S_1$</code> 为构成贝塞尔曲线的点。</p>
+<p>上述图形和动画的绘制代码请参见<a href="https://github.com/leovan/leovan.me/tree/master/scripts/cn/2019-02-19-bezier-curve/bezier-curve-images.py">这里</a>。</p>
+<h1 id="应用技巧">应用技巧</h1>
+<p>在很多绘图软件中，钢笔工具使用的是三次贝塞尔曲线，其中<strong>起始点</strong>和<strong>结束点</strong>分别对应 <code>$P_0$</code> 和 <code>$P_1$</code>，起始点和结束点的<strong>控制点</strong>分别对应 <code>$P_2$</code> 和 <code>$P_3$</code>。</p>
+<p>在利用钢笔工具绘图时，可以参考如下建议来快速高效地完成绘图 <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>：</p>
+<ol>
+<li>控制点尽可能在曲线的最外侧或最内侧。</li>
+<li>除了曲线的结束处外，控制点的控制柄尽可能水平或垂直。</li>
+<li>合理安排控制点的密度。</li>
+</ol>
+<p>下面两张图分别展示了一个原始的字母图案，以及参考上述建议利用贝塞尔曲线勾勒出来的字母图案边框：</p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/letters.png" alt="Letters"></p>
+<p><img src="/images/cn/2019-02-19-bezier-curve/letters-buzier-curve.png" alt="Letters Buzier Curve"></p>
+<p>最后推荐一个网站 <a href="https://bezier.method.ac">The Bezier Game</a>，可以帮助更好的理解和掌握基于贝塞尔曲线的钢笔工具使用。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://zh.wikipedia.org/wiki/%E8%B4%9D%E5%A1%9E%E5%B0%94%E6%9B%B2%E7%BA%BF">https://zh.wikipedia.org/wiki/贝塞尔曲线</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p><a href="http://theagsc.com/blog/tutorials/so-whats-the-big-deal-with-horizontal-vertical-bezier-handles-anyway/">So What’s the Big Deal with Horizontal &amp; Vertical Bezier Handles Anyway?</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item></channel></rss>

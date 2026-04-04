@@ -1,0 +1,3219 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>编程 on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/categories/%E7%BC%96%E7%A8%8B/</link><description>Recent content in 编程 on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 23 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/categories/%E7%BC%96%E7%A8%8B/" rel="self" type="application/rss+xml"/><item><title>大数据 SQL 性能调优 (Big Data SQL Performance Tuning)</title><link>https://zeqiang.fun/cn/2021/05/big-data-sql-performance-tuning/</link><pubDate>Sun, 23 May 2021 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2021/05/big-data-sql-performance-tuning/</guid><description><![CDATA[
+        <p>在日常工作中，数据处理和分析在研发、产品和运营等多个领域起着重要的作用。在海量数据处理和分析中，SQL 是一项基础且重要的能力。一个优秀的 SQL Boy 和茶树姑的 SQL 代码除了保持简单、可读和易于维护的<a href="/cn/2021/05/sql-style-guide/">样式风格</a>外，还需要具备良好的执行性能，准确且高效的计算出结果才能让你在工作中决胜于千里之外。</p>
+<p>影响 SQL 执行性能的主要因素可以总结为如下几项：</p>
+<ol>
+<li>计算资源量（CPU，内存，网络等）</li>
+<li>计算数据量（输入和输出的记录数）</li>
+<li>计算复杂度（业务逻辑复杂程度和对应的 SQL 实现和执行）</li>
+</ol>
+<p>计算资源量是一个前置制约因素，理论上更多的资源能够带来更快的计算效果。计算数据量也可以认为是一个前置制约因素，理论上更大的数据量会导致计算速度降低，但对于复杂的计算逻辑，通过合理的 SQL 可以更好的控制计算过程中的数据量，从而提升 SQL 性能。计算复杂度是影响 SQL 性能的关键因素，复杂的业务逻辑必然比简单的业务逻辑处理时间要长，相同业务逻辑的不同 SQL 实现也会影响运行效率，这就要求我们对业务逻辑进行全面的理解，对实现 SQL 进行合理优化，从而提升计算速度。</p>
+<h2 id="执行引擎">执行引擎</h2>
+<p>SQL 是用于一种用于数据定义和数据操纵的特定目的的编程语言 <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>。SQL 虽然有 ISO 标准 <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>，但大部分 SQL 代码在不同的数据库系统中并不具有完全的跨平台性。不同的执行引擎也会对 SQL 的语法有相应的改动和扩展，同时对于 SQL 的执行也会进行不同的适配和优化。因此，脱离执行引擎的 SQL 性能优化是不可取的。</p>
+<h3 id="hive">Hive</h3>
+<p>Apache Hive 是一个建立在 Hadoop 架构之上的数据仓库。可以将结构化的数据文件映射为一张数据库表，并提供简单的 SQL 查询功能，可以将 SQL 语句转换为 MapReduce 任务进行运行。因此 MapReduce 是 Hive SQL 运行的核心和根基。</p>
+<p>我们以 Word Count 为例简单介绍一下 MapReduce 的原理和过程，Word Count 的 MapReduce 处理过程如下图所示：</p>
+<p><img src="/images/cn/2021-05-23-big-data-sql-performance-tuning/word-count-mapreduce.png" alt=""></p>
+<ol>
+<li><strong>Input</strong>：程序的输入数据。</li>
+<li><strong>Splitting</strong>：讲输入数据分割为若干部分。</li>
+<li><strong>Mapping</strong>：针对 Splitting 分割的每个部分，对应有一个 Map 程序处理。本例中将分割后的文本统计成 <code>&lt;K,V&gt;</code> 格式，其中 <code>K</code> 为单词，<code>V</code> 为该单词在这个 Map 中出现的次数。</li>
+<li><strong>Shuffling</strong>：对 Mapping 的相关输出结果进行合并。本例中将具有相同 <code>K</code> 的统计结果合并到一起。</li>
+<li><strong>Reducing</strong>：对 Shuffling 合并的结果进行汇总。本例中讲相同 <code>K</code> 的 <code>V</code> 值进行加和操作并返回单个统计结果。</li>
+<li><strong>Merged</strong>：对 Reducing 的结果进行融合形成最终输出。</li>
+</ol>
+<h3 id="spark">Spark</h3>
+<p>Apache Spark 是一个用于大规模数据处理的统一分析引擎，Spark SQL 则作为 Apache Spark 用于处理结构化数据的模块。</p>
+<p>Spark 中常见的概念有：</p>
+<ol>
+<li><strong>RDD</strong>：Resilient Distributed Dataset，弹性分布式数据集，是分布式内存中一个抽象概念，提供了一种高度受限的共享内存模型。</li>
+<li><strong>DAG</strong>：Directed Acyclic Graph，有向无环图，反应了 RDD 之间的依赖关系。</li>
+<li><strong>Driver Program</strong>：控制程序，负责为 Application 创建 DAG，通常用 <code>SparkContext</code> 代表 Driver Program。</li>
+<li><strong>Cluster Manager</strong>：集群管理器，负责分配计算资源。</li>
+<li><strong>Worker Node</strong>：工作节点，负责具体计算。</li>
+<li><strong>Executor</strong>：运行在 Worker Node 上的一个<a href="/cn/2021/04/process-thread-and-coroutine-theory/">进程</a>，负责运行 Task，并为 Application 存储数据。</li>
+<li><strong>Application</strong>：Spark 应用程序，包含多个 Executor。</li>
+<li><strong>Task</strong>：任务，运行在 Executor 上的工作单元，是 Executor 中的一个<a href="/cn/2021/04/process-thread-and-coroutine-theory/">线程</a>。</li>
+<li><strong>Stage</strong>：一组并行的 Task，Spark 一般会根据 Shuffle 类算子（例如：<code>reduceByKey</code> 或 <code>join</code> 等）划分 Stage。</li>
+<li><strong>Job</strong>：一组 Stage 的集合，一个 Job 包含多个 RDD 及作用于 RDD 上的操作。</li>
+</ol>
+<p>相关概念构成了 Spark 的整体架构，如下图所示：</p>
+<p><img src="/images/cn/2021-05-23-big-data-sql-performance-tuning/spark-architecture.png" alt=""></p>
+<p>在 Spark 中，一个任务的执行过程大致分为 4 个阶段，如下图所示：</p>
+<p><img src="/images/cn/2021-05-23-big-data-sql-performance-tuning/spark-scheduling.jpeg" alt=""></p>
+<ol>
+<li>定义 RDD 的 Transformations 和 Actions 算子 <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>，并根据这些算子形成 DAG。</li>
+<li>根据形成的 DAG，DAGScheduler 将其划分为多个 Stage，每个 Stage 包含多个 Task。</li>
+<li>DAGScheduler 将 TaskSet 交由 TaskScheduler 运行，并将执行完毕后的结果返回给 DAGScheduler。</li>
+<li>TaskScheduler 将任务分发到每一个 Worker 去执行，并将执行完毕后的结果返回给 TaskScheduler。</li>
+</ol>
+<p>Spark 相比于 Hadoop 的主要改进有如下几点：</p>
+<ol>
+<li>Hadoop 的 MapReduce 的中间结果都会持久化到磁盘上，而 Spark 则采用基于内存的计算（内存不足时也可选持久化到磁盘上），从而减少 Shuffle 数据，进而提升计算速度。</li>
+<li>Spark 采用的 DAG 相比于 Hadoop 的 MapReduce 具有更好的容错性和可恢复性，由于 Spark 预先计算出了整个任务的 DAG，相比于 MapReduce 中各个操作之间是独立的，这更有助于进行全局优化。</li>
+</ol>
+<h3 id="presto">Presto</h3>
+<p>Presto 是一种用于大数据的高性能分布式 SQL 查询引擎。Presto 与 Hive 执行任务过程的差异如下图所示：</p>
+<p><img src="/images/cn/2021-05-23-big-data-sql-performance-tuning/hive-vs-presto.png" alt=""></p>
+<p>Presto 的优点主要有如下几点：</p>
+<ol>
+<li>基于内存计算，减少了磁盘 IO，从而计算速度更快。</li>
+<li>能够连接多个数据源，跨数据源连表查询。</li>
+</ol>
+<p>虽然 Presto 能够处理 PB 级数据，但并不代表 Presto 会把 PB 级别数据都放在内存中计算。而是根据场景，例如 <code>COUNT</code> 和 <code>AVG</code> 等聚合操作，是边读数据边计算，再清理内存，再读取数据计算，这种情况消耗的内存并不高。但是连表查询，可能产生大量的临时数据，从而速度会变慢。</p>
+<h2 id="性能调优">性能调优</h2>
+<p>本节关于 SQL 性能调优的建议主要针对 Hive，Spark 和 Presto 这类大数据 OLAP 执行引擎设计，其他执行引擎不一定完全适用。</p>
+<p>下文性能调优中均以如下两张表为例进行说明：</p>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS sku_order
+(
+  order_id STRING '订单 ID',
+  sku_id STRING '商品 ID',
+  sale_quantity BIGINT '销售数量' 
+)
+COMMENT '商品订单表'
+PARTITIONED BY
+(
+  dt STRING COMMENT '日期分区'
+)
+;
+</code></pre>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS sku_info
+(
+  sku_id STRING '商品 ID',
+  sku_name STRING '商品名称',
+  category_id STRING '品类 ID',
+  category_name STRING '品类名称'
+)
+COMMENT '商品信息表'
+</code></pre>
+<h3 id="减少数据量">减少数据量</h3>
+<ul>
+<li>限定查询分区。对于包含分区的数据表（例如：日期分区），通过合理限定分区来减少数据量，避免全表扫描。</li>
+<li>限定查询字段。避免使用 <code>SELECT *</code>，仅选择需要的字段。<code>SELECT *</code> 会通过查询元数据获取字段信息，同时查询所有字段会造成更大的网络开销。</li>
+<li>在关联前过滤数据。应在进行数据表关联之前按照业务逻辑进行数据过滤，从而提升执行效率。</li>
+</ul>
+<h3 id="数据倾斜">数据倾斜</h3>
+<p>在 Shuffle 阶段，需要将各节点上相同的 Key 拉取到某个节点（Task）上处理，如果某个 Key 对应的数据量特别大则会产生数据倾斜。结果就是该 Task 运行的时间要远远大于其他 Task 的运行时间，从而造成作业整体运行缓慢，数据量过大甚至可能导致某个 Task 出现 OOM。</p>
+<p>在 SQL 中主要有如下几种情况会产生数据倾斜：</p>
+<ul>
+<li><code>JOIN</code> 导致的数据倾斜：两表关联，关联字段的无效值（例如：<code>NULL</code>）或有效值过多，可能会导致数据倾斜。</li>
+<li><code>GROUP BY</code> 导致的数据倾斜：当 <code>GROUP BY</code> 的字段（或字段组合）中，Key 分布不均，可能会导致数据倾斜。</li>
+<li><code>DISTINCT</code> 导致的数据倾斜：当 <code>DISTINCT</code> 的字段（或字段组合）中，Key 分布不均，可能会导致数据倾斜。</li>
+</ul>
+<p>对于不同的数据倾斜情况，解决方案如下：</p>
+<ul>
+<li>
+<p>对于 <code>JOIN</code> 中的无效值进行过滤。</p>
+<pre><code class="language-sql">SELECT
+  category_name,
+  SUM(sale_quantity) AS sale_quantity
+FROM
+  (
+    SELECT
+      sku_id,
+      sale_quantity
+    FROM
+      sku_order
+    WHERE
+      dt = '20210523'
+      AND sku_id IS NOT NULL
+  ) AS sku_order_filtered
+LEFT JOIN
+  sku_info
+ON
+  sku_order_filtered.sku_id = sku_info.sku_id
+GROUP BY
+  category_name
+;
+</code></pre>
+</li>
+<li>
+<p>对于 <code>JOIN</code> 开启 Map Join 或 Broadcast Join 策略，将小表广播到每个 Executor 上来避免产生 Shuffle，从而使得 <code>JOIN</code> 能够快速完成。</p>
+</li>
+</ul>
+<pre><code class="language-shell">set spark.sql.autoBroadcastJoinThreshold=10485760;
+</code></pre>
+<ul>
+<li>
+<p>对于 <code>JOIN</code> 中存在数据倾斜的 KEY 进行打散处理。</p>
+<pre><code class="language-sql">SELECT
+  category_name,
+  SUM(sale_quantity) AS sale_quantity
+FROM
+  (
+    SELECT
+      IF(sku_id IN (0000, 9999), CONCAT(sku_id, '_', CEIL(RAND() * 10)), sku_id) AS sku_id,
+      sale_quantity
+    FROM
+      sku_order
+    WHERE
+      dt = '20210523'
+  ) AS sku_order_modified
+LEFT JOIN
+  (
+    SELECT
+      sku_id,
+      category_name,
+    FROM
+      sku_info
+    WHERE
+      sku_id NOT IN (0000, 9999)
+    UNION ALL
+    SELECT
+      CONCAT(sku_id, '_', suffix) AS sku_id,
+      category_name
+    FROM
+      (
+        SELECT
+          sku_id,
+          SPLIT('1,2,3,4,5,6,7,8,9,10', ',') AS suffix_list,
+          category_name
+        FROM
+          sku_info
+        WHERE
+          sku_id IN (0000, 9999)
+      ) sku_info_tmp LATERAL VIEW EXPLODE(suffix_list) sku_info_suffix AS suffix
+  ) sku_info_all
+ON
+  sku_order_modified.sku_id = sku_info_all.sku_id
+GROUP BY
+  category_name
+;
+</code></pre>
+</li>
+<li>
+<p>对于 <code>GROUP BY</code> 导致的数据倾斜采用两步聚合。</p>
+<pre><code class="language-sql">SELECT
+  IF(sku_is_null = 1, NULL, sku_id) AS sku_id,
+  SUM(sale_quantity) AS sale_quantity
+FROM
+  (
+    SELECT
+      sku_id,
+      sku_is_null,
+      SUM(sale_quantity) AS sale_quantity
+    FROM
+    (
+      SELECT
+        IF(sku_id IS NULL, CONCAT(sku_id, CEIL(RAND() * 10)), sku_id) AS sku_id,
+        IF(sku_id IS NULL, 1, 0) AS sku_is_null,
+        sale_quantity
+      FROM
+        sku_order
+      WHERE
+        dt = '20210523'
+    ) sku_order_modified
+    GROUP BY
+      sku_id,
+      sku_is_null
+  ) sku_order_group
+GROUP BY
+  IF(sku_is_null = 1, NULL, sku_id)
+;
+</code></pre>
+</li>
+<li>
+<p>对于 <code>DISTINCT</code> 导致的数据倾斜，可以改写为 <code>GROUP BY</code> 实现，从而通过多个 Task 计算避免数据倾斜。</p>
+<pre><code class="language-sql">/* COUNT DISTINCT */
+SELECT
+  COUNT(DISTINCT sku_id) AS cnt
+FROM
+  sku_order
+WHERE
+  dt = '20210523'
+;
+
+/* GROUP BY */
+SELECT
+  COUNT(1) AS cnt
+FROM
+  (
+    SELECT
+      sku_id
+    FROM
+      sku_order
+    WHERE
+      dt = '20210523'
+    GROUP BY
+      sku_id
+  ) AS sku_stats
+;
+</code></pre>
+</li>
+</ul>
+<h3 id="其他建议">其他建议</h3>
+<ul>
+<li>
+<p>使用 <a href="https://en.wikipedia.org/wiki/Hierarchical_and_recursive_queries_in_SQL#Common_table_expression">Common Table Expressions (CTEs)</a> 而非子查询。<code>WITH</code> 语句产生的结果类似临时表，可以重复使用，从而避免相同逻辑业务重复计算。</p>
+</li>
+<li>
+<p>使用 <code>LEFT SEMI JOIN</code> 而非 <code>IN</code> 和子查询。Hive 在 0.13 后的版本中才在 <code>IN</code> 和 <code>NOT IN</code> 中支持子查询。</p>
+<pre><code class="language-sql">/* BAD */
+SELECT
+  order_id,
+  sku_id,
+  sale_quantity
+FROM
+  sku_order
+WHERE
+  sku_id IN (SELECT sku_id FROM sku_info)
+;
+
+/* GOOD */
+SELECT
+  order_id,
+  sku_id,
+  sale_quantity
+FROM
+  sku_order
+LEFT SEMI JOIN
+  sku_info
+ON
+  sku_order.sku_id = sku_info.sku_id
+;
+</code></pre>
+</li>
+</ul>
+<h2 id="参数调优">参数调优</h2>
+<p>除了 SQL 本身逻辑的优化外，执行引擎的相关参数设置也会影响 SQL 的执行性能。本小节以 Spark 引擎为例，总结相关参数的设置及其影响。</p>
+<h3 id="动态分区">动态分区</h3>
+<pre><code class="language-shell">/* 以下 Hive 参数对 Spark 同样有效 */
+
+/* 是否启用动态分区功能 */
+set hive.exec.dynamic.partition=true;
+
+/* strict 表示至少需要指定一个分区，nonstrict 表示可以全部动态指定分区 */
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+/* 动态生成分区的最大数量 */
+set hive.exec.max.dynamic.partitions=1000;
+</code></pre>
+<h3 id="资源申请">资源申请</h3>
+<pre><code class="language-shell">/* 每个 Executor 中的核数 */
+set spark.executor.cores=2;
+
+/* Executor 的内存总量。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.executor.memory=4G;
+
+/* Executor 的堆外内存大小，由 YARN 控制，单位为 MB。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.yarn.executor.memoryOverhead=1024;
+
+/* Driver 的内存总量，主要用于存放任务执行过程中 Shuffle 元数据，以及任务中 Collect 的数据，Broadcast 的小表也会先存放在 Driver 中。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.driver.memory=8G;
+
+/* Driver 的堆外内存，由 YARN 控制，单位为 MB。YARN 中 Container 的内存限制为 spark.executor.memory + spark.yarn.executor.memoryOverhead &lt;= 16G。 */
+set spark.yarn.driver.memoryOverhead=1024;
+
+/* storage memory + execution memory 占总内存（java heap-reserved memory）的比例。executor jvm 中内存分为 storage、execution 和 other 内存。storage 存放缓存 RDD 数据，execution 存放 Shuffle 过程的中间数据，other 存放用户定义的数据结构或 Spark 内部元数据。如果用户自定义数据结构较少，可以将该参数比例适当上调。 */
+set spark.memory.fraction=0.7;
+</code></pre>
+<h3 id="动态分配">动态分配</h3>
+<p>开启动态分配，Spark 可以根据当前作业负载动态申请和释放资源：</p>
+<pre><code class="language-shell">set spark.dynamicAllocation.enabled=true;
+</code></pre>
+<p>同时需要设置同一时刻可以申请的最小和最大 Executor 数量：</p>
+<pre><code class="language-shell">set spark.dynamicAllocation.minExecutors=10;
+set spark.dynamicAllocation.maxExecutors=100;
+</code></pre>
+<h3 id="小文件合并">小文件合并</h3>
+<pre><code class="language-shell">/* 小文件合并阈值，如果生成的文件平均大小低于阈值会额外启动一轮 Stage 进行小文件的合并，默认不合并小文件。 */
+set spark.sql.mergeSmallFileSize=67108864;
+
+/* 	设置额外的合并 Job 时的 Map 端输入大小 */
+set spark.sql.targetBytesInPartitionWhenMerge=67108864;
+
+/* 设置 Map 端输入的合并文件大小 */
+set spark.hadoopRDD.targetBytesInPartition=67108864;
+</code></pre>
+<p>在决定一个目录是否需要合并小文件时，会统计目录下的平均大小，然后和 <code>spark.sql.mergeSmallFileSize</code> 比较。在合并文件时，一个 Map Task 读取的数据量取决于下面三者的较大值：<code>spark.sql.mergeSmallFileSize</code>，<code>spark.sql.targetBytesInPartitionWhenMerge</code>，<code>spark.hadoopRDD.targetBytesInPartition</code>。</p>
+<h3 id="shuffle-相关">Shuffle 相关</h3>
+<p>当大表 <code>JOIN</code> 小表时，如果小表足够小，可以将小表广播到所有 Executor 中，在 Map 阶段完成 <code>JOIN</code>。如果该值设置太大，容易导致 Executor 出现 OOM。</p>
+<pre><code class="language-shell">/* 10 * 1024 * 1024, 10MB */
+set spark.sql.autoBroadcastJoinThreshold=10485760;
+</code></pre>
+<p>设置 Reduce 阶段的分区数：</p>
+<pre><code class="language-shell">set spark.sql.shuffle.partitions=1000;
+</code></pre>
+<p>设置过大可能导致很多 Reducer 同时向一个 Mapper 拉取数据，导致 Mapper 由于请求压力过大而挂掉或响应缓慢，从而 fetch failed。</p>
+<p>一些其他 Shuffle 相关的配置如下：</p>
+<pre><code class="language-shell">/* 同一时刻一个 Reducer 可以同时拉取的数据量大小 */
+set spark.reducer.maxSizeInFlight=25165824;
+
+/* 同一时刻一个 Reducer 可以同时产生的请求数 */
+set spark.reducer.maxReqsInFlight=10;
+
+/* 同一时刻一个 Reducer 向同一个上游 Executor 拉取的最多 Block 数 */
+set spark.reducer.maxBlocksInFlightPerAddress=1;
+
+/* Shufle 请求的 Block 超过该阈值就会强制落盘，防止一大堆并发请求将内存占满 */
+set spark.reducer.maxReqSizeShuffleToMem=536870911;
+
+/* Shuffle 中连接超时时间，超过该时间会 fetch failed */
+set spark.shuffle.io.connectionTimeout=120;
+
+/* Shuffle 中拉取数据的最大重试次数 */
+set spark.shuffle.io.maxRetries=3;
+
+/* Shuffle 重试的等待间隔 */
+set spark.shuffle.io.retryWait=5;
+</code></pre>
+<h3 id="orc-相关">ORC 相关</h3>
+<p>ORC 文件的格式如下图所示：</p>
+<p><img src="/images/cn/2021-05-23-big-data-sql-performance-tuning/orc-file-layout.png" alt=""></p>
+<p>其中，Postscript 为文件描述信息，包括 File Footer 和元数据长度、文件版本、压缩格式等；File Footer 是文件的元数据信息，包括数据量、每列的统计信息等；文件中的数据为 Stripe，每个 Stripe 包括索引数据、行数据和 Stripe Footer。更多有关 ORC 文件格式的信息请参见 <a href="https://orc.apache.org/specification/ORCv1/">ORC Specification v1
+</a>。</p>
+<p>在读取 ORC 压缩表时，可以控制生成 Split 的策略，包括：</p>
+<ul>
+<li><strong>BI</strong>：以文件为力度进行 Split 划分</li>
+<li><strong>ETL</strong>：将文件进行切分，多个 Stripe 组成一个 Split</li>
+<li><strong>HYBRID</strong>：当文件的平均大小大于 Hadoop 最大 Split 值时使用 ETL 策略，否则使用 BI 策略</li>
+</ul>
+<p>对于一些较大的 ORC 表，可能其 Footer 较大，ETL 策略可能会导致从 HDFS 拉取大量的数据来切分 Split，甚至会导致 Driver 端 OOM，因此这类表的读取建议采用 BI 策略。对于一些较小，尤其是有数据倾斜的表（即大量 Stripe 存储于少数文件中），建议使用 ETL 策略。</p>
+<p>一些其他 ORC 相关的配置如下：</p>
+<pre><code class="language-shell">/* ORC 谓词下推，默认是关闭 */
+set spark.sql.orc.filterPushdown=true;
+
+/* 	开启后，在 Split 划分时会使用 Footer 信息 */
+set spark.sql.orc.splits.include.file.footer=true;
+
+/* 设置每个 Stripe 可以缓存的大小 */
+set spark.sql.orc.cache.stripe.details.size=10000;
+
+/* 当为 true 时，Spark SQL 的谓语将被下推到 Hive Metastore 中，更早的消除不匹配的分区。 */
+set spark.sql.hive.metastorePartitionPruning=true;
+
+/* 读 ORC 表时，设置小文件合并的阈值，低于该值的 Split 会合并在一个 Task 中执行 */
+set spark.hadoop.mapreduce.input.fileinputformat.split.minsize=67108864;
+
+/* 读 ORC 表时，设置一个 Split 的最大阈值，大于该值的 Split 会切分成多个 Split。 */
+set spark.hadoop.mapreduce.input.fileinputformat.split.maxsize=268435456;
+
+/* 文件提交到HDFS上的算法：1. version=1 是按照文件提交。2. version=2 是批量按照目录进行提交，可以极大节约文件提交到 HDFS 的时间，减轻 NameNode 压力。 */
+set spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version=2;
+</code></pre>
+<h3 id="自适应执行">自适应执行</h3>
+<pre><code class="language-shell">/* 开启动态执行 */
+set spark.sql.adaptive.enabled=true;
+</code></pre>
+<p>当自适应执行开启后，调整 <code>spark.sql.adaptive.shuffle.targetPostShuffleInputSize</code>，当 Mapper 端两个 Partition 的数据合并后小于该值时，Spark 会将两个 Partition 合并到一个 Reducer 进行处理。</p>
+<pre><code class="language-shell">set spark.sql.adaptive.shuffle.targetPostShuffleInputSize=67108864;
+</code></pre>
+<p>当自适应执行开启后，有时会导致过多分区被合并，为了防止分区过少影响性能，可以设置如下参数：</p>
+<pre><code class="language-shell">set spark.sql.adaptive.minNumPostShufflePartitions=10;
+</code></pre>
+<p>一些其他自适应执行相关的配置如下：</p>
+<pre><code class="language-shell">/* 开启动态调整 Join */
+set spark.sql.adaptive.join.enabled=true;
+
+/* 设置 SortMergeJoin 转 BroadcastJoin 的阈值，如果不设置该参数，该阈值和 spark.sql.autoBroadcastJoinThreshold 值相等。 */
+set spark.sql.adaptiveBroadcastJoinThreshold=33554432;
+
+/* 是否允许为了优化 Join 而增加 Shuffle，默认是 false */
+set spark.sql.adaptive.allowAddititionalShuffle=false;
+
+/* 开启自动处理 Join 时的数据倾斜 */
+set spark.sql.adaptive.skewedJoin.enabled=true;
+
+/* 控制处理一个倾斜 Partition 的 Task 个数上限，默认值是 5 */
+set spark.sql.adaptive.skewedPartitionMaxSplits=100;
+
+/* 设置一个 Partition 被视为倾斜 Partition 的行数下限，行数低于该值的 Partition 不会被当做倾斜 Partition 处理。 */
+set spark.sql.adaptive.skewedPartitionRowCountThreshold=10000000;
+
+/* 设置一个 Partition 被视为倾斜 Partition 的大小下限，大小小于该值的 Partition 不会被当做倾斜 Partition 处理。 */
+set spark.sql.adaptive.skewedPartitionSizeThreshold=536870912;
+
+/* 设置倾斜因子，当一个 Partition 满足以下两个条件之一，就会被视为倾斜 Partition：1. 大小大于 spark.sql.adaptive.skewedPartitionSizeThreshold 的同时大于各 Partition 大小中位数与该因子的乘积。2. 行数大于 spark.sql.adaptive.skewedRowCountThreshold 的同时大于各 Partition 行数中位数与该因子的乘积。*/
+set spark.sql.adaptive.skewedPartitionFactor=10;
+</code></pre>
+<h3 id="推测执行">推测执行</h3>
+<pre><code class="language-shell">/* Spark 推测执行开关，默认是 true */
+set spark.speculation=true;
+
+/* 开启推测执行后，每隔该值时间会检测是否有需要推测执行的 Task */
+set spark.speculation.interval=1000ms;
+
+/* 当成功 Task 占总 Task 的比例超过 spark.speculation.quantile，统计成功 Task 运行时间中位数乘以 spark.speculation.multiplier 得到推测执行阈值，当在运行的任务超过这个阈值就会启动推测执行。当资源充足时，可以适当减小这两个值。 */
+set spark.speculation.quantile=0.99;
+set spark.speculation.multiplier=3;
+</code></pre>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://zh.wikipedia.org/wiki/SQL">https://zh.wikipedia.org/wiki/SQL</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p><a href="https://www.iso.org/committee/45342.html">https://www.iso.org/committee/45342.html</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p><a href="https://spark.apache.org/docs/latest/rdd-programming-guide.html">https://spark.apache.org/docs/latest/rdd-programming-guide.html</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>SQL 样式指南 (SQL Style Guide)</title><link>https://zeqiang.fun/cn/2021/05/sql-style-guide/</link><pubDate>Tue, 04 May 2021 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2021/05/sql-style-guide/</guid><description><![CDATA[
+        <p>代码样式指南主要用于规范项目中代码的一致性，使得代码简单、可读和易于维护，从一定程度上也影响代码的质量。一句话概括如何评价代码的质量：</p>
+<blockquote>
+<p>衡量代码质量的唯一有效标准：WTF/min &ndash; <a href="https://en.wikipedia.org/wiki/Robert_C._Martin">Robert C. Martin</a></p>
+</blockquote>
+<p><img src="/images/cn/2021-05-04-sql-style-guide/wtfsm.jpg" alt=""></p>
+<p>Google 针对大多数编程语言（例如：C/C++，Java，JavaScript，Python，R 等）都整理了相关的<a href="https://google.github.io/styleguide/">代码风格</a>，但对于 SQL 这种用于数据库查询特殊目的的编程语言并没有整理对应的风格。同其他编程语言代码风格一样，没有哪种风格是最好的，只要在项目中采用统一合理的风格即可。</p>
+<p>本文参考的 SQL 样式指南有如下几种：</p>
+<ol>
+<li><a href="https://www.sqlstyle.guide/zh/">https://www.sqlstyle.guide/zh/</a></li>
+<li><a href="https://about.gitlab.com/handbook/business-technology/data-team/platform/sql-style-guide/">https://about.gitlab.com/handbook/business-technology/data-team/platform/sql-style-guide/</a></li>
+<li><a href="https://docs.telemetry.mozilla.org/concepts/sql_style.html">https://docs.telemetry.mozilla.org/concepts/sql_style.html</a></li>
+<li><a href="https://github.com/mattm/sql-style-guide">https://github.com/mattm/sql-style-guide</a></li>
+</ol>
+<p>本文给出的 SQL 样式指南基于上述几种进行整理和修改。</p>
+<h2 id="一般原则">一般原则</h2>
+<ul>
+<li>使用一致的、描述性名称。</li>
+<li>使用空格（2 个或 4 个，项目中保持一致），避免使用 TAB 缩进。</li>
+<li>在 SQL 中加入必要的注释，块注释使用 <code>/* */</code>，行注释使用 <code>--</code>，并在末尾换行。</li>
+<li>使用单引号 <code>'</code> 作为被引号包裹的标识符。</li>
+<li>运算符前后添加空格，逗号 <code>,</code> 后添加空格，避免行尾有空格。</li>
+<li>每行代码不超过 80 个字符。</li>
+</ul>
+<h2 id="命名惯例">命名惯例</h2>
+<ul>
+<li>避免名称和保留字一样。</li>
+<li>关键词、函数名称采用大写，字段名、表名采用小蛇式（lower snake case）命名。</li>
+<li>名称要以字母开头，不能以下划线结尾，名称中仅可以使用字母、数字和下划线。</li>
+<li>不要在名字中出现连续下划线 <code>__</code>，这样很难辨认。</li>
+<li>尽量避免使用缩写词。使用时一定确定这个缩写简明易懂。</li>
+<li>字段名总是使用单数。</li>
+</ul>
+<h2 id="对齐和换行">对齐和换行</h2>
+<ul>
+<li>
+<p>避免<a href="https://zh.wikipedia.org/wiki/%E5%B7%9D%E6%B5%81_(%E5%AD%97%E4%BD%93%E6%8E%92%E5%8D%B0%E5%AD%A6)">川流</a>式对齐代码。</p>
+<pre><code class="language-sql">/* Good */
+SELECT id
+FROM table_name
+WHERE column = &quot;test&quot;
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT id
+  FROM talbe_name
+ WHERE column = &quot;test&quot;
+;
+</code></pre>
+</li>
+<li>
+<p>多个元素组合无法呈现在一行中时，应将第一个元素另起一行。</p>
+<pre><code class="language-sql">/* Good */
+SELECT
+  CASE postcode
+    WHEN 'BN1' THEN 'Brighton'
+    WHEN 'EH1' THEN 'Edinburgh'
+  END AS city
+FROM table_name
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT
+  CASE postcode WHEN 'BN1' THEN 'Brighton'
+                WHEN 'EH1' THEN 'Edinburgh'
+  END AS city
+FROM table_name
+;
+</code></pre>
+</li>
+<li>
+<p>由括号构成的多行，结尾括号应单独一行。</p>
+<pre><code class="language-sql">/* Good */
+SELECT id
+FROM table_name
+WHERE postcode IN (
+  'looooooooooooooooooooooooong_BN1',
+  'loooooooooooooooooooooooooog_EH1'
+)
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT id
+FROM table_name
+WHERE postcode IN ('looooooooong_BN1',
+                   'looooooooong_EH1')
+</code></pre>
+</li>
+<li>
+<p>多行采用右侧逗号和左侧关键字连接。</p>
+<pre><code class="language-sql">/* Good */
+SELECT
+  id,
+  name
+FROM
+  talbe_name
+WHERE
+  id &gt; 1
+  AND name LIKE &quot;%Tom%&quot;
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT
+  id
+  , name
+FROM
+  table_name
+WHERE
+  id &gt; 1 AND
+  name LIKE &quot;%Tom%&quot;
+;
+</code></pre>
+</li>
+<li>
+<p>根关键词建议单独一行，多个参数单独一行。</p>
+<pre><code class="language-sql">/* Good */
+SELECT
+  id,
+  name
+FROM
+  table_name
+WHERE
+  id &gt; 1
+  AND name LIKE &quot;%Tom%&quot;
+LIMIT
+  10
+;
+</code></pre>
+<pre><code class="language-sql">/* Acceptable */
+SELECT
+  id,
+  name
+FROM table_name
+WHERE
+  id &gt; 1
+  AND name LIKE &quot;%Tom%&quot;
+LIMIT 10
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT id, name
+FROM table_name
+WHERE
+  id &gt; 1
+  AND name LIKE &quot;%Tom%&quot;
+LIMIT 10
+;
+</code></pre>
+</li>
+</ul>
+<h2 id="明确指定">明确指定</h2>
+<ul>
+<li>
+<p>使用 <code>AS</code> 明确指定别名，而非隐式。</p>
+<pre><code class="language-sql">/* Good */
+SELECT
+  table_name_1.id AS user_id,
+  table_name_2.name AS user_name
+FROM
+  looooooooong_table_name_1 AS table_name_1
+LEFT JOIN
+  looooooooong_table_name_2 AS table_name_2
+ON
+  table_name_1.id = table_name_2.id
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT
+  table_name_1.id user_id,
+  table_name_2.name user_name
+FROM
+  looooooooong_table_name_1 table_name_1
+LEFT JOIN
+  looooooooong_table_name_2 table_name_2
+ON
+  table_name_1.id = table_name_2.id
+;
+</code></pre>
+</li>
+<li>
+<p>避免使用隐式关联。</p>
+<pre><code class="language-sql">/* Good */
+SELECT
+  table_name_1.id,
+  table_name_2.name
+FROM
+  table_name_1
+INNER JOIN
+  table_name_2
+ON
+  table_name_1.id = table_name_2.id
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT
+  table_name_1.id,
+  table_name_2.name
+FROM
+  table_name_1,
+  table_name_2
+ON
+  table_name_1.id = table_name_2.id
+;
+</code></pre>
+</li>
+<li>
+<p>明确关联类型。</p>
+<pre><code class="language-sql">/* Good */
+SELECT
+  table_name_1.id,
+  table_name_2.name
+FROM
+  table_name_1
+INNER JOIN
+  table_name_2
+ON
+  table_name_1.id = table_name_2.id
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT
+  table_name_1.id,
+  table_name_2.name
+FROM
+  table_name_1
+JOIN
+  table_name_2
+ON
+  table_name_1.id = table_name_2.id
+;
+</code></pre>
+</li>
+<li>
+<p>明确指定分组列。</p>
+<pre><code class="language-sql">/* Good */
+SELECT
+  submission_date,
+  normalized_channel IN ('nightly', 'aurora', 'beta') AS is_prerelease,
+  COUNT(*) AS count
+FROM
+  telemetry.clients_daily
+WHERE
+  submission_date &gt; '2019-07-01'
+GROUP BY
+  submission_date,
+  is_prerelease
+;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT
+  submission_date,
+  normalized_channel IN ('nightly', 'aurora', 'beta') AS is_prerelease,
+  COUNT(*) AS count
+FROM
+  telemetry.clients_daily
+WHERE
+  submission_date &gt; '2019-07-01'
+GROUP BY
+  1, 2
+;
+</code></pre>
+</li>
+</ul>
+<h2 id="子查询">子查询</h2>
+<ul>
+<li>
+<p>尽量使用 <a href="https://en.wikipedia.org/wiki/Hierarchical_and_recursive_queries_in_SQL#Common_table_expression">Common Table Expressions (CTEs)</a> 而非子查询。</p>
+<pre><code class="language-sql">/* Good */
+WITH sample AS (
+  SELECT
+    client_id,
+    submission_date
+  FROM
+    main_summary
+  WHERE
+    sample_id = '42'
+)
+
+SELECT *
+FROM sample
+LIMIT 10
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+SELECT *
+FROM (
+  SELECT
+    client_id,
+    submission_date
+  FROM
+    main_summary
+  WHERE
+    sample_id = '42'
+)
+LIMIT 10
+</code></pre>
+</li>
+<li>
+<p>尽量在 CTEs 中处理查询而非主语句中。</p>
+<pre><code class="language-sql">/* Good */
+WITH backings_per_category AS (
+  SELECT
+    ...
+), backers AS (
+  SELECT
+    backings_per_category.backer_id,
+    COUNT(backings_per_category.id) AS projects_backed_per_category
+  INNER JOIN ksr.users AS users ON users.id = backings_per_category.backer_id
+  GROUP BY backings_per_category.backer_id
+), backers_and_creators AS (
+  ...
+)
+SELECT * FROM backers_and_creators;
+</code></pre>
+<pre><code class="language-sql">/* Bad */
+WITH backings_per_category AS (
+  SELECT
+    ...
+), backers AS (
+  SELECT
+    backer_id,
+    COUNT(backings_per_category.id) AS projects_backed_per_category
+), backers_and_creators AS (
+  ...
+)
+SELECT *
+FROM backers_and_creators
+INNER JOIN backers
+ON backers_and_creators
+ON backers.backer_id = backers_and_creators.backer_id
+</code></pre>
+</li>
+</ul>
+<h2 id="其他">其他</h2>
+<ul>
+<li>尽量使用 <code>!=</code> 而不是 <code>&lt;&gt;</code> 表示不等于。</li>
+<li>尽量使用 <code>BETWEEN</code> 而不是多个 <code>AND</code> 语句。</li>
+<li>尽量使用 <code>IN()</code> 而不是多个 <code>OR</code> 语句。</li>
+<li>尽量避免使用 <code>SELECT *</code>。</li>
+<li>尽量避免使用无意义的别名，例如：<code>a, b, c</code>。</li>
+</ul>
+
+        ]]></description></item><item><title>进程，线程和协程 (Process, Thread and Coroutine)</title><link>https://zeqiang.fun/cn/2021/04/process-thread-and-coroutine-python-implementation/</link><pubDate>Sat, 03 Apr 2021 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2021/04/process-thread-and-coroutine-python-implementation/</guid><description><![CDATA[
+        <blockquote>
+<p>理论篇请参见：<a href="/cn/2021/04/process-thread-and-coroutine-theory">进程，线程和协程 (Process, Thread and Coroutine) - 理论篇</a></p>
+</blockquote>
+<p>本文将介绍进程，线程和协程在 Python 中的实现，代码详见<a href="https://github.com/leovan/leovan.me/tree/master/scripts/cn/2021-04-03-process-thread-and-coroutine-python-implementation">这里</a>，部分参考自「Python 并发编程」 <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>:。</p>
+<h2 id="进程和线程">进程和线程</h2>
+<p>在 Python 中可以使用 <code>multiprocessing.Process</code> 和 <code>threading.Thread</code> 来实现进程和线程。我们采用<strong>CPU 密集型</strong>、<strong>磁盘 IO 密集型</strong>、<strong>网络 IO 密集型</strong>和<strong>模拟 IO 密集型</strong>任务类型来测试单线程，多线程和多进程之间的性能差异。</p>
+<pre><code class="language-python">import requests
+
+# CPU 密集型
+def cpu_bound_task(x=1, y=1):
+    c = 0
+
+    while c &lt; 1500000:
+        c += 1
+        x += x
+        y += y
+
+# 磁盘 IO 密集型
+def disk_io_bound_task():
+    with open('tmp.log', 'w') as f:
+        for idx in range(5000000):
+            f.write('{}\n'.format(idx))
+
+# 网络 IO 密集型
+def web_io_bound_task():
+    try:
+        requests.get('https://www.baidu.com')
+    except Exception as e:
+        pass
+
+# 模拟 IO 密集型
+def simulation_io_bound_task():
+    time.sleep(2)
+</code></pre>
+<p>为了方便统计运行时间，定义如下一个运行时间装饰器：</p>
+<pre><code class="language-python">import time
+
+def timer(task_mode):
+    def wrapper(func):
+        def decorator(*args, **kwargs):
+            task_type = kwargs.setdefault('task_type', None)
+            start_time = time.time()
+            func(*args, **kwargs)
+            end_time = time.time()
+            print('耗时（{} - {}）: {}'.format(
+                task_mode, task_type, end_time - start_time))
+        return decorator
+    return wrapper
+</code></pre>
+<p>单线程，多线程和多进程的测试代码如下：</p>
+<pre><code class="language-python">from threading import Thread
+from multiprocessing import Process
+
+@timer('单线程')
+def single_thread(func, task_type='', n=10):
+    for idx in range(n):
+        func()
+
+
+@timer('多线程')
+def multi_threads(func, task_type='', n=10):
+    threads = {}
+
+    for idx in range(n):
+        t = Thread(target=func)
+        threads[idx] = t
+        t.start()
+
+    for thread in threads.values():
+        thread.join()
+
+
+@timer('多进程')
+def multi_processes(func, task_type='', n=10):
+    processes = {}
+
+    for idx in range(n):
+        p = Process(target=func)
+        processes[idx] = p
+        p.start()
+
+    for process in processes.values():
+        process.join()
+</code></pre>
+<p>运行测试</p>
+<pre><code class="language-python"># 单线程
+single_thread(cpu_bound_task, task_type='CPU 密集型任务')
+single_thread(disk_io_bound_task, task_type='磁盘 IO 密集型任务')
+single_thread(web_io_bound_task, task_type='网络 IO 密集型任务')
+single_thread(simulation_io_bound_task, task_type='模拟 IO 密集型任务')
+
+# 多线程
+multi_threads(cpu_bound_task, task_type='CPU 密集型任务')
+multi_threads(disk_io_bound_task, task_type='磁盘 IO 密集型任务')
+multi_threads(web_io_bound_task, task_type='网络 IO 密集型任务')
+multi_threads(simulation_io_bound_task, task_type='模拟 IO 密集型任务'
+
+# 多进程
+multi_processes(cpu_bound_task, task_type='CPU 密集型任务')
+multi_processes(disk_io_bound_task, task_type='磁盘 IO 密集型任务')
+multi_processes(web_io_bound_task, task_type='网络 IO 密集型任务')
+multi_processes(simulation_io_bound_task, task_type='模拟 IO 密集型任务')
+</code></pre>
+<p>可以得到类似如下的结果：</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>单线程</th>
+          <th>多线程</th>
+          <th>多进程</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>CPU 密集型</td>
+          <td>83.42</td>
+          <td>93.82</td>
+          <td>9.08</td>
+      </tr>
+      <tr>
+          <td>磁盘 IO 密集型</td>
+          <td>15.64</td>
+          <td>13.27</td>
+          <td>1.28</td>
+      </tr>
+      <tr>
+          <td>网络 IO 密集型</td>
+          <td>1.13</td>
+          <td>0.18</td>
+          <td>0.13</td>
+      </tr>
+      <tr>
+          <td>模拟 IO 密集型</td>
+          <td>20.02</td>
+          <td>2.02</td>
+          <td>2.01</td>
+      </tr>
+  </tbody>
+</table>
+<p>从测试结果来看，不难得出如下结论：</p>
+<ol>
+<li>多线程和多进程相比单线程速度整体上有很大提升。</li>
+<li>对于 CPU 密集型任务，由于 GIL 加锁和释放问题，多线程相比单线程更慢。</li>
+<li>多线程更适合在 IO 密集场景下使用，例如：爬虫等。</li>
+<li>多进程更适合在 CPU 密集场景下使用，例如：大数据处理，机器学习等。</li>
+</ol>
+<p>创建线程有两种方式：</p>
+<h3 id="利用函数创建线程">利用函数创建线程</h3>
+<p>Python 中的 <code>threading.Thread()</code> 接受两个参数：<strong>线程函数</strong>，用于指定线程执行的函数；<strong>线程函数参数</strong>，以元组的形式传入执行函数所需的参数。</p>
+<pre><code class="language-python">import time
+from threading import Thread
+
+# 自定义函数
+def func(name='Python'):
+    for idx in range(2):
+        print('Hello, {}'.format(name))
+        time.sleep(1)
+
+# 创建线程
+thread_1 = Thread(target=func)
+thread_2 = Thread(target=func, args=('Leo', ))
+
+# 启动线程
+thread_1.start()
+thread_2.start()
+</code></pre>
+<p>可以得到如下输出：</p>
+<pre><code>Hello, Python
+Hello, Leo
+Hello, Python
+Hello, Leo
+</code></pre>
+<h3 id="利用类创建线程">利用类创建线程</h3>
+<p>利用类创建线程需要自定义一个类并继承 <code>threading.Thread</code> 这个父类，同时重写 <code>run</code> 方法。最后通过实例化该类，并运行 <code>start()</code> 方法执行该线程。</p>
+<pre><code class="language-python"># 自定义类
+class MyThread(Thread):
+    def __init__(self, name='Python'):
+        super(MyThread, self).__init__()
+        self.name = name
+
+    def run(self):
+        for idx in range(2):
+            print('Hello, {}'.format(self.name))
+            time.sleep(1)
+
+# 创建线程
+thread_1 = MyThread()
+thread_2 = MyThread('Leo')
+
+# 启动线程
+thread_1.start()
+thread_2.start()
+</code></pre>
+<p>可以得到同上面一样的输出：</p>
+<pre><code>Hello, Python
+Hello, Leo
+Hello, Python
+Hello, Leo
+</code></pre>
+<p>线程的一些常用方法和属性如下所示：</p>
+<pre><code class="language-python"># 创建线程
+t = Thread(target=func)
+
+# 启动线程
+t.start()
+
+# 阻塞线程
+t.join()
+
+# 判断线程是否处于执行状态
+# True: 执行中，False: 其他
+t.is_alive()
+
+# 这是线程是否随主线程退出而退出
+# 默认为 False
+t.daemon = True
+
+# 设置线程名称
+t.name = 'My Thread'
+</code></pre>
+<h2 id="锁">锁</h2>
+<p>在一段代码中加锁表示同一时间有且仅有一个线程可以执行这段代码。在 Python 中锁分为两种：<strong>互斥锁</strong>和<strong>可重入锁</strong>。利用 <code>threading.Lock()</code> 可以获取全局唯一的锁对象，使用 <code>acquire()</code> 和 <code>release()</code> 方法可以获取和释放锁，注意两个需成对出现，否则可能造成死锁。</p>
+<h3 id="互斥锁">互斥锁</h3>
+<p>例如定义两个函数，并在两个线程中执行，这两个函数共用一个变量 <code>C</code>：</p>
+<pre><code class="language-python">import time
+import random
+
+from threading import Thread
+
+# 共用变量
+C = 0
+
+def job1(n=10):
+    global C
+
+    for idx in range(n):
+        C += 1
+        print('Job1: {}'.format(C))
+
+def job2(n=10):
+    global C
+
+    for idx in range(n):
+        C += 10
+        print('Job2: {}'.format(C))
+
+t1 = Thread(target=job1)
+t2 = Thread(target=job2)
+
+t1.start()
+t2.start()
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>Job1: 1
+Job2: 11
+Job2: 21
+Job1: 22
+Job1: 23
+Job2: 33
+Job2: 43
+Job1: 44
+Job2: 54
+Job1: 55
+Job2: 65
+Job1: 66
+Job2: 76
+Job2: 86
+Job1: 87
+Job1: 88
+Job2: 98
+Job1: 99
+Job2: 109
+Job1: 110
+</code></pre>
+<p>两个线程共用一个全局变量，两个线程根据自己执行的快慢对变量 <code>C</code> 进行修改。在增加锁后：</p>
+<pre><code class="language-python">import time
+import random
+
+from threading import Lock
+
+# 全局唯一锁
+LOCK = Lock()
+
+# 共用变量
+C = 0
+
+def job1_with_lock(n=10):
+    global C, LOCK
+
+    LOCK.acquire()
+
+    for idx in range(n):
+        C += 1
+        print('Job1: {}'.format(C))
+        time.sleep(random.random())
+
+    LOCK.release()
+
+
+def job2_with_lock(n=10):
+    global C, LOCK
+
+    LOCK.acquire()
+
+    for idx in range(n):
+        C += 10
+        print('Job2: {}'.format(C))
+        time.sleep(random.random())
+
+    LOCK.release()
+
+t1 = Thread(target=job1_with_lock)
+t2 = Thread(target=job2_with_lock)
+
+t1.start()
+t2.start()
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>Job1: 1
+Job1: 2
+Job1: 3
+Job1: 4
+Job1: 5
+Job1: 6
+Job1: 7
+Job1: 8
+Job1: 9
+Job1: 10
+Job2: 20
+Job2: 30
+Job2: 40
+Job2: 50
+Job2: 60
+Job2: 70
+Job2: 80
+Job2: 90
+Job2: 100
+Job2: 110
+</code></pre>
+<p>此时，由于 <code>job1_with_lock</code> 先拿到了锁，所以当执行时 <code>job2_with_lock</code> 无法获取到锁，就无法对 <code>C</code> 进行修改。只有当 <code>job1_with_lock</code> 执行完毕释放锁后，<code>job2_with_lock</code> 才能执行对 <code>C</code> 的修改操作。为了避免忘记释放锁，可以使用 <code>with</code> 上下文管理器来加锁。</p>
+<h3 id="可重入锁">可重入锁</h3>
+<p>在同一个线程中，我们可能会多次请求同一个资源，这称为<strong>嵌套锁</strong>。如果使用常规的方式：</p>
+<pre><code class="language-python">from threading import Lock
+
+def lock_with_lock(n=10):
+    c = 0
+    lock = Lock()
+
+    with lock:
+        for idx in range(n):
+            c += 1
+            with lock:
+                print(c)
+
+t = Thread(target=lock_with_lock)
+t.start()
+</code></pre>
+<p>则无法正常运行，因为第二次获取锁时，锁已经被同一线程获取，从而无法运行后续代码。由于后续代码无法运行则无法释放锁，从而上述的嵌套锁会造成<strong>死锁</strong>。</p>
+<p>为了解决这个问题，<code>threading</code> 模块提供了<strong>可重入锁</strong> <code>RLock</code>：</p>
+<pre><code class="language-python">from threading import RLock
+
+def rlock_with_lock(n=10):
+    c = 0
+    lock = RLock()
+
+    with lock:
+        for idx in range(n):
+            c += 1
+            with lock:
+                print(c)
+  
+t = Thread(target=rlock_with_lock)
+t.start()
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</code></pre>
+<h3 id="全局解释器锁">全局解释器锁</h3>
+<p>全局解释器锁（Global Interpreter Lock，GIL），是计算机程序设计语言解释器用于同步线程的一种机制，它使得任何时刻仅有一个线程在执行。</p>
+<blockquote>
+<p>任何 Python 线程执行前，必须先获得 GIL 锁，然后，每执行 100 条字节码，解释器就自动释放 GIL 锁，让别的线程有机会执行。这个 GIL 全局锁实际上把所有线程的执行代码都给上了锁，所以，多线程在 Python 中只能交替执行，即使 100 个线程跑在 100 核 CPU 上，也只能用到 1 个核。</p>
+</blockquote>
+<h2 id="通信">通信</h2>
+<p>Python 中实现线程中通信有如下 3 中方法：</p>
+<h3 id="event-事件">Event 事件</h3>
+<p><code>threading.Event</code> 可以创建一个事件变量，多个线程等待这个事件的发生，在事件发生后，所有线程继续运行。<code>threading.Event</code> 包含如下三个函数：</p>
+<pre><code class="language-python">event = threading.Event()
+
+# 重置 event，使得所有该 event 事件都处于待命状态
+event.clear()
+
+# 等待接收 event 的指令，决定是否阻塞程序执行
+event.wait()
+
+# 发送 event 指令，使所有设置该 event 事件的线程执行
+event.set()
+</code></pre>
+<p>例如：</p>
+<pre><code class="language-python">import time
+
+from threading import Thread, Event
+
+class EventThread(Thread):
+    def __init__(self, name, event):
+        super(EventThread, self).__init__()
+
+        self.name = name
+        self.event = event
+
+    def run(self):
+        print('线程 {} 启动于 {}'.format(self.name, time.ctime(time.time())))
+        self.event.wait()
+        print('线程 {} 结束于 {}'.format(self.name, time.ctime(time.time())))
+
+threads = {}
+event = Event()
+
+for tid in range(3):
+    threads[tid] = EventThread(str(tid), event)
+
+event.clear()
+
+for thread in threads.values():
+    thread.start()
+
+print('等待 3 秒钟 ...')
+time.sleep(3)
+
+print('唤醒所有线程 ...')
+event.set() 
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>线程 0 启动于 Thu Apr  1 23:12:32 2021
+线程 1 启动于 Thu Apr  1 23:12:32 2021
+线程 2 启动于 Thu Apr  1 23:12:32 2021
+等待 3 秒钟 ...
+唤醒所有线程 ...
+线程 0 结束于 Thu Apr  1 23:12:35 2021
+线程 1 结束于 Thu Apr  1 23:12:35 2021
+线程 2 结束于 Thu Apr  1 23:12:35 2021
+</code></pre>
+<p>可见线程启动后并未执行完成，而是卡在了 <code>event.wait()</code> 处，直到通过 <code>event.set()</code> 发送指令后，所有线程才继续向下执行。</p>
+<h3 id="condition">Condition</h3>
+<p><code>threading.Condition</code> 与 <code>threading.Event</code> 类似，包含如下 4 个函数：</p>
+<pre><code class="language-python">cond = threading.Condition()
+
+# 类似 lock.acquire()
+cond.acquire()
+
+# 类似 lock.release()
+cond.release()
+
+# 等待指定触发，同时会释放对锁的获取,直到被 notify 才重新占有琐。
+cond.wait()
+
+# 发送指定，触发执行
+cond.notify()
+</code></pre>
+<p>以一个捉迷藏的游戏为例：</p>
+<pre><code class="language-python">import time
+
+from threading import Thread, Condition
+
+class Seeker(Thread):
+    def __init__(self, condition, name):
+        super(Seeker, self).__init__()
+
+        self.condition = condition
+        self.name = name
+
+    def run(self):
+        time.sleep(1) # 确保先运行 Hider 中的方法
+
+        self.condition.acquire()
+
+        print('{}: 我把眼睛蒙好了'.format(self.name))
+        self.condition.notify()
+        self.condition.wait()
+        print('{}: 我找到你了'.format(self.name))
+        self.condition.notify()
+
+        self.condition.release()
+        print('{}: 我赢了'.format(self.name))
+
+
+class Hider(Thread):
+    def __init__(self, condition, name):
+        super(Hider, self).__init__()
+
+        self.condition = condition
+        self.name = name
+
+    def run(self):
+        self.condition.acquire()
+
+        self.condition.wait()
+        print('{}: 我藏好了'.format(self.name))
+        self.condition.notify()
+        self.condition.wait()
+        self.condition.release()
+        print('{}: 被你找到了'.format(self.name))
+
+condition = Condition()
+
+seeker = Seeker(condition, 'Seeker')
+hider = Hider(condition, 'Hider')
+
+seeker.start()
+hider.start()
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>Seeker: 我把眼睛蒙好了
+Hider: 我藏好了
+Seeker: 我找到你了
+Seeker: 我赢了
+Hider: 被你找到了
+</code></pre>
+<p>可见通过 <code>cond.wait()</code> 和 <code>cond.notify()</code> 进行阻塞和通知可以实现双方动作交替进行。</p>
+<h3 id="queue-队列">Queue 队列</h3>
+<p>从一个线程向另一个线程发送数据最安全的方式是使用 <code>queue</code> 库中的队列。创建一个被多个线程共享的队列对象，通过 <code>put()</code> 和 <code>get()</code> 方法向队列发送和获取元素。队列的常用方法如下：</p>
+<pre><code class="language-python">from queue import Queue
+
+# maxsize=0 表示不限大小
+# maxsize&gt;0 且消息数达到限制时，put() 方法会阻塞
+q = Queue(maxsize=0)
+
+# 默认阻塞程序，等待队列消息，可设置超时时间
+q.get(block=True, timeout=None)
+
+# 发送消息，默认会阻塞程序至队列中有空闲位置放入数据
+q.put(item, block=True, timeout=None)
+
+# 等待所有的消息都被消费完
+q.join()
+
+# 通知队列任务处理已经完成，当所有任务都处理完成时，join() 阻塞将会解除
+q.task_done()
+
+# 查询当前队列的消息个数
+q.qsize()
+
+# 队列消息是否都被消费完，返回 True/False
+q.empty()
+
+# 检测队列里消息是否已满
+q.full()
+</code></pre>
+<p>以老师点名为例：</p>
+<pre><code class="language-python">import time
+
+from queue import Queue
+from threading import Thread
+
+class Student(object):
+    def __init__(self, name):
+        super(Student, self).__init__()
+
+        self.name = name
+
+    def speak(self):
+        print('{}: 到'.format(self.name))
+
+
+class Teacher(object):
+    def __init__(self, queue):
+        super(Teacher, self).__init__()
+
+        self.queue = queue
+
+    def call(self, student_name):
+        if student_name == 'exit':
+            print('老师: 点名结束，开始上课')
+        else:
+            print('老师: {}'.format(student_name))
+
+        self.queue.put(student_name)
+
+
+class CallManager(Thread):
+    def __init__(self, queue):
+        super(CallManager, self).__init__()
+
+        self.students = {}
+        self.queue = queue
+
+    def put(self, student):
+        self.students.setdefault(student.name, student)
+
+    def run(self):
+        while True:
+            student_name = self.queue.get()
+
+            if student_name == 'exit':
+                break
+            elif student_name in self.students:
+                self.students[student_name].speak()
+            else:
+                print('学生: 老师，没有 {} 这个人'.format(student_name))
+
+queue = Queue()
+
+teacher = Teacher(queue=queue)
+s1 = Student(name='张三')
+s2 = Student(name='李四')
+
+cm = CallManager(queue)
+cm.put(s1)
+cm.put(s2)
+
+cm.start()
+
+print('开始点名')
+teacher.call('张三')
+time.sleep(1)
+teacher.call('李四')
+time.sleep(1)
+teacher.call('王五')
+time.sleep(1)
+teacher.call('exit')
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>开始点名
+老师: 张三
+张三: 到
+老师: 李四
+李四: 到
+老师: 王五
+学生: 老师，没有 王五 这个人
+老师: 点名结束，开始上课
+</code></pre>
+<p>除了先进先出队列 <code>queue.Queue</code> 外，还有后进先出队列 <code>queue.LifoQueue</code> 和优先级队列 <code>queue.PriorityQueue</code>。</p>
+<h2 id="进程池和线程池">进程池和线程池</h2>
+<p><strong>池</strong>是一组资源的集合，这组资源在服务器启动之初就被完全创建好并初始化，这称为静态资源分配。当服务器进入正式运行阶段，即开始处理客户请求的时候，如果它需要相关的资源，就可以直接从池中获取，无需动态分配。很显然，直接从池中取得所需资源比动态分配资源的速度要快得多，因为分配系统资源的系统调用都是很耗时的。</p>
+<p>池的概念主要目的是为了重用：让线程或进程在生命周期内可以多次使用。它减少了创建创建线程和进程的开销，以空间换时间来提高了程序性能。重用不是必须的规则，但它是程序员在应用中使用池的主要原因。</p>
+<p>Python 中利用 <code>concurrent.futures</code> 库中的 <code>ThreadPoolExecutor</code> 和 <code>ProcessPoolExecutor</code> 创建<strong>线程池</strong>和<strong>进程池</strong>。示例如下：</p>
+<pre><code class="language-python">import time
+import threading
+
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+
+
+def print_func(n=3):
+    for idx in range(n):
+        print('运行 {}-{}'.format(threading.get_ident(), idx))
+        time.sleep(1)
+
+
+def return_func(n=3):
+    res = []
+
+    for idx in range(n):
+        res.append('{}-{}'.format(threading.get_ident(), idx))
+        time.sleep(1)
+
+    return res
+
+
+def test_thread_pool_print(n=3, m=12):
+    with ThreadPoolExecutor(max_workers=n) as executor:
+        for _ in range(m):
+            executor.submit(print_func)
+
+
+def test_process_pool_print(n=3, m=12):
+    with ProcessPoolExecutor(max_workers=n) as executor:
+        for _ in range(m):
+            executor.submit(print_func)
+
+
+def test_thread_pool_return(n=3, m=12):
+    with ThreadPoolExecutor(max_workers=n) as executor:
+        futures = [executor.submit(return_func) for _ in range(m)]
+
+        for future in as_completed(futures):
+            print(future.result())
+
+
+def test_process_pool_return(n=3, m=12):
+    with ProcessPoolExecutor(max_workers=n) as executor:
+        futures = [executor.submit(return_func) for _ in range(m)]
+
+        for future in as_completed(futures):
+            print(future.result())
+
+
+line_sep = '-' * 60
+
+print(line_sep)
+print('测试线程池')
+print(line_sep)
+test_thread_pool_print()
+print(line_sep)
+
+print(line_sep)
+print('测试进程池')
+print(line_sep)
+test_process_pool_print()
+print(line_sep)
+
+print(line_sep)
+print('测试线程池')
+print(line_sep)
+test_thread_pool_return()
+print(line_sep)
+
+print(line_sep)
+print('测试进程池')
+print(line_sep)
+test_process_pool_return()
+print(line_sep)
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>------------------------------------------------------------
+测试线程池
+------------------------------------------------------------
+运行 123145462505472-0
+运行 123145479294976-0
+运行 123145496084480-0
+运行 123145496084480-1
+运行 123145462505472-1
+运行 123145479294976-1
+运行 123145496084480-2
+运行 123145462505472-2
+运行 123145479294976-2
+运行 123145462505472-0
+运行 123145479294976-0
+运行 123145496084480-0
+运行 123145479294976-1
+运行 123145462505472-1
+运行 123145496084480-1
+运行 123145479294976-2
+运行 123145462505472-2
+运行 123145496084480-2
+------------------------------------------------------------
+------------------------------------------------------------
+测试进程池
+------------------------------------------------------------
+运行 4545199616-0
+运行 4545199616-1
+运行 4545199616-2
+运行 4545199616-0
+运行 4545199616-1
+运行 4545199616-2
+运行 4663131648-0
+运行 4663131648-1
+运行 4663131648-2
+运行 4663131648-0
+运行 4663131648-1
+运行 4663131648-2
+运行 4633173504-0
+运行 4633173504-1
+运行 4633173504-2
+运行 4633173504-0
+运行 4633173504-1
+运行 4633173504-2
+------------------------------------------------------------
+------------------------------------------------------------
+测试线程池
+------------------------------------------------------------
+['123145496084480-0', '123145496084480-1', '123145496084480-2']
+['123145479294976-0', '123145479294976-1', '123145479294976-2']
+['123145462505472-0', '123145462505472-1', '123145462505472-2']
+['123145479294976-0', '123145479294976-1', '123145479294976-2']
+['123145496084480-0', '123145496084480-1', '123145496084480-2']
+['123145462505472-0', '123145462505472-1', '123145462505472-2']
+------------------------------------------------------------
+------------------------------------------------------------
+测试进程池
+------------------------------------------------------------
+['4791307776-0', '4791307776-1', '4791307776-2']
+['4588228096-0', '4588228096-1', '4588228096-2']
+['4654599680-0', '4654599680-1', '4654599680-2']
+['4791307776-0', '4791307776-1', '4791307776-2']
+['4588228096-0', '4588228096-1', '4588228096-2']
+['4654599680-0', '4654599680-1', '4654599680-2']
+------------------------------------------------------------
+</code></pre>
+<p>其中，<code>submit()</code> 方法用于提交要执行的任务到线程池或进程池中，并返回该任务的 <code>Future</code> 对象。<code>Future</code> 对象的 <code>done()</code> 方法用于判断任务是否执行完毕，通过 <code>result(timeout=None)</code> 方法获取返回结果。利用 <code>concurrent.futures.as_completed()</code> 方法可以返回一个包含指定 Future 实例的迭代器，这些实例在完成时生成 Future 对象。</p>
+<h2 id="生成器和迭代器">生成器和迭代器</h2>
+<figure>
+  <img data-src="/images/cn/2021-04-03-process-thread-and-coroutine-python-implementation/iterators-and-generators.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：https://nvie.com/posts/iterators-vs-generators/</p></figcaption>
+</figure>
+<p><strong>容器</strong>是一种把多个元素组织在一起的数据结构，容器中的元素可以逐个迭代获取，可以用 <code>in</code> 或 <code>not in</code> 判断元素是否包含在容器中。常见的容器对象有：</p>
+<pre><code>list, deque, ...
+set, frozensets, ...
+dict, defaultdict, OrderedDict, Counter, ...
+tuple, namedtuple, ...
+str
+</code></pre>
+<h3 id="可迭代对象">可迭代对象</h3>
+<p>很多容器都是<strong>可迭代对象</strong>，此外还有更多的对象同样也可以是可迭代对象，比如处于打开状态的 <code>file</code> 和 <code>socket</code> 等。凡是可以返回一个迭代器的对象都可称之为可迭代对象，例如：</p>
+<pre><code class="language-python">from collections import deque
+from collections.abc import Iterable
+
+print(isinstance('Leo Van', Iterable))
+print(isinstance([1, 2, 3], Iterable))
+print(isinstance({'k1': 'v1', 'k2': 'v2'}, Iterable))
+print(isinstance(deque('abc'), Iterable))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>True
+True
+True
+True
+</code></pre>
+<h3 id="迭代器">迭代器</h3>
+<p><strong>迭代器</strong>是一个带有状态的对象，通过 <code>next()</code> 方法可以返回容器中的下一个值。任何实现 <code>__iter__()</code> 和 <code>__next__()</code> 方法的对象都是迭代器。其中，<code>__iter__()</code> 方法返回迭代器本身，<code>__next__()</code> 方法返回容器中的下一个值，如果容器中没有更多元素了，则抛出 <code>StopIteration</code> 异常。例如：</p>
+<pre><code class="language-python">class MyList(object):
+    def __init__(self, end):
+        super(MyList, self).__init__()
+
+        self.end = end
+
+    def __iter__(self):
+        return MyListIterator(self.end)
+
+    def __repr__(self):
+        return '[{}]'.format(', '.join([str(ele) for ele in self]))
+
+
+class MyListIterator(object):
+    def __init__(self, end):
+        super(MyListIterator, self).__init__()
+
+        self.data = end
+        self.start = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        while self.start &lt; self.data:
+            self.start += 1
+            return self.start - 1
+
+        raise StopIteration
+
+my_list = MyList(3)
+
+print('MyList: {}'.format(my_list))
+print(isinstance(my_list, Iterable))
+print(isinstance(my_list, Iterator))
+
+for ele in my_list:
+    print(ele)
+
+my_list_iterator = MyListIterator(3)
+
+print('MyListIterator: {}'.format(my_list_iterator))
+print(isinstance(my_list_iterator, Iterable))
+print(isinstance(my_list_iterator, Iterator))
+
+my_iterator = iter(my_list)
+
+print('MyIterator: {}'.format(my_iterator))
+print(isinstance(my_iterator, Iterable))
+print(isinstance(my_iterator, Iterator))
+
+while True:
+    try:
+        print(next(my_iterator))
+    except StopIteration as e:
+        return
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>MyList: [0, 1, 2]
+True
+False
+0
+1
+2
+MyListIterator: &lt;__main__.MyListIterator object at 0x7fc9602b2100&gt;
+True
+True
+0
+1
+2
+MyIterator: &lt;__main__.MyListIterator object at 0x7fc9602b2fa0&gt;
+True
+True
+0
+1
+2
+Stop
+</code></pre>
+<h3 id="生成器">生成器</h3>
+<p><strong>生成器</strong>非常类似于返回数组的函数，都是具有参数、可被调用、产生一系列的值。但是生成器并不是构造出数组包含所有的值并一次性返回，而是每次产生一个值，因此生成器看起来像函数，但行为像迭代器。</p>
+<p>Python 中创建生成器有两种方法：使用类似列表方式或 <code>yield</code> 关键字：</p>
+<pre><code class="language-python">from collections.abc import Generator
+from inspect import getgeneratorstate
+
+a_list = [x for x in range(10)]
+print(a_list)
+print(isinstance(a_list, Generator))
+
+a_generator = (x for x in range(10))
+print(a_generator)
+print(isinstance(a_generator, Generator))
+
+def my_yield(n):
+    now = 0
+
+    while now &lt; n:
+        yield now
+        now += 1
+
+    raise StopIteration
+
+gen = my_yield(4)
+print(gen)
+print(isinstance(gen, Generator))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+False
+&lt;generator object &lt;genexpr&gt; at 0x7fdf84a8a430&gt;
+True
+&lt;generator object my_yield at 0x7fdf86a03f20&gt;
+True
+</code></pre>
+<p>由于生成器并不是一次生成所有元素，而是每次执行后返回一个值，通过 <code>next()</code> 和 <code>generator.send(None)</code> 两个方法可以激活生成器，例如：</p>
+<pre><code class="language-python">def my_yield(n):
+    now = 0
+
+    while now &lt; n:
+        yield now
+        now += 1
+
+    raise StopIteration
+
+gen = my_yield(4)
+print(gen.send(None))
+print(next(gen))
+print(gen.send(None))
+print(next(gen))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>0
+1
+2
+3
+</code></pre>
+<p>生成器在其生命周期中共有 4 种状态：</p>
+<ul>
+<li><code>GEN_CREATED</code>：已创建</li>
+<li><code>GEN_RUNNING</code>：正在执行（只在多线程应用中能看到该状态）</li>
+<li><code>GEN_SUSPENDED</code>：暂停中</li>
+<li><code>GEN_CLOSED</code>：已关闭</li>
+</ul>
+<p>例如：</p>
+<pre><code class="language-python">from collections.abc import Generator
+from inspect import getgeneratorstate
+
+def my_yield(n):
+    now = 0
+
+    while now &lt; n:
+        yield now
+        now += 1
+
+    raise StopIteration
+
+gen = my_yield(4)
+print(gen)
+print(getgeneratorstate(gen))
+
+print(gen.send(None))
+print(next(gen))
+print(getgeneratorstate(gen))
+
+print(gen.send(None))
+print(next(gen))
+print(getgeneratorstate(gen))
+
+gen.close()
+print(getgeneratorstate(gen))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>GEN_CREATED
+0
+1
+GEN_SUSPENDED
+2
+3
+GEN_SUSPENDED
+GEN_CLOSED
+</code></pre>
+<p>生成器在不满足生成元素的条件时，会抛出 <code>StopIteration</code> 异常，通过类似列表形式构建的生成器会自动实现该异常，自定的生成器则需要手动实现该异常。</p>
+<h2 id="协程">协程</h2>
+<h3 id="yield">yield</h3>
+<p>协程通过 <code>yield</code> 暂停生成器，可以将程序的执行流程交给其他子程序，从而实现不同子程序之间的交替执行。例如：</p>
+<pre><code class="language-python">def jump_range(n):
+    idx = 0
+
+    while idx &lt; n:
+        jump = yield idx
+        print('[idx: {}, jump: {}]'.format(idx, jump))
+
+        if jump is None:
+            jump = 1
+
+        idx += jump
+
+itr = jump_range(6)
+print(next(itr))
+print(itr.send(2))
+print(next(itr))
+print(itr.send(-1))
+print(next(itr))
+print(next(itr))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>0
+[idx: 0, jump: 2]
+2
+[idx: 2, jump: None]
+3
+[idx: 3, jump: -1]
+2
+[idx: 2, jump: None]
+3
+[idx: 3, jump: None]
+4
+</code></pre>
+<p><code>yield idx</code> 将 <code>idx</code> 返回给外部调用程序，<code>jump = yield</code> 可以接受外部程序通过 <code>send()</code> 发送的信息，并将其赋值给 <code>jump</code>。</p>
+<p><code>yield from</code> 是 Python 3.3 之后出现的新语法，后面是可迭代对象，可以是普通的可迭代对象，也可以是迭代器，甚至是生成器。<code>yield</code> 和 <code>yield from</code> 的对比如下：</p>
+<pre><code class="language-python">a_str = 'Leo'
+a_list = [1, 2, 3]
+a_dict = {'name': 'Leo', 'gender': 'Male'}
+a_gen = (idx for idx in range(4, 8))
+
+def gen(*args, **kwargs):
+    for item in args:
+        for ele in item:
+            yield ele
+
+new_gen = gen(a_str, a_list, a_dict, a_gen)
+print(list(new_gen))
+
+a_gen = (idx for idx in range(4, 8))
+
+def gen_from(*args, **kwargs):
+    for item in args:
+        yield from item
+
+new_gen = gen_from(a_str, a_list, a_dict, a_gen)
+print(list(new_gen))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>['L', 'e', 'o', 1, 2, 3, 'name', 'gender', 4, 5, 6, 7]
+['L', 'e', 'o', 1, 2, 3, 'name', 'gender', 4, 5, 6, 7]
+</code></pre>
+<p>在实现生成器的嵌套时，使用 <code>yield from</code> 可以比使用 <code>yield</code> 避免各种意想不到的异常。使用 <code>yield from</code> 时，需要关注如下几个概念：</p>
+<ul>
+<li>调用方：调用委托生成器的代码</li>
+<li>委托生成器：包含 <code>yield from</code> 表达式的生成器函数</li>
+<li>子生成器：<code>yield from</code> 后面的生成器函数</li>
+</ul>
+<p>如下是一个计算平均数的例子：</p>
+<pre><code class="language-python"># 子生成器
+def average_gen():
+    total = 0
+    count = 0
+    average = 0
+
+    while True:
+        num = yield average
+
+        if num is None:
+            break
+
+        count += 1
+        total += num
+        average = total / count
+
+    return total, count, average
+
+# 委托生成器
+def proxy_gen():
+    while True:
+        total, count, average = yield from average_gen()
+        print('计算完毕，共输入 {} 个数值，总和 {}，平均值 {}'.format(
+            count, total, average))
+
+# 调用方
+calc_average = proxy_gen()
+next(calc_average)
+print(calc_average.send(10))
+print(calc_average.send(20))
+print(calc_average.send(30))
+calc_average.send(None)
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>10.0
+15.0
+20.0
+计算完毕，共输入 3 个数值，总和 60，平均值 20.0
+</code></pre>
+<p>委托生成器的作用是在调用方和子生成器之间建立一个<strong>双向通道</strong>，调用方通过 <code>send()</code> 将消息发送给子生成器，子生成器 <code>yield</code> 的值则返回给调用方。<code>yield from</code> 背后为整个过程做了很多操作，例如：捕获 <code>StopIteration</code> 异常等。</p>
+<h3 id="asyncio">asyncio</h3>
+<p><code>asyncio</code> 是 Python 3.4 引入的标准库，直接内置了对<strong>异步 IO</strong> 的支持。只要在一个函数前面加上 <code>async</code> 关键字就可以将一个函数变为一个协程。例如：</p>
+<pre><code class="language-python">from collections.abc import Coroutine
+
+async def async_func(name):
+    print('Hello, ', name)
+
+coroutine = async_func('World')
+print(isinstance(coroutine, Coroutine))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>True
+</code></pre>
+<p>利用 <code>asyncio.coroutine</code> 装饰器可以将一个生成器当作协程使用，但其本质仍旧是一个生成器。例如：</p>
+<pre><code class="language-python">import asyncio
+
+from collections.abc import Generator, Coroutine
+
+@asyncio.coroutine
+def coroutine_func(name):
+    print('Hello,', name)
+    yield from asyncio.sleep(1)
+    print('Bye,', name)
+
+
+coroutine = coroutine_func('World')
+print(isinstance(coroutine, Generator))
+print(isinstance(coroutine, Coroutine))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>True
+False
+</code></pre>
+<p><code>asyncio</code> 中包含如下几个重要概念：</p>
+<ul>
+<li><strong><code>event_loop</code> 事件循环</strong>：程序开启一个无限的循环，协程将注册到事件循环上，当满足事件发生时，调用相应的协程函数。</li>
+<li><strong><code>coroutine</code> 协程</strong>：一个使用 <code>async</code> 定义的协程函数，它的调用不会立即执行，而是会返回一个协程对象。协程对象需要注册到事件循环上，由事件循环控制调用。</li>
+<li><strong><code>future</code> 对象</strong>：代表将来执行或没有执行的对象。它和 <code>task</code> 对象没有本质上的区别。</li>
+<li><strong><code>task</code> 对象</strong>：一个协程对象是一个原生可以挂起的函数，任务是对协程的进一步封装，其中包含任务的各种状态。<code>Task</code> 对象是 <code>Future</code> 的子类，它将 <code>coroutine</code> 和 <code>Future</code> 联系在一起，将 <code>coroutine</code> 封装成为一个 <code>Future</code> 对象。</li>
+<li><strong><code>async / await</code> 关键字</strong>：<code>async</code> 定义一个协程，<code>await</code> 用于挂起阻塞的异步调用接口。</li>
+</ul>
+<p>协程完整的工作流程如下：</p>
+<pre><code class="language-python">import asyncio
+
+async def hello(name):
+    print('Hello,', name)
+    
+# 定义协程
+coroutine = hello('World')
+
+# 定义事件循环
+loop = asyncio.get_event_loop()
+
+# 创建任务
+task = loop.create_task(coroutine)
+
+# 将任务交由时间循环并执行
+loop.run_until_complete(task)
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>Hello, World
+</code></pre>
+<p><code>await</code> 用于挂起阻塞的异步调用接口，其作用在一定程度上类似于 <code>yield</code>。<code>yield from</code> 后面可接可迭代对象，也可接 future 对象或协程对象；<code>await</code> 后面必须接 future 对象或协程对象。</p>
+<pre><code class="language-python">import asyncio
+from asyncio.futures import Future
+
+async def hello(name):
+    await asyncio.sleep(2)
+    print('Hello, ', name)
+
+coroutine = hello(&quot;World&quot;)
+
+# 将协程转为 task 对象
+task = asyncio.ensure_future(coroutine)
+
+print(isinstance(task, Future))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>True
+</code></pre>
+<p>异步 IO 的实现原理就是在 IO 高的地方挂起，等 IO 结束后再继续执行。绝大部分情况下，后续代码的执行是需要依赖 IO 的返回值的，这就需要使用<strong>回调</strong>。</p>
+<p>回调的实现有两种，一种是在同步编程中直接获取返回结果：</p>
+<pre><code class="language-python">import asyncio
+import time
+
+async def _sleep(x):
+    time.sleep(x)
+    return '暂停了 {} 秒'.format(x)
+
+coroutine = _sleep(2)
+loop = asyncio.get_event_loop()
+task = asyncio.ensure_future(coroutine)
+
+loop.run_until_complete(task)
+print('返回结果：{}'.format(task.result()))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>返回结果：暂停了 2 秒
+</code></pre>
+<p>另一种是通过添加回调函数来实现：</p>
+<pre><code class="language-python">import asyncio
+import time
+
+async def _sleep(x):
+    time.sleep(x)
+    return '暂停了 {} 秒'.format(x)
+
+def callback(future):
+    print('回调返回结果：{}'.format(future.result()))
+
+coroutine = _sleep(2)
+loop = asyncio.get_event_loop()
+task = asyncio.ensure_future(coroutine)
+
+task.add_done_callback(callback)
+loop.run_until_complete(task)
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>回调返回结果：暂停了 2 秒
+</code></pre>
+<p><code>asyncio</code> 实现并发需要多个协程来完成，每当有任务阻塞时需要 <code>await</code>，然后让其他协程继续工作。</p>
+<pre><code class="language-python">import asyncio
+
+async def do_some_work(x):
+    print('等待中 ...')
+    await asyncio.sleep(x)
+    print('{} 秒后结束'.format(x))
+    return x
+
+# 协程对象
+coroutine1 = do_some_work(1)
+coroutine2 = do_some_work(2)
+coroutine3 = do_some_work(4)
+
+# 任务列表
+tasks = [
+    asyncio.ensure_future(coroutine1),
+    asyncio.ensure_future(coroutine2),
+    asyncio.ensure_future(coroutine3)
+]
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(asyncio.wait(tasks))
+
+for task in tasks:
+    print('任务结果：{}'.format(task.result()))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>等待中 ...
+等待中 ...
+等待中 ...
+1 秒后结束
+2 秒后结束
+4 秒后结束
+任务结果：1
+任务结果：2
+任务结果：4
+</code></pre>
+<p>协程之间可以进行嵌套，即在一个协程中 <code>await</code> 另一个协程：</p>
+<pre><code class="language-python">import asyncio
+
+async def do_some_work(x):
+    print('等待中 ...')
+    await asyncio.sleep(x)
+    print('{} 秒后结束'.format(x))
+    return x
+
+async def out_do_some_work():
+    coroutine1 = do_some_work(1)
+    coroutine2 = do_some_work(2)
+    coroutine3 = do_some_work(4)
+
+    tasks = [
+        asyncio.ensure_future(coroutine1),
+        asyncio.ensure_future(coroutine2),
+        asyncio.ensure_future(coroutine3)
+    ]
+
+    dones, pendings = await asyncio.wait(tasks)
+
+    for task in dones:
+        print('任务结果：{}'.format(task.result()))
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(out_do_some_work())
+</code></pre>
+<p>如果使用 <code>asyncio.gather()</code> 来获取结果，则需要对获取结果部分做如下修改：</p>
+<pre><code class="language-python">results = await asyncio.gather(*tasks)
+for result in results:
+    print('任务结果：{}'.format(result))
+</code></pre>
+<p><code>asyncio.wait()</code> 返回 <code>dones</code> 和 <code>pendings</code>，分别表示已完成和未完成的任务；<code>asyncio.gather()</code> 则会把结果直接返回。</p>
+<p>运行结果如下：</p>
+<pre><code>等待中 ...
+等待中 ...
+等待中 ...
+1 秒后结束
+2 秒后结束
+4 秒后结束
+任务结果：1
+任务结果：4
+任务结果：2
+</code></pre>
+<p>协程（准确的说是 <code>Future</code> 或 <code>Task</code> 对象）包含如下状态：</p>
+<ul>
+<li><code>Pending</code>：已创建，未执行</li>
+<li><code>Running</code>：执行中</li>
+<li><code>Done</code>：执行完毕</li>
+<li><code>Cancelled</code>：被取消</li>
+</ul>
+<p>测试代码如下：</p>
+<pre><code class="language-python">coroutine = _sleep(10)
+loop = asyncio.get_event_loop()
+task = loop.create_task(coroutine)
+
+print('Pending')
+
+try:
+    t = Thread(target=loop.run_until_complete, args=(task, ))
+    t.start()
+    print('Running')
+    t.join()
+except KeyboardInterrupt as e:
+    task.cancel()
+    print('Cancel')
+finally:
+    print('Done')
+</code></pre>
+<p>执行顺利的话，运行结果如下：</p>
+<pre><code>Pending
+Running
+Done
+</code></pre>
+<p>如果在启动后按下 <kbd>Ctrl</kbd> + <kbd>C</kbd> 则会触发 <code>task.cancel()</code>，运行结果如下：</p>
+<pre><code>Pending
+Running
+Cancelled
+Done
+</code></pre>
+<p><code>asyncio.wait()</code> 可以通过参数控制何时返回：</p>
+<pre><code class="language-python">import random
+import asyncio
+
+async def random_sleep():
+    await asyncio.sleep(random.uniform(0.5, 6))
+
+loop = asyncio.get_event_loop()
+tasks = [random_sleep() for _ in range(1, 10)]
+
+dones, pendings = loop.run_until_complete(asyncio.wait(
+    tasks, return_when=asyncio.FIRST_COMPLETED))
+print('第一次完成的任务数：{}'.format(len(dones)))
+
+dones, pendings = loop.run_until_complete(asyncio.wait(
+    pendings, timeout=2))
+print('第二次完成的任务数: {}'.format(len(dones)))
+
+dones, pendings = loop.run_until_complete(asyncio.wait(pendings))
+print('第三次完成的任务数：{}'.format(len(dones)))
+</code></pre>
+<p>运行结果如下：</p>
+<pre><code>第一次完成的任务数：1
+第二次完成的任务数: 4
+第三次完成的任务数：4
+</code></pre>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://iswbm.com/108.html">https://iswbm.com/108.html</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>进程，线程和协程 (Process, Thread and Coroutine)</title><link>https://zeqiang.fun/cn/2021/04/process-thread-and-coroutine-theory/</link><pubDate>Thu, 01 Apr 2021 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2021/04/process-thread-and-coroutine-theory/</guid><description><![CDATA[
+        <blockquote>
+<p>Python 实现篇请参见：<a href="/cn/2021/04/process-thread-and-coroutine-python-implementation">进程，线程和协程 (Process, Thread and Coroutine) - 实现篇</a></p>
+</blockquote>
+<h2 id="进程-线程和协程">进程，线程和协程</h2>
+<p>**进程（Process）**是计算机中已运行的程序 <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>。**线程（Thread）**是操作系统能够进行运算调度的最小单位。大部分情况下，线程被包含在进程之中，是进程中的实际运作单位。一条线程指的是进程中一个单一顺序的控制流，一个进程中可以并发多个线程，每条线程并行执行不同的任务 <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>。</p>
+<p>进程和线程之间的主要区别在于：</p>
+<ol>
+<li>线程共享创建其进程的地址空间，进程使用自己的地址。</li>
+<li>线程可以直接访问进程的数据，进程使用其父进程数据的副本。</li>
+<li>线程可以同其进程中其他线程直接通信，进程必须使用**进程间通讯（inter-process communicate, IPC）**与同级进程通信。</li>
+<li>线程开销较小，进程开销较大。</li>
+<li>线程的创建较为容易，进程需要复制其父进程。</li>
+<li>线程可以控制相同进程的其他线程，进程只能控制其子进程。</li>
+<li>对于主线程的修改（例如：取消、优先级修改等）可能会影响进程中的其他线程，对于父进程的修改不会影响其子进程。</li>
+</ol>
+<p>单线程进程和多线程进程之间的对比如下图所示：</p>
+<p><img src="/images/cn/2021-04-01-process-thread-and-coroutine-theory/single-thread-process-vs-multiple-threads-process.png" alt=""></p>
+<p>一个关于进程和线程的形象类比如下 <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>：</p>
+<ol>
+<li>计算机的核心是 CPU，它承担了所有的计算任务。它就像一座工厂，时刻在运行。</li>
+<li>假定工厂的电力有限，一次只能供给一个车间使用。也就是说，一个车间开工的时候，其他车间都必须停工。背后的含义就是，单个 CPU 一次只能运行一个任务。</li>
+<li><strong>进程</strong>就好比工厂的车间，它代表 CPU 所能处理的单个任务。任一时刻，CPU 总是运行一个进程，其他进程处于非运行状态。</li>
+<li>一个车间里，可以有很多工人。他们协同完成一个任务。</li>
+<li><strong>线程</strong>就好比车间里的工人。一个进程可以包括多个线程。</li>
+<li>车间的空间是工人们共享的，比如许多房间是每个工人都可以进出的。这象征一个进程的内存空间是共享的，每个线程都可以使用这些共享内存。</li>
+<li>可是，每间房间的大小不同，有些房间最多只能容纳一个人，比如厕所。里面有人的时候，其他人就不能进去了。这代表一个线程使用某些共享内存时，其他线程必须等它结束，才能使用这一块内存。</li>
+<li>一个防止他人进入的简单方法，就是门口加一把锁。先到的人锁上门，后到的人看到上锁，就在门口排队，等锁打开再进去。这就叫“互斥锁”（Mutual Exclusion，Mutex），防止多个线程同时读写某一块内存区域。</li>
+<li>还有些房间，可以同时容纳 <code>$n$</code> 个人，比如厨房。也就是说，如果人数大于 <code>$n$</code>，多出来的人只能在外面等着。这好比某些内存区域，只能供给固定数目的线程使用。</li>
+<li>这时的解决方法，就是在门口挂 <code>$n$</code> 把钥匙。进去的人就取一把钥匙，出来时再把钥匙挂回原处。后到的人发现钥匙架空了，就知道必须在门口排队等着了。这种做法叫做“信号量”（Semaphore），用来保证多个线程不会互相冲突。不难看出，Mutex 是 Semaphore 的一种特殊情况（<code>$n = 1$</code> 时）。也就是说，完全可以用后者替代前者。但是，因为 Mutex 较为简单，且效率高，所以在必须保证资源独占的情况下，还是采用这种设计。</li>
+<li>操作系统的设计，因此可以归结为三点：(1). 以多进程形式，允许多个任务同时运行；(2). 以多线程形式，允许单个任务分成不同的部分运行；(3). 提供协调机制，一方面防止进程之间和线程之间产生冲突，另一方面允许进程之间和线程之间共享资源。</li>
+</ol>
+<p><strong>协程</strong>（Coroutine）是计算机程序的一类组件，推广了协作式多任务的子例程，允许执行被挂起与被恢复。相对子例程而言，协程更为一般和灵活，但在实践中使用没有子例程那样广泛。协程更适合于用来实现彼此熟悉的程序组件，如协作式多任务、异常处理、事件循环、迭代器、无限列表和管道。</p>
+<p><strong>子例程</strong>（Subroutine），是一个大型程序中的某部分代码，由一个或多个语句块组成。它负责完成某项特定任务，而且相较于其他代码，具备相对的独立性。</p>
+<p>协程和子例程的执行过程对比如下：</p>
+<p><img src="/images/cn/2021-04-01-process-thread-and-coroutine-theory/subroutine-vs-coroutine.png" alt=""></p>
+<ul>
+<li>子例程可以调用其他子例程，调用者等待被调用者结束后继续执行，故而子例程的生命期遵循后进先出，即最后一个被调用的子例程最先结束返回。协程的生命期完全由对它们的使用需要来决定。</li>
+<li>子例程的起始处是惟一的入口点，每当子例程被调用时，执行都从被调用子例程的起始处开始。协程可以有多个入口点，协程的起始处是第一个入口点，每个 <code>yield</code> 返回出口点都是再次被调用执行时的入口点。</li>
+<li>子例程只在结束时一次性的返回全部结果值。协程可以在 <code>yield</code> 时不调用其他协程，而是每次返回一部分的结果值，这种协程常称为<strong>生成器</strong>或<strong>迭代器</strong>。</li>
+</ul>
+<p>协程类似于线程，但是协程是协作式多任务的，而线程是抢占式多任务的。这意味着协程提供<strong>并发性</strong>而非<strong>并行性</strong>。协程超过线程的好处是它们可以用于硬性实时的语境（在协程之间的切换不需要涉及任何系统调用或任何阻塞调用），这里不需要用来守卫<strong>临界区段</strong>的<strong>同步原语</strong>比如互斥锁、信号量等，并且不需要来自操作系统的支持。</p>
+<h2 id="通信">通信</h2>
+<h3 id="进程间通信">进程间通信</h3>
+<h4 id="管道">管道</h4>
+<p>管道（Pipeline）是一系列将标准输入输出链接起来的进程，其中每一个进程的输出被直接作为下一个进程的输入。 例如：</p>
+<pre><code class="language-shell">ls -l | less
+</code></pre>
+<p><code>ls</code> 用于在 Unix 下列出目录内容，<code>less</code> 是一个有搜索功能的交互式的文本分页器。这个管道使得用户可以在列出的目录内容比屏幕长时目录上下翻页。</p>
+<h4 id="命名管道">命名管道</h4>
+<p>命名管道是计算机进程间的一种先进先出通信机制。是类 Unix 系统传统管道的扩展。传统管道属于匿名管道，其生存期不超过创建管道的进程的生存期。但命名管道的生存期可以与操作系统运行期一样长。</p>
+<h4 id="信号">信号</h4>
+<p>信号（Signals）是 Unix、类 Unix 以及其他 POSIX 兼容的操作系统中进程间通讯的一种有限制的方式。它是一种异步的通知机制，用来提醒进程一个事件已经发生。当一个信号发送给一个进程，操作系统中断了进程正常的控制流程，此时，任何非原子操作都将被中断。如果进程定义了信号的处理函数，那么它将被执行，否则就执行默认的处理函数。</p>
+<p>例如，在一个运行的程序的控制终端键入特定的组合键可以向它发送某些信号：<kbd>Ctrl</kbd> + <kbd>C</kbd> 发送 INT 信号（SIGINT），这会导致进程终止；<kbd>Ctrl</kbd> + <kbd>Z</kbd> 发送 TSTP 信号（SIGTSTP），这会导致进程挂起。</p>
+<h4 id="消息队列">消息队列</h4>
+<p>消息队列提供了异步的通信协议，每一个贮列中的纪录包含详细说明的资料，包含发生的时间，输入设备的种类，以及特定的输入参数，也就是说：消息的发送者和接收者不需要同时与消息队列交互。消息会保存在队列中，直到接收者取回它。</p>
+<p>消息队列本身是异步的，它允许接收者在消息发送很长时间后再取回消息。和信号相比，消息队列能够传递更多的信息。与管道相比，消息队列提供了有格式的数据，这可以减少开发人员的工作量。</p>
+<h4 id="信号量">信号量</h4>
+<p>信号量（Semaphore）又称为信号标，是一个同步对象，用于保持在 0 至指定最大值之间的一个计数值。当线程完成一次对该 Semaphore 对象的等待（wait）时，该计数值减一；当线程完成一次对 Semaphore 对象的释放（release）时，计数值加一。当计数值为 0，则线程等待该 Semaphore 对象不再能成功直至该 Semaphore 对象变成 signaled 状态。Semaphore 对象的计数值大于 0，为 signaled 状态；计数值等于 0，为 nonsignaled 状态.</p>
+<h4 id="共享内存">共享内存</h4>
+<p>共享内存指可被多个进程存取的内存，一个进程是一段程序的单个运行实例。在这种情况下，共享内存被用作进程间的通讯。</p>
+<h4 id="伯克利套接字">伯克利套接字</h4>
+<p>伯克利套接字（Internet Berkeley Sockets），又称为 BSD 套接字是一种应用程序接口，主要用于实现进程间通讯，在计算机网络通讯方面被广泛使用。</p>
+<h3 id="线程间通信">线程间通信</h3>
+<h4 id="锁机制">锁机制</h4>
+<ul>
+<li><strong>互斥锁</strong>：互斥锁（Mutual Exclusion，Mutex）是一种用于多线程编程中，防止两条线程同时对同一公共资源（比如全局变量）进行读写的机制。</li>
+<li><strong>条件锁</strong>：读写锁是计算机程序的并发控制的一种同步机制，用于解决读写问题。读操作可并发重入，写操作是互斥的。</li>
+<li><strong>条件变量</strong>：条件变量是利用线程间共享的全局变量进行同步的一种机制，主要包括两个动作：一个线程等待“条件变量的条件成立”而挂起；另一个线程使“条件成立”（给出条件成立信号）。为了防止竞争，条件变量的使用总是和一个互斥锁结合在一起。</li>
+<li><strong>自旋锁</strong>：自旋锁是用于多线程同步的一种锁，线程反复检查锁变量是否可用。由于线程在这一过程中保持执行，因此是一种忙等待。一旦获取了自旋锁，线程会一直保持该锁，直至显式释放自旋锁。</li>
+</ul>
+<h4 id="信号-1">信号</h4>
+<p>同上文。</p>
+<h4 id="信号量-1">信号量</h4>
+<p>同上文。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://zh.wikipedia.org/wiki/%E8%BF%9B%E7%A8%8B">https://zh.wikipedia.org/wiki/进程</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p><a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B">https://zh.wikipedia.org/wiki/线程</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p><a href="https://www.ruanyifeng.com/blog/2013/04/processes_and_threads.html">https://www.ruanyifeng.com/blog/2013/04/processes_and_threads.html</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>在群晖 NAS 上编译安装 tmux</title><link>https://zeqiang.fun/cn/2020/05/compile-and-install-tmux-on-synology-nas/</link><pubDate>Thu, 07 May 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2020/05/compile-and-install-tmux-on-synology-nas/</guid><description><![CDATA[
+        <h2 id="工具链安装">工具链安装</h2>
+<p>登录 NAS 控制台，在系统根目录创建 <code>toolkit</code> 目录：</p>
+<pre><code class="language-shell">sudo mkdir /toolkit
+sudo chown -R username:users /toolkit
+</code></pre>
+<p>其中 <code>username</code> 为使用的用户名，如果后续使用过程中出现磁盘空间不足的问题，可以在其他具有较大容量的分区建立 <code>toolkit</code>，再在根目录建立软链进行使用：</p>
+<pre><code class="language-shell">mkdir /xxx/toolkit
+sudo ln -s /xxx/toolkit /toolkit
+sudo chown -R username:users /toolkit
+</code></pre>
+<p>之后下载相关工具脚本：</p>
+<pre><code class="language-shell">cd /toolkit
+git clone https://github.com/SynologyOpenSource/pkgscripts-ng.git
+</code></pre>
+<p>工具脚本使用 Python 3 实现，请确保 NAS 已经安装 Python 3，后续使用过程中如果提示相关 Python 扩展包未安装的情况请自行安装后重试。实验的 Synology NAS 为 DS418play，系统版本为 <strong>DSM 6.2.2</strong> 系统，处理器为 INTEL Celeron J3355 处理器（产品代号：<strong>Apollo Lake</strong>），首先利用 <code>EnvDeploy</code> 下载所需的编译环境：</p>
+<pre><code class="language-shell">cd /toolkit/pkgscripts-ng
+sudo ./EnvDeploy -v 6.2 -p apollolake
+</code></pre>
+<p>请根据自己机器的系统版本和处理器类型自行调整 <code>-v</code> 和 <code>-p</code> 参数。如果下载速度较慢可以手动从 <a href="https://sourceforge.net/projects/dsgpl/files/toolkit/DSM6.2/">https://sourceforge.net/projects/dsgpl/files/toolkit/DSM6.2/</a> 下载下列文件：</p>
+<pre><code>base_env-6.2.txz
+ds.apollolake-6.2.dev.txz
+ds.apollolake-6.2.env.txz
+</code></pre>
+<p>将其放置到 <code>/toolkit/toolkit_tarballs</code> 目录中，然后通过如下命令进行部署安装：</p>
+<pre><code class="language-shell">sudo ./EnvDeploy -v 6.2 -p apollolake -t /toolkit/toolkit_tarballs
+</code></pre>
+<h2 id="编译-tmux">编译 tmux</h2>
+<p>在 <code>/toolkit</code> 目录下建立 <code>source</code> 文件夹，并将 tmux 源代码（本文以 3.1b 版本为例）下载到该文件夹中：</p>
+<pre><code class="language-shell">cd /toolkit
+mkdir source
+cd source
+wget https://github.com/tmux/tmux/releases/download/3.1b/tmux-3.1b.tar.gz
+tar -zxvf tmux-3.1b.tar.gz
+mv tmux-3.1b tmux
+</code></pre>
+<p>在 tmux 源代码根目录中建立 <code>SynoBuildConf</code> 文件夹，并在文件夹中创建如下文件：</p>
+<pre><code class="language-shell">cd /toolkit/source/tmux
+mkdir SynoBuildConf
+</code></pre>
+<p><code>build</code></p>
+<pre><code class="language-bash">#!/bin/bash
+
+case ${MakeClean} in
+	[Yy][Ee][Ss])
+		make distclean
+		;;
+esac
+
+NCURSES_INCS=&quot;$(pkg-config ncurses --cflags)&quot;
+NCURSES_LIBS=&quot;$(pkg-config ncurses --libs)&quot;
+
+CFLAGS=&quot;${CFLAGS} ${NCURSES_INCS}&quot;
+LDFLAGS=&quot;${LDFLAGS} ${NCURSES_LIBS}&quot;
+
+env CC=&quot;${CC}&quot; AR=&quot;${AR}&quot; CFLAGS=&quot;${CFLAGS}&quot; LDFLAGS=&quot;${LDFLAGS}&quot; \
+./configure ${ConfigOpt}
+
+make ${MAKE_FLAGS}
+</code></pre>
+<p><code>depends</code></p>
+<pre><code class="language-bash">[default]
+all=&quot;6.2&quot;
+</code></pre>
+<p><code>install</code></p>
+<pre><code class="language-bash">#!/bin/bash
+
+PKG_NAME=&quot;tmux&quot;
+TGZ_DIR=&quot;/tmp/_${PKG_NAME}_tgz&quot;
+PKG_DIR=&quot;/tmp/_${PKG_NAME}_pkg&quot;
+PKG_DEST=&quot;/image/packages&quot;
+
+source /pkgscripts-ng/include/pkg_util.sh
+
+create_package_tgz() {
+	### clear destination directory
+	for dir in $TGZ_DIR $PKG_DIR; do
+		rm -rf &quot;$dir&quot;
+	done
+	for dir in $TGZ_DIR $PKG_DIR; do
+		mkdir -p &quot;$dir&quot;
+	done
+
+	### install needed file into TGZ_DIR
+	DESTDIR=&quot;${TGZ_DIR}&quot; make install
+
+	### create package.tgz
+	pkg_make_package $TGZ_DIR $PKG_DIR
+}
+
+create_package_spk(){
+	### Copy package center scripts to PKG_DIR
+	cp -r synology/scripts/ $PKG_DIR
+
+	### Copy package icon
+	cp -av synology/PACKAGE_ICON*.PNG $PKG_DIR
+
+	### Generate INFO file
+	synology/INFO.sh &gt; INFO
+	cp INFO $PKG_DIR
+
+	### Create the final spk.
+	mkdir -p $PKG_DEST
+	pkg_make_spk $PKG_DIR $PKG_DEST
+}
+
+main() {
+	create_package_tgz
+	create_package_spk
+}
+
+main &quot;$@&quot;
+</code></pre>
+<p>在 tmux 源代码根目录中建立 <code>synology</code> 文件夹，并在文件夹中创建如下文件：</p>
+<pre><code class="language-shell">cd /toolkit/source/tmux
+mkdir synology
+</code></pre>
+<p><code>INFO.sh</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+. /pkgscripts-ng/include/pkg_util.sh
+
+package=&quot;tmux&quot;
+version=&quot;3.1b&quot;
+displayname=&quot;tmux&quot;
+arch=&quot;$(pkg_get_platform) &quot;
+maintainer=&quot;tmux&quot;
+maintainer_url=&quot;https://github.com/tmux&quot;
+distributor=&quot;Leo Van&quot;
+distributor_url=&quot;https://leovan.me&quot;
+description=&quot;tmux is a terminal multiplexer: it enables a number of terminals to be created, accessed, and controlled from a single screen. tmux may be detached from a screen and continue running in the background, then later reattached.&quot;
+support_url=&quot;https://github.com/tmux/tmux&quot;
+thirdparty=&quot;yes&quot;
+startable=&quot;no&quot;
+silent_install=&quot;yes&quot;
+silent_upgrade=&quot;yes&quot;
+silent_uninstall=&quot;yes&quot;
+
+[ &quot;$(caller)&quot; != &quot;0 NULL&quot; ] &amp;&amp; return 0
+
+pkg_dump_info
+</code></pre>
+<p>并为其添加运行权限：</p>
+<pre><code class="language-shell">cd /toolkit/source/tmux/scripts
+chmod u+x INFO.sh
+</code></pre>
+<p>下载 tmux 图标并将其重命名：</p>
+<pre><code class="language-shell">cd /toolkit/source/tmux/synology
+wget https://raw.githubusercontent.com/tmux/tmux/master/logo/tmux-logo-huge.png
+convert tmux-logo-huge.png -crop 480x480+0+0 -resize 72x PACKAGE_ICON.PNG
+convert tmux-logo-huge.png -crop 480x480+0+0 -resize 256x PACKAGE_ICON_256.PNG
+</code></pre>
+<p>此处需要使用 <a href="https://www.imagemagick.org/">ImageMagick</a> 对图标进行裁剪和缩放，请自行安装，或在本地对图片进行处理后上传到指定目录。在 <code>/toolkit/source/tmux/synology</code> 目录中建立 <code>scripts</code> 文件夹，并在文件夹中创建如下文件：</p>
+<pre><code class="language-shell">cd /toolkit/source/tmux/synology
+mkdir scripts
+</code></pre>
+<p><code>postinst</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+ln -sf &quot;$SYNOPKG_PKGDEST/usr/local/bin/tmux&quot; /usr/bin/
+</code></pre>
+<p><code>postuninst</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+rm -f /usr/local/bin/tmux
+rm -f /usr/bin/tmux
+</code></pre>
+<p><code>postupgrade</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+exit 0
+</code></pre>
+<p><code>preinst</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+exit 0
+</code></pre>
+<p><code>preuninst</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+exit 0
+</code></pre>
+<p><code>preupgrade</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+exit 0
+</code></pre>
+<p><code>start-stop-status</code></p>
+<pre><code class="language-bash">#!/bin/sh
+
+case $1 in
+	start)
+		exit 0
+	;;
+	stop)
+		exit 0
+	;;
+	status)
+		if [ -h &quot;/usr/bin/tmux&quot; ]; then
+			exit 0
+		else
+			exit 1
+		fi
+	;;
+	killall)
+        ;;
+	log)
+		exit 0
+	;;
+esac
+</code></pre>
+<p>为所有文件添加运行权限：</p>
+<pre><code class="language-shell">cd /toolkit/source/tmux/synology/scripts
+chmod u+x *
+</code></pre>
+<p>利用 <code>PkgCreate.py</code> 构建 <code>tmux</code> 扩展包：</p>
+<pre><code class="language-shell">sudo ./PkgCreate.py -v 6.2 -p apollolake tmux
+</code></pre>
+<p>最终构建完毕的扩展包位于 <code>/toolkit/build_env/ds.apollolake-6.2/image/packages</code> 中。</p>
+<h2 id="安装-tmux">安装 tmux</h2>
+<p>在 <code>/toolkit/build_env/ds.apollolake-6.2/image/packages</code> 目录中有两个编译好的扩展包，分别是 <code>tmux-apollolake-3.1b_debug.spk</code> 和 <code>tmux-apollolake-3.1b.spk</code>。其中 <code>tmux-apollolake-3.1b.spk</code> 为 Release 版本，传输到本地，通过 NAS 的套件中心手动安装即可。安装完毕后，套件中心的“已安装”会出现 tmux，如下图所示：</p>
+<p><img src="/images/cn/2020-05-07-compile-and-install-tmux-on-synology-nas/tmux-installed.png" alt=""></p>
+<p>进入 NAS 控制台，运行 <code>tmux -V</code> 可以得到安装好的 tmux 版本信息：</p>
+<pre><code class="language-shell">tmux 3.1b
+</code></pre>
+<p>在此放出编译好的 <a href="https://cdn.leovan.me/packages/synology/tmux-apollolake-3.1b.spk">tmux 扩展包</a>，方便和 DS418play 具有相同系统的 CPU 架构的小伙伴直接使用。</p>
+<blockquote>
+<p>本文主要参考了 Synology 官方的扩展包构建指南：https://help.synology.com/developer-guide/create_package/index.html</p>
+</blockquote>
+
+        ]]></description></item><item><title>利用 Flask 和 Google App Engine 部署模型服务</title><link>https://zeqiang.fun/cn/2018/10/serving-models-with-flask-and-gae/</link><pubDate>Fri, 19 Oct 2018 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2018/10/serving-models-with-flask-and-gae/</guid><description><![CDATA[
+        <div class="blockquote" style='border-left: 4px solid #369BE5;'>本文的配套代码请参见 <a href="https://github.com/leovan/model-serving-demo">这里</a>，建议配合代码阅读本文。</div>
+<h2 id="模型部署和服务调用">模型部署和服务调用</h2>
+<p>对于做算法的同学，大家或多或少的更关心模型的性能指标多些，对于一些工程性问题考虑的较少。模型的部署是这些工程性问题中重要的一个，它直接关系到模型在生产系统的使用。一些成熟的机器学习框架会提供自己的解决方案，例如 <a href="https://www.tensorflow.org">Tensorflow</a> 提供的 <a href="https://www.tensorflow.org/serving/">Serving</a> 服务等。但很多情况下我们构建的工程可能不只使用了一种框架，因此一个框架自身的部署工具可能就很难满足我们的需求了。</p>
+<p>针对此类情况，本文介绍一个 <strong>简单</strong> 的 <strong>准生产</strong> 模型部署方案。简单是指除了模型相关代码之外的工程性代码量不大，这得益于将要使用的 <a href="http://flask.pocoo.org/">Flask</a> 框架。准生产是指这种部署方案应对一般的生产环境问题不大，对于高并发的场景可以通过横向扩容并进行负载均衡解决，但对于单次调用时效性要求较高的场景则需要另寻其他解决方案。</p>
+<p>本文方案的模型部署和服务调用框架如下图所示：</p>
+<p><img src="/images/cn/2018-10-19-serving-models-with-flask-and-gae/model-serving.png" alt="Model-Serving"></p>
+<p>其主要特性如下：</p>
+<ol>
+<li>服务端采用 Python 的 Flask 框架构建，无需使用其他外部服务。Flask 框架的 <a href="https://zh.wikipedia.org/zh/%E5%BE%AE%E6%9C%8D%E5%8A%A1">微服务</a> (Microframework) 特性使得服务端代码简洁高效。</li>
+<li>利用 <a href="https://gunicorn.org/">Gunicorn</a> 提供的高性能 Python WSGI HTTP UNIX Server，方便在服务端运行 Flask 应用。</li>
+<li>客户端和服务端之间采用 <a href="https://zh.wikipedia.org/zh/%E8%A1%A8%E7%8E%B0%E5%B1%82%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2">RESTful API</a> 调用方式，尽管在性能上可能不及其他一些方案 (例如：基于 RPC 的解决方案等)，但其较好地解决了跨语言交互的问题，不同语言之间交互仅需使用 HTTP 协议和 JSON 数据格式即可。</li>
+</ol>
+<h2 id="flask-服务和-ajax-调用">Flask 服务和 AJAX 调用</h2>
+<h3 id="flask-服务封装">Flask 服务封装</h3>
+<p>为了将模型代码和 Flask 服务进行整合，首先假设你已经对模型部分代码做了完美的封装 &#x1f60e;，整个工程先叫做 <code>model-serving-demo</code> 吧。整理一下代码的目录结构，给一个我中意的 Python 目录结构风格：</p>
+<pre><code>model-serving-demo/                # 工程根目录
+├── bin/                           # 可执行命令目录
+|   ├─ start.sh                    # 启动脚本
+|   ├─ stop.sh                     # 停止脚本
+|   └─ ...
+├── conf/                          # 配置文件目录
+|   ├─ logging.conf                # 日志配置文件
+|   ├─ xxx_model.conf              # XXX Model 配置文件
+|   └─ ...
+├── data/                          # 数据文件目录
+├── docs/                          # 文档目录
+├── model_serving/                 # 模块根目录
+|   ├─ models/                     # 模型代码目录
+|   |   ├─ __init__.py
+|   |   ├─ xxx_model.py            # XXX Model 代码
+|   |   └─ ...
+|   ├─ resources/                  # Flask RESTful Resources 代码目录
+|   |   ├─ __init__.py
+|   |   ├─ xxx_model_resource.py   # XXX Model Flask RESTful Resources 代码
+|   |   └─ ...
+|   ├─ tests/                      # 测试代码根目录
+|   |   ├─ models                  # 模型测试代码目录
+|   |   |   ├─ __init__.py
+|   |   |   ├─ test_xxx_model.py   # XXX Model 测试代码
+|   |   |   └─ ...
+|   |   ├─ __init__.py
+|   |   └─ ...
+|   ├─ tmp/                        # 临时目录
+|   └─ ...
+├── .gitignore                     # Git Ignore 文件
+├── app.yaml                       # Google App Engine 配置文件
+├── LICENSE                        # 授权协议
+├── main.py                        # 主程序代码
+├── README.md                      # 说明文件
+└── requirements.txt               # 依赖包列表
+</code></pre>
+<p>我们利用一个极简的示例介绍整个模型部署，相关的库依赖 <code>requirements.txt</code> 如下：</p>
+<pre><code>Flask==1.0.2
+Flask-RESTful==0.3.6
+Flask-Cors==3.0.6
+jsonschema==2.6.0
+docopt==0.6.2
+
+# 本地部署时需保留，GAE 部署时请删除
+# gunicorn==19.9.0
+</code></pre>
+<p>其中：</p>
+<ol>
+<li><a href="http://flask.pocoo.org/">Flask</a> 用于构建 Flask 服务。</li>
+<li><a href="https://flask-restful.readthedocs.io/">Flask-RESTful</a> 用于构建 Flask RESTful API。</li>
+<li><a href="https://flask-cors.readthedocs.io/">Flask-Cors</a> 用于解决 AJAX 调用时的 <a href="https://zh.wikipedia.org/zh/%E8%B7%A8%E4%BE%86%E6%BA%90%E8%B3%87%E6%BA%90%E5%85%B1%E4%BA%AB">跨域问题</a>。</li>
+<li><a href="https://python-jsonschema.readthedocs.io/">jsonschema</a> 用于对请求数据的 JSON 格式进行校验。</li>
+<li><a href="http://docopt.org/">docopt</a> 用于从代码文档自动生成命令行参数解析器。</li>
+<li><a href="https://gunicorn.org/">gunicorn</a> 用于提供的高性能 Python WSGI HTTP UNIX Server。</li>
+</ol>
+<p>XXX Model 的代码 <code>xxx_model.py</code> 如下：</p>
+<pre><code class="language-python">from ..utils.log_utils import XXXModel_LOGGER
+
+
+LOGGER = XXXModel_LOGGER
+
+
+class XXXModel():
+    def __init__(self):
+        LOGGER.info('Initializing XXX Model ...')
+
+        LOGGER.info('XXX Model Initialized.')
+
+    def hello(self, name:str) -&gt; str:
+        return 'Hello, {name}!'.format(name=name)
+</code></pre>
+<p>其中 <code>hello()</code> 为服务使用的方法，其接受一个类型为 <code>str</code> 的参数 <code>name</code>，并返回一个类型为 <code>str</code> 的结果。</p>
+<p>XXX Model 的 Flask RESTful Resource 代码 <code>xxx_model_resource.py</code> 如下：</p>
+<pre><code class="language-python">from flask_restful import Resource, request
+
+from ..models.xxx_model import XXXModel
+from ..utils.validation_utils import validate_json
+
+
+xxx_model_instance = XXXModel()
+xxx_model_schema = {
+    'type': 'object',
+    'properties': {
+        'name': {'type': 'string'}
+    },
+    'required': ['name']
+}
+
+
+class XXXModelResource(Resource):
+    @validate_json(xxx_model_schema)
+    def post(self):
+        json = request.json
+
+        return {'result': xxx_model_instance.hello(json['name'])}
+</code></pre>
+<p>我们需要从 Flask RESTful 的 <code>Resource</code> 类继承一个新的类 <code>XXXModelResource</code> 用于处理 XXX Model 的服务请求。如上文介绍，我们在整个模型服务调用中使用 POST 请求方式和 JSON 数据格式，因此我们需要在类 <code>XXXModelResource</code> 中实现 <code>post()</code> 方法，同时对于传入数据的 JSON 格式进行校验。</p>
+<p><code>post()</code> 方法用于处理整个模型的服务请求，<code>xxx_model_instance</code> 模型实例在类 <code>XXXModelResource</code> 外部进行实例化，避免每次处理请求时都进行初始化。<code>post()</code> 的返回结果无需处理成 JSON 格式的字符串，仅需返回词典数据即可，Flask RESTful 会自动对其进行转换。</p>
+<p>为了方便对请求数据的 JSON 格式进行校验，我们将对 JSON 格式的校验封装成一个修饰器。使用时如上文代码中所示，在 <code>post()</code> 方法上方添加 <code>@validate_json(xxx_model_schema)</code> 即可，其中 <code>xxx_model_schema</code> 为一个符合 <a href="https://python-jsonschema.readthedocs.io/">jsonschema</a> 要求的 JSON Schema。示例代码中要求传入的 JSON 数据 <strong>必须</strong> 包含一个名为 <code>name</code> 类型为 <code>string</code> 的字段。</p>
+<p><code>validate_json</code> 修饰器的代码 <code>validation_utils.py</code> 如下：</p>
+<pre><code class="language-python">from functools import wraps
+from jsonschema import validate, ValidationError
+from flask_restful import request
+
+
+def validate_json(schema, force=False):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            json_body = request.get_json(force=force)
+
+            if json_body is None:
+                return {'message': 'No JSON object'}, 400
+
+            try:
+                validate(json_body, schema)
+            except ValidationError as e:
+                return {'message': e.message}, 400
+
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+</code></pre>
+<p>首先我们需要验证请求包含一个 JSON 请求体，同时 JSON 请求体的内容需满足 <code>schema</code> 的要求。如果不满足这些条件，我们需要返回对应的错误信息 <code>message</code>，同时返回合理的 <a href="https://zh.wikipedia.org/zh/HTTP%E7%8A%B6%E6%80%81%E7%A0%81">HTTP 状态码</a> (例如：<code>400</code>) 用于表示无法处理错误的请求。对于正常的请求响应 (即 HTTP 状态码为 200 的情况)，状态码可以省略不写。</p>
+<p>构建完 XXX Model 的 Flask RESTful Resource 后，我们就可以构建 Flask 的主服务了，主程序代码 <code>main.py</code> 如下：</p>
+<pre><code class="language-python">&quot;&quot;&quot;
+Model Serving Demo
+
+Usage:
+    main.py [--host &lt;host&gt;] [--port &lt;port&gt;] [--debug]
+    main.py (-h | --help)
+    main.py --version
+
+Options:
+    --host &lt;host&gt;                     绑定的 Host [default: 0.0.0.0]
+    --port &lt;port&gt;                     绑定的 Port [default: 9999]
+    --debug                           是否开启 Debug [default: False]
+    -h --help                         显示帮助
+    -v --version                      显示版本
+
+&quot;&quot;&quot;
+
+from docopt import docopt
+
+from flask import Flask
+from flask_cors import CORS
+from flask_restful import Api
+
+from model_serving.resources.xxx_model_resource import XXXModelResource
+
+
+app = Flask(__name__)
+CORS(app)
+
+api = Api(app)
+api.add_resource(XXXModelResource, '/v1/XXXModel')
+
+
+if __name__ == '__main__':
+    args = docopt(__doc__, version='Model Serving Demo v1.0.0')
+    app.run(host=args['--host'], port=args['--port'], debug=args['--debug'])
+</code></pre>
+<p><code>docopt</code> 库用于从代码文档自动生成命令行参数解析器，具体使用方法请参见 <a href="http://docopt.org/">官方文档</a>。整个 Flask 主服务的构建比较简单，流程如下：</p>
+<ol>
+<li>构建 Flask 主程序，<code>app = Flask(__name__)</code>。</li>
+<li>解决 AJAX 调用的跨域问题， <code>CORS(app)</code>。为了方便起见，我们不加任何参数，允许任意来源的请求，详细的使用方式请参见 <a href="https://flask-cors.readthedocs.io/">官方文档</a>。</li>
+<li>构建 Flask RESTful API，<code>api = Api(app)</code>。</li>
+<li>将构建好的 XXX Model 的 Flask RESTful Resource 添加到 API 中，<code>api.add_resource(XXXModelResource, '/v1/XXXModel')</code>。
+其中第二个参数为请求的 URL，对于这个 URL 的建议将在后续小节中详细说明。</li>
+</ol>
+<p>Flask 主程序配置完毕后，我们通过 <code>app.run()</code> 在本地启动 Flask 服务，同时可以指定绑定的主机名，端口，以及是否开启调试模式等。通过 <code>python main.py</code> 启动 Flask 服务后，可以在命令行看到如下类似的日志：</p>
+<pre><code>[2018/10/21 00:00:00] - [INFO] - [XXXModel] - Initializing XXX Model ...
+[2018/10/21 00:00:00] - [INFO] - [XXXModel] - XXX Model Initialized.
+ * Serving Flask app &quot;main&quot; (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+[2018/10/21 00:00:00] - [INFO] - [werkzeug] -  * Running on http://0.0.0.0:9999/ (Press CTRL+C to quit)
+</code></pre>
+<p>现在就可以测试调用服务了，我们用 <code>curl</code> 命令进行简单的测试，相关代码 <code>request-demo.sh</code> 如下：</p>
+<pre><code class="language-bash">host=0.0.0.0
+port=9999
+url=https://zeqiang.fun/v1/XXXModel
+curl_url=http://${host}:${port}${url}
+
+invalid_json='{}'
+valid_json='{&quot;name&quot;: &quot;Leo&quot;}'
+
+# No JSON object
+curl --request POST --url ${curl_url} --verbose
+
+# Invalid JSON object
+curl --header 'Content-Type: application/json; charset=UTF-8' \
+    --request POST --data ${invalid_json} --url ${curl_url} --verbose
+
+# Valid JSON object
+curl --header 'Content-Type: application/json; charset=UTF-8' \
+    --request POST --data ${valid_json} --url ${curl_url} --verbose
+</code></pre>
+<p>三种不同的请求返回的 HTTP 状态码和结果如下：</p>
+<pre><code>HTTP/1.0 400 BAD REQUEST
+{&quot;message&quot;: &quot;No JSON object&quot;}
+
+HTTP/1.0 400 BAD REQUEST
+{&quot;message&quot;: &quot;'name' is a required property&quot;}
+
+HTTP/1.0 200 OK
+{&quot;result&quot;: &quot;Hello, Leo!&quot;}
+</code></pre>
+<p>上文中，我们通过 <code>python main.py</code> 利用内置的 Server 启动了 Flask 服务，启动后日志中打印出来一条警告信息，告诉使用者不要在生产环境中使用内置的 Server。在生产环境中我们可以利用高性能 Python WSGI HTTP UNIX Server <a href="https://gunicorn.org/">gunicorn</a> 来启动 Flask 服务。</p>
+<p>服务启动 (<code>start.sh</code>) 脚本代码如下：</p>
+<pre><code class="language-bash">cd `dirname $0`
+cd ..
+
+base_dir=`pwd`
+tmp_dir=${base_dir}/tmp
+pid_file_path=${tmp_dir}/model-serving-demo.pid
+log_file_path=${tmp_dir}/model-serving-demo.log
+
+bind_host=0.0.0.0
+bind_port=9999
+workers=2
+
+nohup gunicorn -b ${bind_host}:${bind_port} \
+  -w ${workers} -p ${pid_file_path} \
+  main:app &gt; ${log_file_path} 2&gt;&amp;1 &amp;
+</code></pre>
+<p>服务停止 (<code>stop.sh</code>) 脚本代码如下：</p>
+<pre><code class="language-bash">cd `dirname $0`
+cd ..
+
+base_dir=`pwd`
+tmp_dir=${base_dir}/tmp
+pid_file_path=${tmp_dir}/model-serving-demo.pid
+
+kill -TERM `echo ${pid_file_path}`
+</code></pre>
+<p>gunicorn 的详细参数配置和使用教程请参见 <a href="https://docs.gunicorn.org/en/stable/">官方文档</a>。</p>
+<h3 id="restful-api-设计">RESTful API 设计</h3>
+<p>RESTful API 是一种符合 REST(Representational State Transfer，表现层状态转换) 原则的框架，该框架是由 Fielding 在其博士论文 <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> 中提出。相关的核心概念如下：</p>
+<ol>
+<li><strong>资源 (Resources)</strong>，即网络中的一个实体 (文本，图片，服务等)，使用一个 URL 进行表示。</li>
+<li><strong>表现层 (Representation)</strong>，资源具体的呈现形式即为表现层，例如图片可以表示为 PNG 文件，音乐可以表示为 MP3 文件，还有本文使用的数据格式 JSON 等。HTTP 请求的头信息中用 Accept 和 Content-Type 字段对表现层进行描述。</li>
+<li><strong>状态转换 (State Transfer)</strong>，互联网通信协议 HTTP 协议是一个无状态协议，所有的状态都保存在服务端。因此如果客户端想要操作服务器，必须通过某种手段让服务器端发生 <strong>状态转换</strong>。客户端利用 HTTP 协议中的动作对服务器进行操作，例如：GET，POST，PUT，DELETE 等。</li>
+</ol>
+<p>利用 RESTful API 构建模型服务时，需要注意如下几点：</p>
+<ol>
+<li>为模型服务设置专用域名，例如：<code>https://api.example.com</code>，并配以负载均衡。</li>
+<li>将 API 的版本号写入 URL 中，例如：<code>https://api.example.com/v1</code>。</li>
+<li>RESTful 框架中每个 URL 表示一种资源，因此可以将模型的名称作为 URL 的终点 (Endpoint)，例如：<code>https://api.example.com/v1/XXXModel</code>。</li>
+<li>对于操作资源的 HTTP 方式有多种，综合考虑建议选用 POST 方式，同时建议使用 JSON 数据格式。</li>
+<li>为请求响应设置合理的状态码，例如：200 OK 表示正常返回，400 INVALID REQUEST 表示无法处理客户端的错误请求等。</li>
+<li>对于错误码为 4xx 的情况，建议在返回中添加键名为 <code>message</code> 的错误信息。</li>
+</ol>
+<h3 id="ajax-调用">AJAX 调用</h3>
+<p>对于动态网页，我们可以很容易的在后端服务中发起 POST 请求调用模型服务，然后将结果在前端进行渲染。对于静态网页，我们可以利用 AJAX 进行相关操作。首先我们需要一个交互界面，如下为利用 <a href="https://material.io/design/">Google Material Design</a> 风格的 <a href="https://github.com/material-components/material-components-web">Material Design Components Web</a> 组件设计一个交互界面，实现细节请参见 <a href="https://github.com/leovan/model-serving-demo/tree/master/client/xxx-model-ajax-client.html">示例代码</a>。</p>
+<p>
+  
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/material-components-web@latest/dist/material-components-web.min.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+.center {
+  justify-content: center;
+}
+
+.text-field--fullwidth {
+  width: 100%;
+}
+
+.loading {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  margin: auto;
+}
+
+.loading-bounce-1, .loading-bounce-2 {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #333;
+  opacity: 0.6;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  -webkit-animation: bounce 2.0s infinite ease-in-out;
+  animation: bounce 2.0s infinite ease-in-out;
+}
+
+.loading-bounce-2 {
+  -webkit-animation-delay: -1.0s;
+  animation-delay: -1.0s;
+}
+
+@-webkit-keyframes bounce {
+  0%, 100% { -webkit-transform: scale(0.0) }
+  50% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(0.0);
+    -webkit-transform: scale(0.0);
+  } 50% {
+    transform: scale(1.0);
+    -webkit-transform: scale(1.0);
+  }
+}
+</style>
+
+<div class="mdc-card">
+  <div class="mdc-card__actions center">
+    <div class="mdc-typography--headline6"><span>XXX Model AJAX Client</span></div>
+  </div>
+  <div class="mdc-card__actions">
+    <div class="mdc-text-field text-field--fullwidth" data-mdc-auto-init="MDCTextField">
+      <input id="name" class="mdc-text-field__input" value="Leo">
+      <div class="mdc-line-ripple"></div>
+    </div>
+  </div>
+  <div class="mdc-card__actions center">
+    <button id="submit" class="mdc-button mdc-button--outlined" data-mdc-auto-init="MDCRipple">Submit</button>
+    <div class="loading" id="loading" style="display: none;">
+      <div class="loading-bounce-1"></div>
+      <div class="loading-bounce-2"></div>
+    </div>
+  </div>
+  <div class="mdc-card__actions center">
+    <div class="mdc-typography--body1">
+      <p id="result">Result</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $("#submit").click(function() {
+      $("#submit").toggle();
+      $("#loading").toggle();
+
+      /*
+      $.ajax({
+        url: "http://0.0.0.0:9999/v1/XXXModel",
+        method: "POST",
+        contentType: "application/json; charset=UTF-8",
+        data: JSON.stringify({"name": $("#name").val()}),
+        timeout: 3000,
+
+        success: function (data, textStatus, jqXHR) {
+          $("#result").html(data.result);
+
+          $("#loading").toggle();
+          $("#submit").toggle();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          $("#result").html(errorThrown);
+
+          $("#loading").toggle();
+          $("#submit").toggle();
+        }
+      });
+      */
+
+      setTimeout(function() {
+        $("#result").html("Hello, " + $("#name").val() + "!");
+        $("#submit").toggle();
+        $("#loading").toggle();
+      }, 1000);
+    });
+  });
+</script>
+
+
+
+
+
+</p>
+<p>AJAX 服务请求代码的核心部分如下：</p>
+<pre><code class="language-javascript">$(document).ready(function() {
+    $(&quot;#submit&quot;).click(function() {
+        $.ajax({
+            url: &quot;http://0.0.0.0:9999/v1/XXXModel&quot;,
+            method: &quot;POST&quot;,
+            contentType: &quot;application/json; charset=UTF-8&quot;,
+            data: JSON.stringify({&quot;name&quot;: $(&quot;#name&quot;).val()}),
+            timeout: 3000,
+
+            success: function (data, textStatus, jqXHR) {
+                $(&quot;#result&quot;).html(data.result);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                $(&quot;#result&quot;).html(errorThrown);
+            }
+        });
+    });
+});
+</code></pre>
+<p>代码使用了 <a href="https://jquery.com/">jQuery</a> 的相关函数。<code>JSON.stringify({&quot;name&quot;: $(&quot;#name&quot;).val()})</code> 获取 ID 为 <code>name</code> 的元素的值，并将其转换成符合服务端要求的 JSON 格式。通过 AJAX 向远程发出请求后，如果请求成功则将返回数据 <code>data</code> 中对应的结果 <code>result</code> 填充到 ID 为 <code>result</code> 的元素中，否则填入返回的错误信息。</p>
+<h2 id="google-app-engine-部署">Google App Engine 部署</h2>
+<p>上文中已经介绍了如何在本地利用 Flask 部署模型服务和相关调用方法，但如果希望在自己的网站中调用时，则利用 SaaS 来部署符合会是一个不二之选。国内外多个厂商均提供了相应的 SaaS 产品，例如 <a href="https://cloud.google.com/appengine/">Google</a>，<a href="https://aws.amazon.com/partners/saas-on-aws/">Amazon</a>，<a href="https://azure.microsoft.com/en-us/solutions/saas/">Microsoft</a> 等。Google App Engine (GAE) 提供了一个 <a href="https://cloud.google.com/free/docs/always-free-usage-limits">始终免费</a> 方案，虽然部署阶段会受到 GFW 的影响，但调用阶段测试影响并不是很大 (不同地区和服务提供商会有差异)。综合考虑，本文选择 GAE 作为 SaaS 平台部署服务，各位看官请自备梯子。</p>
+<h3 id="环境准备">环境准备</h3>
+<p>首先，在 <a href="https://console.cloud.google.com/projectcreate">Google Cloud Platform Console</a> 中建立一个新的 Project，假设项目名为 <code>YOUR_PROJECT_ID</code>。</p>
+<p>其次，根据 <a href="https://cloud.google.com/sdk/docs/">Google Cloud SDK 文档</a> 在本地安装相应版本的 Google Cloud SDK。MacOS 下建议通过 <code>brew cask install google-cloud-sdk</code> 方式安装，安装完毕后确认在命令行中可以运行 <code>gcloud</code> 命令。</p>
+<pre><code class="language-bash">$ gcloud version
+Google Cloud SDK 221.0.0
+bq 2.0.35
+core 2018.10.12
+gsutil 4.34
+</code></pre>
+<h3 id="构建-gae-工程">构建 GAE 工程</h3>
+<p>模型服务仅作为后端应用，因此本节不介绍前端页面开发的相关部分，有兴趣的同学请参见 <a href="https://cloud.google.com/appengine/docs/standard/python3/quickstart">官方文档</a>。GAE 部署 Python Web 应用采用了 <a href="https://wsgi.readthedocs.io/en/latest/">WSGI 标准</a>，我们构建的本地部署版本完全满足这个要求，因此仅需为项目在根目录添加一个 GAE 配置文件 <code>app.yaml</code> 即可，内容如下：</p>
+<pre><code class="language-yaml">runtime: python37
+
+handlers:
+  - url: /.*
+    script: main.app
+
+skip_files:
+  - .idea/
+  - .vscode/
+  - __pycache__/
+  - .hypothesis/
+  - .pytest_cache/
+  - bin/
+  - ^(.*/)?.*\.py[cod]$
+  - ^(.*/)?.*\$py\.class$
+  - ^(.*/)?.*\.log$
+</code></pre>
+<p>其中，<code>runtime</code> 指定了服务运行的环境，<code>handlers</code> 指定了不同的 URL 对应的处理程序，在此所有的 URL 均由 <code>main.py</code> 中的 <code>app</code> 进行处理，<code>skip_files</code> 用于过滤不需要上传的文件。更多关于 <code>app.yaml</code> 的设置信息，请参见 <a href="https://cloud.google.com/appengine/docs/standard/python3/config/appref">官方文档</a>。</p>
+<h3 id="部署-gae-工程">部署 GAE 工程</h3>
+<p>在部署 GAE 工程之前我们可以利用本地的开发环境对其进行测试，测试无误后，即可运行如下命令将其部署到 GAE 上：</p>
+<pre><code class="language-bash">gcloud app deploy --project [YOUR_PROJECT_ID]
+</code></pre>
+<p>然后根据命令行提示完成整个部署流程，部署完成的远程服务 URL 为 <code>https://YOUR_PROJECT_ID.appspot.com</code>，更多的测试和部署细节请参见 <a href="https://cloud.google.com/appengine/docs/standard/python3/testing-and-deploying-your-app">官方文档</a>。</p>
+<p>部署后的 GAE 服务使用了其自带的域名 <code>appspot.com</code>。如果你拥有自己的域名，可以根据官方文档 <a href="https://cloud.google.com/appengine/docs/standard/python3/mapping-custom-domains">设置自己的域名</a> 并 <a href="https://cloud.google.com/appengine/docs/standard/python3/secURLng-custom-domains-with-ssl">开启 SSL</a>。</p>
+<div class="blockquote" style='border-left: 4px solid #369BE5;'>本文部分内容参考了 Genthial 的博客 <a href="https://guillaumegenthial.github.io/serving.html">Serving a model with Flask</a> 和阮一峰的博客 <a href="https://www.ruanyifeng.com/blog/2011/09/restful.html">理解RESTful架构</a> 和 <a href="https://www.ruanyifeng.com/blog/2014/05/restful_api.html">RESTful API 设计指南</a>。</div>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Fielding, Roy T., and Richard N. Taylor. <em>Architectural styles and the design of network-based software architectures.</em> Vol. 7. Doctoral dissertation: University of California, Irvine, 2000.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>基于 PyQt5/PySide2 和 QML 的跨平台 GUI 程序开发</title><link>https://zeqiang.fun/cn/2018/05/cross-platform-gui-application-based-on-pyqt/</link><pubDate>Sun, 27 May 2018 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2018/05/cross-platform-gui-application-based-on-pyqt/</guid><description><![CDATA[
+        <p>先聊聊写界面化程序的目的，在 B/S 结构软件盛行的今天，C/S 结构的软件还有人用吗？答案是肯定的，至少你想用 B/S 结构的软件的时候你得有个 C/S 结构的浏览器，对吧？这样说显得有点抬杠，当然，我认为最重要的还是“简单”，或者说“用户友好”。再 Geek 的人应该也喜欢有的时候偷懒，虽然我称不上 Geek，但也经常在黑框框中不用鼠标敲着各种代码，但是还是希望能够有些小工具只要能够点个几下就能帮忙干些事情的。至于对于更普通的用户而言，就应该更加希望能够用最“简单，清晰，明了”的方式“快速”的完成一项任务，有点像 Windows 用户把桌面上的快捷方式拖到回收站，然后和我说：好了，程序卸载了，我只能回答说：或许你该换个 MAC。</p>
+<h2 id="exclamation-更新-exclamation">&#x2757; 更新 &#x2757;</h2>
+<p><a href="https://github.com/leovan/SciHubEVA">SciHubEVA</a> 最新版本已经采用 <a href="https://wiki.qt.io/Qt_for_Python">PySide2</a> 进行改写，Windows 版本安装包构建工作迁移至 <a href="http://www.jrsoftware.org/isinfo.php">Inno Setup 6</a>，更多变更请参见 <a href="https://github.com/leovan/SciHubEVA/blob/master/CHANGELOG.md">CHANGELOG</a>。</p>
+<h2 id="跨平台-gui-程序开发方案选型">跨平台 GUI 程序开发方案选型</h2>
+<p>所以，写个带界面的小工具就是把你的想法更好的服务自己和别人的一个好途径，那么问题来了，对于我这做算法的种业余编程选手，怎么搞定界面化应用呢？虽然是业余编程选手，也也一路从 Logo，Basic，VB，C/C++，Java，R，Python 等等走来，当然很多都是从入门到放弃，总之对于同时需要兼顾一定美感的我，总结了几种跨平台界面化的解决方案。</p>
+<ol>
+<li><a href="http://www.oracle.com/technetwork/java/javafx/overview/index.html">JavaFX</a>，基于 JVM，一次编译处处运行，配合 Material Design 风格的 <a href="https://github.com/jfoenixadmin/JFoenix">JFoenix</a>，应该是能写出很漂亮的界面的。</li>
+<li><a href="https://www.qt.io/">Qt</a>，一次编写处处编译，配合 <a href="http://doc.qt.io/qt-5/qtquick-index.html">Qt Quick</a> 和 <a href="http://doc.qt.io/qt-5/qtqml-index.html">QML</a>，可以把前后端分离。原生 C++ 语言支持，同时有 Python 绑定，对于 Python 比较熟的同学相对友好。界面风格上在较新的 Qt Quick 中也支持了 <a href="http://doc.qt.io/Qt-5/qtquickcontrols2-material.html">Material Design 风格</a>。</li>
+<li><a href="https://electronjs.org/">Electron</a>，使用 JavaScript, HTML 和 CSS 等 Web 技术创建原生程序的框架，很多优秀的应用都是用这个来搞的，例如：<a href="https://github.com/Microsoft/vscode">Visual Studio Code</a>，<a href="https://github.com/zeit/hyper">Hyper</a> 等。</li>
+</ol>
+<p>我不认为这 3 种方法孰优孰劣，因为毕竟我们的目的是快速的搞定一个漂亮的小工具，因此到底选哪个完全取决于个人对相关技术的熟悉程度。因此，对于我这个搞算法的，最终选择了 Qt 的 Python 绑定 <a href="https://riverbankcomputing.com/software/pyqt/intro">PyQt</a>。作为 R 的忠实用户，实在是没找到特别好的解决方案，只能找个借口说我们 R 就不是干这个用的&hellip;&hellip;</p>
+<h2 id="环境配置">环境配置</h2>
+<p>当然选择 PyQt 也是有些个人的倾向在里面的，写 C++ 的年代就用过 Qt，对于原理多少有些了解。不过针对 PyQt，以及其与 Qt Quick 和 QML 的结合使用在后面开发时发现相关文档比较少，只能一步一步地趟雷了。毕竟要做跨平台的 GUI 程序开发，因此本文会针对 macOS 和 Windows 两个系统做相关说明，Linux 系统由于发行版本太多就不做说明了，大部分情况应该和 macOS 类似。</p>
+<ul>
+<li>Python (开发语言)</li>
+</ul>
+<p>Python 的版本选择了 3.5，因为在后面选择 3.6 时发现编译打包的时候会有些错误，没有细究，简单 Google 了此类问题，发现回退到 3.5 版本就没问题了，可能需要相关打包工具的更新才能有对 3.6 更好的支持。如果使用 Conda 建立虚拟环境，建议新建一个干净的 Python 3.5 的环境。</p>
+<ul>
+<li>Qt 和 PyQt (界面化)</li>
+</ul>
+<p>Qt 和 PyQt 均采用比较新的版本，版本号需大于 5.10。Qt 直接从官网下载安装即可，理论上不需要安装 Qt，因为 PyQt 中包含了运行时环境，安装 Qt 的目的是为了使用其可视化的 Qt Creator，设计界面的时候会比较方便。如果使用 Conda 建立 Python 虚拟环境，请使用 pip 安装 PyQt 的对应版本，Conda 中的 PyQt 的版本相对较低，一些新的 Qt 特性不支持。</p>
+<ul>
+<li>PyInstaller (编译打包)</li>
+</ul>
+<p><a href="https://www.pyinstaller.org/">PyInstaller</a> 是一个用于打包 Python 代码到一个本地化可执行程序的工具，安装其最新版本即可：<code>pip install PyInstaller</code>。</p>
+<ul>
+<li>appdmg 和 NSIS (安装包制作)</li>
+</ul>
+<p><a href="https://github.com/LinusU/node-appdmg">appdmg</a> 是 macOS 下一个用于制作 DMG 镜像的工具，使用前先安装 <a href="https://nodejs.org">Node.js</a>，再通过 <code>npm install -g appdmg</code> 安装最新版即可。<a href="https://sourceforge.net/projects/nsis/">NSIS</a> 是 Windows 下一个用于制作安装包的工具，NSIS 的一个问题是不支持 Unicode，因此对于包含中文字符的脚本需要以 GBK 编码格式保存。Unicode 版本的 NSIS 为 <a href="http://www.scratchpaper.com">Unicode NSIS</a>，不过 Unicode NSIS 已经长时间未更新，因此本文依旧将 NSIS 作为安装包制作工具。</p>
+<h2 id="界面设计">界面设计</h2>
+<p>通过需求分析，整个工具最核心的两个界面为程序主界面和配置信息界面：</p>
+<p><img src="/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/app.png" alt="APP"></p>
+<p>程序主界面包含了待搜索的信息，保存的路径，相关的按钮和日志输出。</p>
+<p><img src="/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/preferences.png" alt="PREFERENCES"></p>
+<p>配置信息界面以配置项的分组不同分别包括通用，网络和代理等相关的配置信息更改。</p>
+<p>整个界面设计采用了 Google 的 <a href="https://material.io/design/">Material Design</a> 风格，尤其是在没有 UI 支援的情况下，使用这个风格至少不会让你的应用太丑。在 PyQt 中，可以通过 <a href="http://doc.qt.io/Qt-5/qtquickcontrols2-styles.html">多种方式</a> 启用 Material Design 风格。</p>
+<h2 id="程序开发">程序开发</h2>
+<p>本文以 <a href="https://github.com/leovan/SciHubEVA">Sci-Hub EVA</a> 作为示例介绍 PyQt 的跨平台 GUI 程序开发。Sci-Hub EVA 是一个利用 Sci-Hub API 下载论文的界面化小工具，功能相对简单。首先介绍一下工程的目录：</p>
+<pre><code class="language-txt">docs\
+images\
+translations\
+ui\
+BUILDING.md
+Info.plist
+LICENSE
+README.md
+SciHubEVA.conf
+SciHubEVA.cpp
+SciHubEVA.dmg.json
+SciHubEVA.nsi
+SciHubEVA.pro
+SciHubEVA.qrc
+SciHubEVA.win.version
+requirements.txt
+scihub_add_scihub_url.py
+scihub_api.py
+scihub_conf.py
+scihub_eva.py
+scihub_preferences.py
+scihub_resources.py
+scihub_utils.py
+version_updater.py
+</code></pre>
+<p>其中，<code>docs</code> 目录为项目的一些文档，<code>images</code> 目录为项目的相关图片文件，<code>translations</code> 目录为项目的 i18n 翻译文件，<code>ui</code> 目录为相关的界面文件 (QML 文件)，<code>Info.plist</code> 为 macOS 程序信息文件，<code>SciHubEVA.conf</code> 为程序配置文件，<code>SciHubEVA.cpp</code> 为 Qt 生成的 C++ 主文件，<code>SciHubEVA.dmg.json</code> 为利用 appdmg 制作 DMG 镜像的配置文件，<code>SciHubEVA.nsi</code> 为利用 NSIS 制作 Windows 安装包的脚本文件，<code>SciHubEVA.pro</code> 为程序的 Qt 主项目文件，，<code>SciHubEVA.qrc</code> 为程序的资源文件，<code>SciHubEVA.win.version</code> 为打包 Windows 的版本信息文件，<code>requirements.txt</code> 为 Python 依赖包信息文件，<code>scihu_*.py</code> 为程序实现相关 Python 代码，<code>version_updater.py</code> 为版本更新的小工具。</p>
+<p>下文中不会介绍具体的业务逻辑代码，而是对开发过程中的一些核心点和注意事项进行简单的介绍。</p>
+<h3 id="python-与-qml-通信">Python 与 QML 通信</h3>
+<p>首先，对于每一个界面 (QML 文件)，我们都有一个与之对应 Python 文件 (除非该页面没有具体的业务逻辑，例如：<code>ui\SciHubEVAAbout.qml</code> 为关于页面，<code>ui\SciHubEVAMenuBar.qml</code> 为菜单栏)，以主页面 (<code>ui\SciHubEVA.qml</code> 和 <code>scihub_eva.py</code>) 为例，我们为每个界面创建一个类，同时该类集成自 Qt 的一个基类：</p>
+<pre><code class="language-python">class SciHubEVA(QObject):
+    pass
+</code></pre>
+<p>Python 代码同界面交互的核心是通过 Qt 的 <a href="http://doc.qt.io/qt-5/signalsandslots.html"><strong>信号与槽</strong></a>，同样在 PyQt 中也是利用 <a href="http://pyqt.sourceforge.net/Docs/PyQt5/signals_slots.html">相同的机制</a>。简单的理解 PyQt 与 QML 的信号与槽，可以认为<strong>信号</strong>就是<strong>函数的定义</strong>，<strong>槽</strong>就是<strong>函数的实现</strong>。同时，信号和槽往往会位于不同的地方，例如：信号定义在 Python 中，则对应的槽会在 QML 中，反之亦然，当然这并不是一定的。两者通过 <code>connect()</code> 函数连接起来，当触发一个信号时，槽就会接受到信号传递的参数，并执行槽里面相应的逻辑。</p>
+<h3 id="i18n">i18n</h3>
+<p>Qt 对于多语言支持比较完善，在 QML 中对于需要翻译的地方利用 <code>qsTr()</code> 函数处理待翻译的文本即可，例如：</p>
+<pre><code class="language-qml">Label {
+    id: labelQuery
+    text: qsTr(&quot;Query: &quot;)
+}
+</code></pre>
+<p>在 Python 代码中，对于继承自 <code>QObject</code> 的类，可以利用基类中的 <code>tr()</code> 函数处理待翻译的文本即可，例如：</p>
+<pre><code class="language-python">self.tr('Saved PDF as: ')
+</code></pre>
+<p>同时将具有待翻译文本的文件加入到 <code>SciHubEVA.pro</code> 的主工程文件中，用于后续翻译处理：</p>
+<pre><code class="language-text">lupdate_only {
+SOURCES += \
+    ui/SciHubEVA.qml \
+    ui/SciHubEVAAbout.qml \
+    ui/SciHubEVAMenuBar.qml \
+    ui/SciHubEVAPreferences.qml \
+    ui/SciHubEVAAddSciHubURL.qml \
+    scihub_api.py
+}
+
+TRANSLATIONS += \
+    translations/SciHubEVA_zh_CN.ts
+</code></pre>
+<p>因为 Python 代码中也有需要翻译的文件，因此我们需要运行如下命令生成翻译的源文件：</p>
+<pre><code class="language-bash">lupdate SciHubEVA.pro
+pylupdate5 SciHubEVA.pro
+</code></pre>
+<p>这样在 <code>translations</code> 目录即可生成待翻译的源文件 (ts 文件)，利用 Qt 自带的 Liguist 可以对其进行编辑，翻译并保存后，利用如下命令生成翻译的结果文件：</p>
+<pre><code class="language-bash}">lrelease SciHubEVA.pro
+</code></pre>
+<p>在 <code>translations</code> 目录即可生成待翻译的结果文件 (qm 文件)。</p>
+<h3 id="资源文件">资源文件</h3>
+<p>在 GUI 编程中，我们不可避免的会使用到各种各样的资源，例如：图片，音频，字体等等。Qt 中提供了一种<a href="http://doc.qt.io/qt-5/resources.html">资源管理方案</a>，可以在不同场景下使用 (Python 和 QML 中均可)。<code>SciHubEVA.qrc</code> 定义了所有使用到的资源：</p>
+<pre><code class="language-xml">&lt;RCC&gt;
+    &lt;qresource prefix=&quot;/&quot;&gt;
+        &lt;file&gt;ui/SciHubEVA.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAMenuBar.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAAbout.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAPreferences.qml&lt;/file&gt;
+        &lt;file&gt;ui/SciHubEVAAddSciHubURL.qml&lt;/file&gt;
+        &lt;file&gt;images/about.png&lt;/file&gt;
+    &lt;/qresource&gt;
+&lt;/RCC&gt;
+</code></pre>
+<p>在 QML 中使用示例如下：</p>
+<pre><code class="language-qml}">Image {
+    id: imageAboutLogo
+    source: &quot;qrc:/images/about.png&quot;
+}
+</code></pre>
+<p>在 Python 中使用示例如下：</p>
+<pre><code class="language-python">self._engine = QQmlApplicationEngine()
+self._engine.load('qrc:/ui/SciHubEVA.qml')
+</code></pre>
+<p>使用 <code>qrc</code> 文件管理资源文件的一个好处就是不需要担心各种相对路径和绝对路径带来的找不到文件的错误，但同时一个缺点是当资源文件更新后，需要运行 <code>pyrcc5 SciHubEVA.qrc -o scihub_resources.py</code> 更新资源，同时还需要在主程序代码中引入生成的 Python 资源代码。</p>
+<h3 id="界面线程分离">界面线程分离</h3>
+<p>写 GUI 应用的一个重要问题就是界面线程的分离，需要把耗时的业务逻辑摘出来，单独作为一个线程运行，这样才不会造成界面的“假死”情况。<code>scihub_api.py</code> 中的 <code>SciHubAPI</code> 作为下载文章的主类，下载过程相对耗时。因为其既需要 Qt 中的 <code>tr()</code> 函数，也需要线程，通过 Python 的多继承，<code>SciHubAPI</code> 类构造如下：</p>
+<pre><code class="language-python">class SciHubAPI(QObject, threading.Thread):
+    pass
+</code></pre>
+<h2 id="编译打包">编译打包</h2>
+<p>PyInstaller 是一个用于打包 Python 代码到一个本地化可执行程序的工具，详细的使用方法请参见<a href="https://www.pyinstaller.org/documentation.html">官方文档</a>。同样，我们在此仅说明打包过程中遇到的一些问题。</p>
+<h3 id="macos">macOS</h3>
+<p>macOS 下的编译打包命令如下：</p>
+<pre><code class="language-bash"># 清理相关目录和文件
+rm -rf build
+rm -rf dist
+rm -f SciHubEVA.spec
+
+# 重新生成资源文件
+rm -f scihub_resources.py
+pyrcc5 SciHubEVA.qrc -o scihub_resources.py
+
+# 编译打包
+pyinstaller -w scihub_eva.py \
+  --hidden-import &quot;PyQt5.Qt&quot; \
+  --hidden-import &quot;PyQt5.QtQuick&quot; \
+  --add-data &quot;LICENSE:.&quot; \
+  --add-data &quot;SciHubEVA.conf:.&quot; \
+  --add-data &quot;images/SciHubEVA.png:images&quot; \
+  --add-data &quot;translations/SciHubEVA_zh_CN.qm:translations&quot; \
+  --name &quot;SciHubEVA&quot; \
+  --icon &quot;images/SciHubEVA.icns&quot;
+
+# 拷贝程序信息
+cp Info.plist dist/SciHubEVA.app/Contents
+</code></pre>
+<p>编译打包过程中的 <code>--hidden-import</code> 参数是因为我们使用了 Qt Quick 和 QML 相关框架，但是在 Python 代码中我们并没有显式的引入这两个包，因此我们需要告知 PyInstaller 我们使用了这两个包，这样 PyInstaller 才会把相关的动态链接库拷贝到打包的程序中。</p>
+<p>打包好的程序 <code>SciEvaHub.app</code> 会保存在 <code>dist</code> 目录中。由于目前无论是 macOS 还是 Windows 系统，高分辨率已经比较常见，为了适应高分辨率，我们需要在代码中添加相应的支持，在入口 Python 文件中，我们需要在头部添加如下信息：</p>
+<pre><code class="language-python">if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+    QGuiApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+    QGuiApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+</code></pre>
+<p>同时针对 macOS 系统，我们需要在 <code>Info.plist</code> 中添加如下信息以支持高分辨率：</p>
+<pre><code class="language-xml">&lt;key&gt;NSHighResolutionCapable&lt;/key&gt;
+&lt;string&gt;True&lt;/string&gt;
+&lt;key&gt;NSSupportsAutomaticGraphicsSwitching&lt;/key&gt;
+&lt;string&gt;True&lt;/string&gt;
+</code></pre>
+<p><code>Info.plist</code> 中的其他信息针对性进行修改即可，最后将其拷贝到打包好的程序中。</p>
+<h3 id="windows">Windows</h3>
+<p>Windows 下的编译打包命令如下：</p>
+<pre><code class="language-dos">rem 清理相关目录和文件
+rd /s /Q build
+rd /s /Q dist
+del /Q SciHubEVA.spec
+
+rem 重新生成资源文件
+del /Q scihub_resources.py
+pyrcc5 SciHubEVA.qrc -o scihub_resources.py
+
+rem 编译打包
+pyinstaller -w scihub_eva.py ^
+  --hidden-import &quot;PyQt5.Qt&quot; ^
+  --hidden-import &quot;PyQt5.QtQuick&quot; ^
+  --add-data &quot;LICENSE;.&quot; ^
+  --add-data &quot;SciHubEVA.conf;.&quot; ^
+  --add-data &quot;images/SciHubEVA.png;images&quot; ^
+  --add-data &quot;translations/SciHubEVA_zh_CN.qm;translations&quot; ^
+  --name &quot;SciHubEVA&quot; ^
+  --icon &quot;images/SciHubEVA.ico&quot; ^
+  --version-file &quot;SciHubEVA.win.version&quot;
+</code></pre>
+<p>编译打包过程中的 <code>--version-file</code> 参数是 Windows 程序的相关版本信息，具体请参见微软的 <a href="http://msdn.microsoft.com/en-us/library/ff468916(v=vs.85).aspx">Version Information Structures</a>。</p>
+<p>打包好的程序会在 <code>dist\SciHubEVA</code> 目录中，该目录还包含了所有运行时所需的文件。</p>
+<h2 id="安装包制作">安装包制作</h2>
+<h3 id="macos-1">macOS</h3>
+<p>macOS 下我们使用 appdmg 工具将编译打包好的程序制作成 DMG 镜像文件。DMG 镜像文件可以对原始的程序进行压缩，便于分发。appdmg 通过一个 JSON 文件控制 DMG 镜像的制作，详细的 JSON 格式和相关参数请参见 <a href="https://github.com/LinusU/node-appdmg">官方文档</a>，Sci-Hub EVA 的 DMG 制作 JSON 文件如下：</p>
+<pre><code class="language-json">{
+    &quot;title&quot;: &quot;Sci-Hub EVA&quot;,
+    &quot;icon&quot;: &quot;images/SciHubEVA.icns&quot;,
+    &quot;icon-size&quot;: 100,
+    &quot;background&quot;: &quot;images/SciHubEVA-dmg-backgroud.png&quot;,
+    &quot;format&quot;: &quot;UDZO&quot;,
+    &quot;window&quot;: {
+        &quot;size&quot;: {
+            &quot;width&quot;: 600,
+            &quot;height&quot;: 400
+        }
+    },
+    &quot;contents&quot;: [
+        {
+            &quot;x&quot;: 100,
+            &quot;y&quot;: 150,
+            &quot;type&quot;: &quot;file&quot;,
+            &quot;path&quot;: &quot;dist/SciHubEVA.app&quot;
+        },
+        {
+            &quot;x&quot;: 300,
+            &quot;y&quot;: 150,
+            &quot;type&quot;: &quot;link&quot;,
+            &quot;path&quot;: &quot;/Applications&quot;
+        }
+    ]
+}
+</code></pre>
+<p>打包好后的 DMG 镜像效果如下：</p>
+<p><img src="/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/dmg.png" alt="DMG"></p>
+<h3 id="windows-1">Windows</h3>
+<p>Windows 下我们使用 NSIS 构建安装包，同样 NSIS 也支持多语言安装包构建，但请注意，NSIS 程序本身并不支持 Unicode，因此 NSIS 安装包的脚本需使用 GBK 编码保存。构建好的安装包的安装界面如下：</p>
+<p><img src="/images/cn/2018-05-27-cross-platform-gui-application-based-on-pyqt/nsis.png" alt="NSIS"></p>
+<p>整个 Sci-Hub EVA 的编译打包和安装包制作过程请参见 <a href="https://github.com/leovan/SciHubEVA/tree/master/building">构建说明文档</a>。</p>
+
+        ]]></description></item></channel></rss>

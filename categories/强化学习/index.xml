@@ -1,0 +1,980 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>强化学习 on Zeqiang Fang | 方泽强</title><link>https://zeqiang.fun/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/</link><description>Recent content in 强化学习 on Zeqiang Fang | 方泽强</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 11 Jul 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://zeqiang.fun/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/" rel="self" type="application/rss+xml"/><item><title>无模型策略预测和控制 - 时序差分学习 (Model-Free Policy Prediction and Control - Temporal Difference Learning)</title><link>https://zeqiang.fun/cn/2020/07/model-free-policy-prediction-and-control-temporal-difference-learning/</link><pubDate>Sat, 11 Jul 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2020/07/model-free-policy-prediction-and-control-temporal-difference-learning/</guid><description><![CDATA[
+        <blockquote>
+<p>本文为<a href="/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">《强化学习系列》</a>文章<br>
+本文内容主要参考自：<br>
+1.《强化学习》<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup><br>
+2. CS234: Reinforcement Learning <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup><br>
+3. UCL Course on RL <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup></p>
+</blockquote>
+<h2 id="时序差分预测">时序差分预测</h2>
+<p>**时序差分（Temporal Difference，TD）**和蒙特卡洛方法都利用经验来解决预测问题。给定策略 <code>$\pi$</code> 的一些经验，以及这些经验中的非终止状态 <code>$S_t$</code>，一个适用于非平稳环境的简单的每次访问型蒙特卡洛方法可以表示为：</p>
+<p><code>$$ V\left(S_{t}\right) \gets V\left(S_{t}\right)+\alpha\left[G_{t}-V\left(S_{t}\right)\right] \label{eq:mc-update} $$</code></p>
+<p>其中，<code>$G_t$</code> 是时刻 <code>$t$</code> 真实的回报，<code>$\alpha$</code> 是步长参数，称之为常量 <code>$\alpha$</code> MC。MC 需要等到一幕的结尾才能确定对 <code>$V \left(S_t\right)$</code> 的增量（此时才能获得 <code>$G_t$</code>），而 TD 则只需要等到下一个时刻即可。在 <code>$t+1$</code> 时刻，TD 使用观察到的收益 <code>$R_{t+1}$</code> 和估计值 <code>$V \left(S_{t+1}\right)$</code> 来进行一次有效更新：</p>
+<p><code>$$ V\left(S_{t}\right) \gets V\left(S_{t}\right)+\alpha\left[R_{t+1}+\gamma V\left(S_{t+1}\right)-V\left(S_{t}\right)\right] \label{eq:td-update} $$</code></p>
+<p>这种 TD 方法称之为 TD(0)，算法的完整过程如下：</p>
+
+
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.css">
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{表格型 TD(0) 算法，用于估计 $V \approx v_{\pi}$}
+\begin{algorithmic}
+\REQUIRE 待评估策略 $\pi$
+\STATE 对于所有 $s \in \mathcal{S}^+$，任意初始化 $V \left(s\right)$，其中 $V \left(\text{终止状态}\right) = 0$
+\FOR{每一幕}
+  \STATE 初始化 $S$
+  \REPEAT
+    \STATE $A \gets$ 策略 $\pi$ 在状态 $S$ 下做出的决策动作
+    \STATE 执行动作 $A$，观测到 $R, S'$
+    \STATE $V\left(S\right) \gets V\left(S\right)+\alpha\left[R+\gamma V\left(S^{\prime}\right)-V\left(S\right)\right]$
+    \STATE $S \gets S'$
+  \UNTIL{$S$ 为终止状态}
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<p>TD(0) 的更新在某种程度上基于已存在的估计，我们称之为一种<strong>自举法</strong>。</p>
+<p>TD 和 MC 方法都能渐进地收敛于正确的预测，但两种方法谁收敛的更快，目前暂时未能证明。但在如下的随机任务上，TD 方法通常比常量 <code>$\alpha$</code> MC 方法收敛得更快。假设如下 MRP 所有阶段都同中心 C 开始，每个时刻以相同的概率向左或向右移动一个状态。幕终止于最左侧或最右侧，终止于最右侧时有 +1 的收益，除此之外收益均为零。</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/random-walk-mrp.png" class="lazyload"/>
+  
+</figure>
+<p>由于这个任务没有折扣，因此每个状态的真实价值是从这个状态开始并终止于最右侧的概率，即 A 到 E 的概率分别为 <code>$\frac{1}{6}, \frac{2}{6}, \frac{3}{6}, \frac{4}{6}, \frac{5}{6}$</code>。</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/random-walk-mc-td.png" class="lazyload"/>
+  
+</figure>
+<p>上图左侧显示了在经历了不同数量的幕采样序列之后，运行一次 TD(0) 所得到的价值估计。在 100 幕后，估计值已经非常接近真实值了。上图右侧显示了不同的 <code>$\alpha$</code> 情况下学习到的价值函数和真实价值函数的均方根（RMS）误差，对于所有的 <code>$s$</code>，近似价值函数都被初始化为中间值 <code>$V \left(s\right) = 0.5$</code>，显示的误差是 5 个状态上运行 100 次的平均误差。</p>
+<p>给定近似价值函数 <code>$V$</code>，在访问非终止状态的每个时刻 <code>$t$</code>，使用式 <code>$\ref{eq:mc-update}$</code> 和 <code>$\ref{eq:td-update}$</code> 计算相应的增量经验，产生新的总增量，以此类推，直到价值函数收敛。我们称这种方法为<strong>批量更新</strong>，因为只有在处理了<strong>整批</strong>的训练数据后才进行更新。批量蒙特卡洛方法总是找出最小化训练集上均方误差的估计，而批量 TD(0) 总是找出完全符合马尔可夫过程模型的最大似然估计参数。因此，MC 在非马尔可夫环境中更加高效，而 TD 在马尔可夫环境中更加高效。</p>
+<p>DP，MC 和 TD 的状态价值更新回溯过程如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/dp-backup.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ \textbf{DP} \quad V\left(S_{t}\right) \leftarrow \mathbb{E}_{\pi}\left[R_{t+1}+\gamma V\left(S_{t+1}\right)\right] $$</code></p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/mc-backup.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ \textbf{MC} \quad V\left(S_{t}\right) \leftarrow V\left(S_{t}\right)+\alpha\left(G_{t}-V\left(S_{t}\right)\right) $$</code></p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/td-backup.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ \textbf{TD} \quad V\left(S_{t}\right) \leftarrow V\left(S_{t}\right)+\alpha\left(R_{t+1}+\gamma V\left(S_{t+1}\right)-V\left(S_{t}\right)\right) $$</code></p>
+<h2 id="时序差分控制">时序差分控制</h2>
+<p>利用时序差分方法解决控制问题，我们依然采用广义策略迭代（GPI），只是在评估和预测部分采用时序差分方法。同蒙特卡洛方法一样，我们需要在试探和开发之间做出权衡，因此方法又划分为同轨策略和离轨策略。</p>
+<h3 id="sarsa-同轨策略下的时序差分控制">Sarsa：同轨策略下的时序差分控制</h3>
+<p>在同轨策略中，我们需要对所有状态 <code>$s$</code> 以及动作 <code>$a$</code> 估计出在当前的行动策略下所有对应的 <code>$q_{\pi} \left(s, a\right)$</code>。确保状态值在 TD(0) 下收敛的定理同样也适用于对应的动作值的算法上</p>
+<p><code>$$ Q\left(S_{t}, A_{t}\right) \leftarrow Q\left(S_{t}, A_{t}\right)+\alpha\left[R_{t+1}+\gamma Q\left(S_{t+1}, A_{t+1}\right)-Q\left(S_{t}, A_{t}\right)\right] $$</code></p>
+<p>每当从非终止状态的 <code>$S_t$</code> 出现一次转移之后，就进行上述的一次更新，如果 <code>$S_{t+1}$</code> 是终止状态，那么 <code>$Q \left(S_{t+1}, A_{t+1}\right)$</code> 则定义为 0。这个更新规则用到了描述这个事件的五元组 <code>$\left(S_t, A_t, R_{t+1}, S_{t+1}, A_{t+1}\right)$</code>，因此根据这五元组将这个算法命名为 <strong>Sarsa</strong>。Sarsa 控制算法的一般形式如下：</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{Sarsa（同轨策略下的 TD 控制）算法，用于估计 $Q \approx q_*$}
+\begin{algorithmic}
+\STATE 对于所有 $s \in \mathcal{S}^+, a \in \mathcal{A} \left(s\right)$，任意初始化 $Q \left(s, a\right)$，其中 $Q \left(\text{终止状态}, \cdot\right) = 0$
+\FOR{每一幕}
+  \STATE 初始化 $S$
+  \STATE 使用从 $Q$ 得到的策略（例如 $\epsilon-$ 贪心），在 $S$ 处选择 $A$
+  \REPEAT
+    \STATE 执行动作 $A$，观测到 $R, S'$
+    \STATE 使用从 $Q$ 得到的策略（例如 $\epsilon-$ 贪心），在 $S'$ 处选择 $A'$
+    \STATE $Q\left(S, A\right) \gets Q\left(S, A\right)+\alpha\left[R+\gamma Q\left(S', A'\right)-Q\left(S, A\right)\right]$
+    \STATE $S \gets S'$
+    \STATE $A \gets A'$
+  \UNTIL{$S$ 为终止状态}
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<h3 id="q-learning-离轨策略下的时序差分控制">Q-Learning：离轨策略下的时序差分控制</h3>
+<p>离轨策略下的时序差分控制算法被称为 <strong>Q-Learning</strong>，其定义为：</p>
+<p><code>$$ Q\left(S_{t}, A_{t}\right) \gets Q\left(S_{t}, A_{t}\right)+\alpha\left[R_{t+1}+\gamma \max_{a} Q\left(S_{t+1}, a\right)-Q\left(S_{t}, A_{t}\right)\right] $$</code></p>
+<p>在这里，待学习的动作价值函数 <code>$Q$</code> 采用了对最优动作价值函数 <code>$q_*$</code> 的直接近似作为学习目标，而与用于生成智能体决策序例轨迹的行动策略是什么无关。Q-Learning 算法的流程如下：</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{Q-Learning（离轨策略下的 TD 控制）算法，用于估计 $\pi \approx \pi_*$}
+\begin{algorithmic}
+\STATE 对于所有 $s \in \mathcal{S}^+, a \in \mathcal{A} \left(s\right)$，任意初始化 $Q \left(s, a\right)$，其中 $Q \left(\text{终止状态}, \cdot\right) = 0$
+\FOR{每一幕}
+  \STATE 初始化 $S$
+  \REPEAT
+    \STATE 使用从 $Q$ 得到的策略（例如 $\epsilon-$ 贪心），在 $S$ 处选择 $A$
+    \STATE 执行动作 $A$，观测到 $R, S'$
+    \STATE $Q\left(S, A\right) \gets Q\left(S, A\right)+\alpha\left[R+\gamma \max_{a} Q\left(S', a\right)-Q\left(S, A\right)\right]$
+    \STATE $S \gets S'$
+  \UNTIL{$S$ 为终止状态}
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<h3 id="期望-sarsa">期望 Sarsa</h3>
+<p>如果将 Q-Learning 中对于下一个“状态-动作”二元组取最大值这一步换成取期望，即更新规则为：</p>
+<p><code>$$ \begin{aligned} Q\left(S_{t}, A_{t}\right) &amp; \gets Q\left(S_{t}, A_{t}\right)+\alpha\left[R_{t+1}+\gamma \mathbb{E}_{\pi}\left[Q\left(S_{t+1}, A_{t+1}\right) \mid S_{t+1}\right]-Q\left(S_{t}, A_{t}\right)\right] \\ &amp; \gets Q\left(S_{t}, A_{t}\right)+\alpha\left[R_{t+1}+\gamma \sum_{a} \pi\left(a \mid S_{t+1}\right) Q\left(S_{t+1}, a\right)-Q\left(S_{t}, A_{t}\right)\right] \end{aligned} $$</code></p>
+<p>给定下一个状态 <code>$S_{t+1}$</code>，这个算法确定地向期望意义上的 Sarsa 算法所决定的方向上移动，因此这个算法被称为<strong>期望 Sarsa</strong>。期望 Sarsa 在计算上比 Sarsa 更加复杂，但它消除了因为随机选择 <code>$A_{t+1}$</code> 而产生的方差。</p>
+<h3 id="双学习">双学习</h3>
+<p>在上述算法中，在估计值的基础上进行最大化也可以被看做隐式地对最大值进行估计，而这会产生一个显著的正偏差。假设在状态 <code>$s$</code> 下可以选择多个动作 <code>$a$</code>，这些动作在该状态下的真实价值 <code>$q \left(s, a\right)$</code> 全为零，但他们的估计值 <code>$Q \left(s, a\right)$</code> 是不确定的，可能大于零也可能小于零。真实值的最大值是零，但估计值的最大值是正数，因此就产生了正偏差，我们称其为<strong>最大化偏差</strong>。</p>
+<p>我们用下例进行说明，在如下这个 MDP 中有两个非终止节点 A 和 B。每幕都从 A 开始并选择向左或向右的动作。向右则会立即转移到终止状态并得到值为 0 的收益和回报。向左则会是状态转移到 B，得到的收益也是 0。而在 B 这个状态下有很多种可能的动作，每种动作被选择后会立刻停止并得到一个从均值为 -0.1 方差为 1.0 的分布中采样得到的收益。</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/double-learning-example.png" class="lazyload"/>
+  
+</figure>
+<p>因此，任何一个以向左开始的轨迹的期望回报均为 -0.1，则在 A 这个状态中根本就不该选择向左。然而使用 <code>$\epsilon-$</code> 贪心策略来选择动作的 Q-Learning 算法会在开始阶段非常明显地选择向左这个动作。即使在算法收敛到稳定时，它选择向左这个动作的概率也比最优值高了大约 5%，如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/double-learning-example-left-probability.png" class="lazyload"/>
+  
+</figure>
+<p>解决该问题的一种方法为<strong>双学习</strong>。如果们将样本划分为两个集合，并用它们学习两个独立的对真实价值 <code>$q \left(a\right), \forall a \in A$</code> 的估计 <code>$Q_1 \left(a\right)$</code> 和 <code>$Q_2 \left(a\right)$</code>。则我们可以使用其中一个 <code>$Q_1$</code> 来确认最大的动作 <code>$A^* = \arg\max_a Q_1 \left(a\right)$</code>，用另一个 <code>$Q_2$</code> 来计算其价值的估计 <code>$Q_2 \left(A^*\right) = Q_2 \left(\arg\max_a Q_1 \left(a \right)\right)$</code>。由于 <code>$\mathbb{E} \left[Q_2 \left(A^*\right)\right] = q \left(A^*\right)$</code>，因此这个估计是无偏的。我们可以交换两个估计 <code>$Q_1 \left(a\right)$</code> 和 <code>$Q_2 \left(a\right)$</code> 的角色再执行一遍上面的过程，就可以得到另一个无偏的估计 <code>$Q_1 \left(\arg\max_a Q_2 \left(a\right)\right)$</code>。</p>
+<p>双学习的 Q-Learning 版本为 Double Q-Learning。Double Q-Learning 在学习时会以 0.5 的概率进行如下更新：</p>
+<p><code>$$ Q_{1}\left(S_{t}, A_{t}\right) \leftarrow Q_{1}\left(S_{t}, A_{t}\right)+\alpha\left[R_{t+1}+\gamma Q_{2}\left(S_{t+1}, \underset{a}{\arg \max } Q_{1}\left(S_{t+1}, a\right)\right)-Q_{1}\left(S_{t}, A_{t}\right)\right] $$</code></p>
+<p>以 0.5 的概率交换 <code>$Q_1$</code> 和 <code>$Q_2$</code> 的角色进行同样的更新。使用 <code>$\epsilon-$</code> 贪心策略的 Double Q-Learning 的完整算法流程如下：</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{Double Q-Learning，用于估计 $Q_1 \approx Q_2 \approx q_*$}
+\begin{algorithmic}
+\REQUIRE 步长 $\alpha \in \left(0, 1\right]$，很小的 $\epsilon > 0$
+\STATE 对于所有 $s \in \mathcal{S}^+, a \in \mathcal{A} \left(s\right)$，任意初始化 $Q_1 \left(s, a\right), Q_2 \left(s, a\right)$，其中 $Q \left(\text{终止状态}, \cdot\right) = 0$
+\FOR{每一幕}
+  \STATE 初始化 $S$
+  \REPEAT
+    \STATE 基于 $Q_1 + Q_2$ 使用 $\epsilon-$ 贪心策略在 $S$ 处选择 $A$
+    \STATE 执行动作 $A$，观测到 $R, S'$
+    \IF{$Random(0, 1] > 0.5$}
+      \STATE $Q_{1}(S, A) \leftarrow Q_{1}(S, A)+\alpha\left(R+\gamma Q_{2}\left(S^{\prime}, \arg \max _{a} Q_{1}\left(S^{\prime}, a\right)\right)-Q_{1}(S, A)\right)$
+    \ELSE
+      \STATE $Q_{2}(S, A) \leftarrow Q_{2}(S, A)+\alpha\left(R+\gamma Q_{1}\left(S^{\prime}, \arg \max _{a} Q_{2}\left(S^{\prime}, a\right)\right)-Q_{2}(S, A)\right)$
+    \ENDIF
+    \STATE $S \gets S'$
+  \UNTIL{$S$ 为终止状态}
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<h2 id="taxi-v3-示例">Taxi-v3 示例</h2>
+<p>我们以 <a href="https://gym.openai.com/envs/Taxi-v3/">Taxi-v3</a> 为示例来测试 Sarsa，Q-Learning 和 期望 Sarsa 三种不同的算法。Taxi-v3 包含了一个 5x5 的网格，即 25 个可能的位置，我们需要驾驶一辆出租车分别在图中的 R、G、Y、B 四个位置接送乘客。客人共计存在 4 种可能的上车点，4 种可能的下车点，同时考虑出租车的位置，整个环境共有 <code>$5 \times 5 \times \left(4 + 1\right) \times 4 = 500$</code> 种可能的状态，如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/taxi-v3-env.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/</p></figcaption>
+</figure>
+<p>出租车需要根据当前环境采取不同的动作，共计 6 种可能的动作：向南走，向北走，向东走，向西走，接上乘客，放下乘客。由于环境中存在墙，出租车每次撞墙不会发生任何移动。每一步动作默认 -1 的回报，当选择错误的地点接上或放下乘客时获得 -10 的回报，在成功运送一个客人后获得 +20 的回报。</p>
+<p>分别利用 Sarsa，Q-Learning 和 期望 Sarsa 三种不同的算法训练模型，我们以 100 幕作为窗口计算平均回报，前 1000 个平均回报的对比结果如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/taxi-v3-rewards.png" class="lazyload"/>
+  
+</figure>
+<p>Taxi-v3 的成绩排行榜可参见 <a href="https://github.com/openai/gym/wiki/Leaderboard#taxi-v3">这里</a>。利用训练好的模型执行预测的效果如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/taxi-v3-evaluation.gif" class="lazyload"/>
+  
+</figure>
+<p>本文示例代码实现请参见<a href="https://github.com/leovan/leovan.me/tree/master/scripts/cn/2020-07-11-model-free-policy-prediction-and-control-temporal-difference-learning/">这里</a>。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Sutton, R. S., &amp; Barto, A. G. (2018). <em>Reinforcement learning: An introduction</em>. MIT press.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>CS234: Reinforcement Learning <a href="http://web.stanford.edu/class/cs234/index.html">http://web.stanford.edu/class/cs234/index.html</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p>UCL Course on RL <a href="https://www.davidsilver.uk/teaching">https://www.davidsilver.uk/teaching</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>无模型策略预测和控制 - 蒙特卡洛方法 (Model-Free Policy Prediction and Control - Monte-Carlo Learning)</title><link>https://zeqiang.fun/cn/2020/07/model-free-policy-prediction-and-control-monte-carlo-learning/</link><pubDate>Wed, 01 Jul 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2020/07/model-free-policy-prediction-and-control-monte-carlo-learning/</guid><description><![CDATA[
+        <blockquote>
+<p>本文为<a href="/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">《强化学习系列》</a>文章<br>
+本文内容主要参考自：<br>
+1.《强化学习》<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup><br>
+2. CS234: Reinforcement Learning <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup><br>
+3. UCL Course on RL <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup></p>
+</blockquote>
+<p>蒙特卡洛算法仅需要<strong>经验</strong>，即从真实或者模拟的环境交互中采样得到的状态、动作、收益的序例。从<strong>真实</strong>经验中学习不需要关于环境动态变化规律的先验知识，却依然能够达到最优的行为；从<strong>模拟</strong>经验中学习尽管需要一个模型，但这个模型只需要能够生成状态转移的一些样本，而不需要像动态规划那样生成所有可能的转移概率分布。</p>
+<h2 id="蒙特卡洛预测">蒙特卡洛预测</h2>
+<p>一个状态的价值是从该状态开始的期望回报，即未来的折扣收益累积值的期望。那么一个显而易见的方式是根据经验进行估计，即对所有经过这个状态之后产生的回报进行平均。随着越来越多的回报被观察到，平均值就会收敛到期望值，这就是蒙特卡洛算法的基本思想。</p>
+<p>假设给定策略 <code>$\pi$</code> 下途径状态 <code>$s$</code> 的多幕数据，我们需要估计策略 <code>$\pi$</code> 下状态 <code>$s$</code> 的价值函数 <code>$v_{\pi} \left(s\right)$</code>。在同一幕中，<code>$s$</code> 可能多次被访问，因此蒙特卡洛方法分为<strong>首次访问型 MC 算法</strong>和<strong>每次访问型 MC 算法</strong>，两者的区别在于更新时是否校验 <code>$S_t$</code> 已经在当前幕中出现过。以首次访问型 MC 预测算法为例，算法流程如下：</p>
+
+
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.css">
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{首次访问型 MC 预测算法，用于估计 $V \approx v_{\pi}$}
+\begin{algorithmic}
+\REQUIRE 待评估策略 $\pi$
+\STATE 对于所有 $s \in \mathcal{S}$，任意初始化 $V \left(s\right) \in \mathbb{R}$
+\STATE 对于所有 $s \in \mathcal{S}$，$Returns \left(s\right) \gets \varnothing$
+\WHILE{TRUE}
+  \STATE 根据 $\pi$ 生成一幕序列 $S_0, A_0, R_1, \cdots, S_{T-1}, A_{T-1}, R_T$
+  \STATE $G \gets 0$
+  \FOR{$t \in T-1, T-2, \cdots, 0$}
+    \STATE $G \gets \gamma G + R_{t+1}$
+    \IF{$S_t$ 在 $S_0, S_1, \cdots, S_{t-1}$ 中出现过}
+      \STATE $Returns \left(S_t\right) \gets Resurn \left(S_t\right) \cup G$
+      \STATE $V \left(S_t\right) \gets avg \left(Returns \left(S_t\right)\right)$
+    \ENDIF
+  \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<p>以<a href="https://zh.wikipedia.org/wiki/%E4%BA%8C%E5%8D%81%E4%B8%80%E9%BB%9E">二十一点</a>游戏为例，每一局可以看作一幕，胜、负、平分别获得收益 <code>$+1, -1, 0$</code>。每局游戏进行中的收益都为 <code>$0$</code>，并且不打折扣（<code>$\gamma = 1$</code>），最终的收益即为整个游戏的回报。玩家的动作为要牌（Hit）或停牌（Stand），状态则取决于玩家的牌和庄家显示的牌。假设所有牌来自无穷多的一组牌（即每次取出的牌都会再放回牌堆）。如果玩家手上有一张 A，可以视作 11 而不爆掉，那么称这张 A 为<strong>可用的</strong>，此时这张牌总会被视作 11。因此，玩家做出的选择只会依赖于三个变量：他手牌的总和（12-31），庄家显示的牌（A-10），以及他是否有可用的 A，共计 200 个状态。</p>
+<p>考虑如下策略，玩家在手牌点数之和小于 20 时均要牌，否则停牌。通过该策略多次模型二十一点游戏，并且计算每一个状态的回报的平均值。模拟结果如下：</p>
+<figure>
+  <img data-src="/images/cn/2020-07-01-model-free-policy-prediction-and-control-monte-carlo-learning/blackjack-monte-carlo-on-policy.png" class="lazyload"/>
+  
+</figure>
+<p>有可用 A 的状态的估计会更不确定、不规律，因为这样的状态更加罕见。无论哪种情况，在大于约 500000 局游戏后，价值函数都能很好地近似。</p>
+<h2 id="蒙特卡洛控制">蒙特卡洛控制</h2>
+<p>如果无法得到环境的模型，那么计算动作的价值（“状态-动作”二元组的价值）比计算状态的价值更加有用。动作价值函数的策略评估的目标是估计 <code>$q_{\pi} \left(s, a\right)$</code>，即在策略 <code>$\pi$</code> 下从状态 <code>$s$</code> 采取动作 <code>$a$</code> 的期望回报。只需将对状态的访问改为对“状态-动作”二元组的访问，蒙特卡洛算法就可以几乎和之前完全相同的方式解决该问题，唯一复杂之处在于一些“状态-动作”二元组可能永远不会被访问到。为了实现基于动作价值函数的策略评估，我们必须保证持续的试探。一种方式是将指定的“状态-动作”二元组作为起点开始一幕采样，同时保证所有“状态-动作”二元组都有非零的概率可以被选为起点。这样就保证了在采样的幕个数趋于无穷时，每一个“状态-动作”二元组都会被访问到无数次。我们把这种假设称为<strong>试探性出发</strong>。</p>
+<p>策略改进的方法是在当前价值函数上贪心地选择动作。由于我们有动作价值函数，所以在贪心的时候完全不需要使用任何的模型信息。对于任意的一个动作价值函数 <code>$q$</code>，对应的贪心策略为：对于任意一个状态 <code>$s \in \mathcal{S}$</code>，必定选择对应动作价值函数最大的动作：</p>
+<p><code>$$ \pi \left(s\right) = \arg\max_a q \left(s, a\right) $$</code></p>
+<p>策略改进可以通过将 <code>$q_{\pi_k}$</code> 对应的贪心策略作为 <code>$\pi_{k+1}$</code> 来进行。这样的 <code>$\pi_k$</code> 和 <code>$\pi_{k+1}$</code> 满足策略改进定理，因为对于所有的状态 <code>$s \in \mathcal{S}$</code>：</p>
+<p><code>$$ \begin{aligned} q_{\pi_{k}}\left(s, \pi_{k+1}(s)\right) &amp;=q_{\pi_{k}}\left(s, \underset{a}{\arg \max } q_{\pi_{k}}(s, a)\right) \\ &amp;=\max _{a} q_{\pi_{k}}(s, a) \\ &amp; \geqslant q_{\pi_{k}}\left(s, \pi_{k}(s)\right) \\ &amp; \geqslant v_{\pi_{k}}(s) \end{aligned} $$</code></p>
+<p>对于蒙特卡洛策略迭代，可以逐幕交替进行评估与改进。每一幕结束后，使用观测到的回报进行策略评估，然后在该幕序列访问到的每一个状态上进行策略改进。使用这个思路的一个简单算法称为<strong>基于试探性出发的蒙特卡洛（蒙特卡洛 ES）</strong>，算法流程如下：</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{蒙特卡洛 ES（试探性出发），用于估计 $\pi \approx \pi_*$}
+\begin{algorithmic}
+\STATE 对于所有 $s \in \mathcal{S}$，任意初始化 $\pi \left(s\right) \in \mathcal{A} \left(s\right)$
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，任意初始化 $Q \left(s, a\right) \in \mathbb{R}$
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，$Returns \left(s, a\right) \gets \varnothing$
+\WHILE{TRUE}
+  \STATE 选择 $S_0 \in \mathcal{S}$ 和 $A_0 \in \mathcal{A} \left(S_0\right)$ 以使得所有“状态-动作”二元组的概率都 $> 0$
+  \STATE 从 $S_0, A_0$ 开始根据 $\pi$ 生成一幕序列 $S_0, A_0, R_1, \cdots, S_{T-1}, A_{T-1}, R_T$
+  \STATE $G \gets 0$
+  \FOR{$t \in T-1, T-2, \cdots, 0$}
+    \STATE $G \gets \gamma G + R_{t+1}$
+    \IF{$S_t, A_t$ 在 $S_0, A_0, S_1, A_1, \cdots, S_{t-1}, A_{t-1}$ 中出现过}
+      \STATE $Returns \left(S_t, A_t\right) \gets Resurn \left(S_t, A_t\right) \cup G$
+      \STATE $Q \left(S_t, A_t\right) \gets avg \left(Returns \left(S_t, A_t\right)\right)$
+      \STATE $\pi \left(S_t\right) \gets \arg\max_a Q \left(S_t, a\right)$
+    \ENDIF
+  \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<p>利用蒙特卡洛 ES 可以很直接地解决二十一点游戏，只需随机等概率选择庄家的扑克牌、玩家手牌的点数，以及确定是否有可用的 A 即可。令只在 20 或 21 点停牌为初始策略，初始动作价值函数全部为零，下图展示了蒙特卡洛 ES 得出的最优策略：</p>
+<figure>
+  <img data-src="/images/cn/2020-07-01-model-free-policy-prediction-and-control-monte-carlo-learning/blackjack-monte-carlo-exploring-starts.png" class="lazyload"/>
+  
+</figure>
+<h2 id="同轨策略和离轨策略">同轨策略和离轨策略</h2>
+<h3 id="同轨策略">同轨策略</h3>
+<p>为了避免很难被满足的试探性出发假设，一般性的解法是智能体能够持续不断地选择所有可能的动作，有两种方法可以保证这一点，<strong>同轨策略（on-policy）<strong>和</strong>离轨策略（off-policy）</strong>。在同轨策略中，用于生成采样数据序列的策略和用于实际决策的待评估和改进的策略是相同的；而在离轨策略中，用于评估或改进的策略与生成采样数据的策略是不同的，即生成的数据“离开”了待优化的策略所决定的决策序列轨迹。</p>
+<p>在同轨策略中，策略一般是“软性”的，即对于任意 <code>$s \in \mathcal{S}$</code> 以及 <code>$a \in \mathcal{A} \left(s\right)$</code>，都有 <code>$\pi \left(a | s\right) &gt; 0$</code>，但他们会逐渐地逼近一个确定性的策略。<code>$\epsilon-$</code> 贪心策略是指在绝大多数时候都采取获得最大估计值的动作价值函数对应的动作，但同时以一个较小的概率 <code>$\epsilon$</code> 随机选择一个动作。因此对于所有非贪心的动作都以 <code>$\frac{\epsilon}{|\mathcal{A} \left(s\right)|}$</code> 的概率被选中，贪心动作则以 <code>$1 - \epsilon + \frac{\epsilon}{|\mathcal{A} \left(s\right)|}$</code> 的概率被选中。同轨策略的蒙特卡洛控制</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{同轨策略的首次访问型 MC 控制算法（对于 $\epsilon-$ 软性策略），用于估计 $\pi \approx \pi_*$}
+\begin{algorithmic}
+\STATE $\pi \gets$ 一个任意的 $\epsilon-$ 软性策略
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，任意初始化 $Q \left(s, a\right) \in \mathbb{R}$
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，$Returns \left(s, a\right) \gets \varnothing$
+\WHILE{TRUE}
+  \STATE 根据 $\pi$ 生成一幕序列 $S_0, A_0, R_1, \cdots, S_{T-1}, A_{T-1}, R_T$
+  \STATE $G \gets 0$
+  \FOR{$t \in T-1, T-2, \cdots, 0$}
+    \STATE $G \gets \gamma G + R_{t+1}$
+    \IF{$S_t, A_t$ 在 $S_0, A_0, S_1, A_1, \cdots, S_{t-1}, A_{t-1}$ 中出现过}
+      \STATE $Returns \left(S_t, A_t\right) \gets Resurn \left(S_t, A_t\right) \cup G$
+      \STATE $Q \left(S_t, A_t\right) \gets avg \left(Returns \left(S_t, A_t\right)\right)$
+      \STATE $A^* \gets \arg\max_a Q \left(S_t, a\right)$
+      \STATE 对于所有 $a \in \mathcal{A} \left(S_t\right)$，$\pi\left(a \mid S_{t}\right) \leftarrow\left\{\begin{array}{ll}
+1-\varepsilon+\varepsilon /\left|\mathcal{A}\left(S_{t}\right)\right| & \text { if } a=A^{*} \\
+\varepsilon /\left|\mathcal{A}\left(S_{t}\right)\right| & \text { if } a \neq A^{*}
+\end{array}\right.$
+    \ENDIF
+  \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<h3 id="离轨策略">离轨策略</h3>
+<p>所有的学习控制方法都面临一个困境：它们希望学到的动作可以使随后的智能体行为是最优的，但是为了搜索所有的动作（以保证找到最优动作），它们需要采取非最优的行动。同轨策略采用一种妥协的方法，它并不学习最优策略的动作值，而是学习一个接近最优而且仍能进行试探的策略的动作值。一个更加直接的方法是采用两个策略，一个用来学习并成为最优策略，另一个更加有试探性，用来产生智能体的行动样本。用来学习的策略被称为<strong>目标策略</strong>，用于生成行动样本的策略被称为<strong>行动策略</strong>。在这种情况下，我们认为学习所用的数据“离开”了待学习的目标策略，因此整个过程称为<strong>离轨策略学习</strong>。</p>
+<p>几乎所有的离轨策略方法都采用了<strong>重要度采样</strong>，重要度采样是一种在给定来自其他分布的样本的条件下，估计某种分布的期望值的通用方法。在离轨策略学习中，对回报值根据其轨迹在目标策略与行动策略中出现的相对概率进行加权，这个相对概率称为<strong>重要度采样比</strong>。给定起始状态 <code>$S_t$</code>，后续的“状态-动作”轨迹 <code>$A_t, S_{t+1}, A_{t+1}, \cdots, S_T$</code> 在策略 <code>$\pi$</code> 下发生的概率为：</p>
+<p><code>$$ \begin{aligned} \operatorname{Pr}\left\{A_{t},\right.&amp;\left.S_{t+1}, A_{t+1}, \ldots, S_{T} \mid S_{t}, A_{t: T-1} \sim \pi\right\} \\ &amp;=\pi\left(A_{t} \mid S_{t}\right) p\left(S_{t+1} \mid S_{t}, A_{t}\right) \pi\left(A_{t+1} \mid S_{t+1}\right) \cdots p\left(S_{T} \mid S_{T-1}, A_{T-1}\right) \\ &amp;=\prod_{k=t}^{T-1} \pi\left(A_{k} \mid S_{k}\right) p\left(S_{k+1} \mid S_{k}, A_{k}\right) \end{aligned} $$</code></p>
+<p>其中，<code>$p$</code> 为状态转移概率函数。因此，在目标策略和行动策略轨迹下的相对概率（重要度采样比）为：</p>
+<p><code>$$ \rho_{t: T-1} \doteq \frac{\prod_{k=t}^{T-1} \pi\left(A_{k} \mid S_{k}\right) p\left(S_{k+1} \mid S_{k}, A_{k}\right)}{\prod_{k=t}^{T-1} b\left(A_{k} \mid S_{k}\right) p\left(S_{k+1} \mid S_{k}, A_{k}\right)}=\prod_{k=t}^{T-1} \frac{\pi\left(A_{k} \mid S_{k}\right)}{b\left(A_{k} \mid S_{k}\right)} $$</code></p>
+<p>化简后，重要度采样比只与两个策略和样本序列数据相关，而与 MDP 的动态特性（状态转移概率）无关。我们希望估计目标策略下的期望回报（价值），但我们只有行动策略中的回报 <code>$G_t$</code>。直接使用行动策略中的回报进行估计是不准的，因此需要使用重要度采样比调整回报从而得到正确的期望值：</p>
+<p><code>$$ \mathbb{E}\left[\rho_{t: T-1} G_{t} \mid S_{t}=s\right]=v_{\pi}(s) $$</code></p>
+<p>定义所有访问过状态 <code>$s$</code> 的时刻集合为 <code>$\mathcal{T} \left(s\right)$</code>，<code>$T \left(t\right)$</code> 表示时刻 <code>$t$</code> 后的首次终止，用 <code>$G_t$</code> 表示在 <code>$t$</code> 之后到达 <code>$T \left(t\right)$</code> 时的回报值。则 <code>$\left\{G_t\right\}_{t \in \mathcal{T} \left(s\right)}$</code> 就是状态 <code>$s$</code> 对应的回报值，<code>$\left\{\rho_{t:T \left(t\right) - 1}\right\}_{t \in \mathcal{T} \left(s\right)}$</code> 是相应的重要度采样比。则为了预测 <code>$v_{\pi} \left(s\right)$</code>，有：</p>
+<p><code>$$ V(s) \doteq \frac{\sum_{t \in \mathcal{T}(s)} \rho_{t: T(t)-1} G_{t}}{|\mathcal{T}(s)|} \label{eq:ordinary-importance-sampling} $$</code></p>
+<p>为一种简单平均实现的重要度采样，称之为<strong>普通重要度采样</strong>。</p>
+<p><code>$$ V(s) \doteq \frac{\sum_{t \in \mathcal{T}(s)} \rho_{t: T(t)-1} G_{t}}{\sum_{t \in \mathcal{T}(s)} \rho_{t: T(t)-1}} \label{eq:weighted-importance-sampling} $$</code></p>
+<p>为一种加权的重要度采样，称之为<strong>加权重要度采样</strong>，如果分母为零，则式 <code>$\ref{eq:weighted-importance-sampling}$</code> 的值也为零。式 <code>$\ref{eq:ordinary-importance-sampling}$</code> 得到的结果在期望上是 <code>$v_{\pi} \left(s\right)$</code> 的无偏估计，但其值可能变得很极端，式 <code>$\ref{eq:weighted-importance-sampling}$</code> 的估计是有偏的，但其估计的方差可以收敛到 0。</p>
+<p>我们对二十一点游戏的状态值进行离轨策略估计。评估的状态为玩家有一张 A，一张 2（或者等价情况，有三张 A），从这个状态开始等概率选择要牌或停牌得到采样数据，目标策略只在和达到 20 或 21 时停牌。</p>
+<figure>
+  <img data-src="/images/cn/2020-07-01-model-free-policy-prediction-and-control-monte-carlo-learning/blackjack-monte-carlo-off-policy.png" class="lazyload"/>
+  
+</figure>
+<p>在目标策略中，这个状态的值大概为 -0.27726（利用目标策略独立生成 1 亿幕数据后对回报进行平均得到）。两种离轨策略方法在采样随机策略经过 1000 幕离轨策略数据采样后都很好地逼近了这个值，但加权重要度采样在开始时错误率明显较低，这也是实践中的典型现象。</p>
+<p>假设一个回报序列 <code>$G_1, G_2, \cdots, G_{n-1}$</code>，它们都从相同的状态开始，且每一个回报都对应一个随机权重 <code>$W_i$</code>，我们希望获得如下式子的估计：</p>
+<p><code>$$ V_{n} \doteq \frac{\sum_{k=1}^{n-1} W_{k} G_{k}}{\sum_{k=1}^{n-1} W_{k}}, \quad n \geq 2 $$</code></p>
+<p>同时在获得一个额外的回报 <code>$G_n$</code> 时能保持更新。为了能不断跟踪 <code>$V_n$</code> 的变化，我们必须为每一个状态维护前 <code>$n$</code> 个回报对应的权值的累加和 <code>$C_n$</code>。<code>$V_n$</code> 的更新方法如下：</p>
+<p><code>$$ \begin{array}{l} V_{n+1} \doteq V_{n}+\dfrac{W_{n}}{C_{n}}\left[G_{n}-V_{n}\right], \quad n \geq 1 \\ C_{n+1} \doteq C_{n}+W_{n+1} \end{array} $$</code></p>
+<p>其中，<code>$C_0 = 0$</code>，<code>$V_1$</code> 是任意值。一个完整的用于蒙特卡洛策略评估的逐幕增量算法如下：</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{离轨策略 MC 预测算法（策略评估），用于估计 $Q \approx q_{\pi}$}
+\begin{algorithmic}
+\REQUIRE 一个任意的目标策略 $\pi$
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，任意初始化 $Q \left(s, a\right) \in \mathbb{R}$
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，$C \left(s, a\right) \gets 0$
+\WHILE{TRUE}
+  \STATE $b \gets$ 任何能包括 $\pi$ 的策略
+  \STATE 根据 $b$ 生成一幕序列 $S_0, A_0, R_1, \cdots, S_{T-1}, A_{T-1}, R_T$
+  \STATE $G \gets 0$
+  \STATE $W \gets 1$
+  \FOR{$t \in T-1, T-2, \cdots, 0$}
+    \STATE $G \gets \gamma G + R_{t+1}$
+    \STATE $C \left(S_t, A_t\right) \gets C \left(S_t, A_t\right) + W$
+    \STATE $Q \left(S_{t}, A_{t}\right) \leftarrow Q\left(S_{t}, A_{t}\right)+\frac{W}{C\left(S_{t}, A_{t}\right)}\left[G-Q\left(S_{t}, A_{t}\right)\right]$
+    \STATE $W \leftarrow W \frac{\pi\left(A_{t} \mid S_{t}\right)}{b\left(A_{t} \mid S_{t}\right)}$
+    \IF{$W = 0$}
+      \BREAK
+    \ENDIF
+  \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<p>在离轨策略中，策略的价值评估和策略的控制是分开的，用于生成行动数据的策略被称为<strong>行动策略</strong>，行动策略可能与实际上被评估和改善的策略无关，而被评估和改善的策略称为<strong>目标策略</strong>。这样分离的好处在于当行动策略能对所有可能的动作继续进行采样时，目标策略可以是确定的（贪心的）。</p>
+<p>离轨策略蒙特卡洛控制方法要求行动策略对目标策略可能做出的所有动作都有非零的概率被选择。为了试探所有的可能性，要求行动策略是软性的。一个基于通用迭代策略（GPI）和重要度采样的离轨策略蒙特卡洛控制方法如下：</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{离轨策略 MC 控制算法，用于估计 $\pi \approx \pi_*$}
+\begin{algorithmic}
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，任意初始化 $Q \left(s, a\right) \in \mathbb{R}$
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，$C \left(s, a\right) \gets 0$
+\STATE 对于所有 $s \in \mathcal{S}, a \in \mathcal{A} \left(s\right)$，$\pi \left(s\right) \gets \arg\max_a Q \left(s, a\right)$
+\STATE \COMMENT{出现平分情况选取方法应保持一致}
+\WHILE{TRUE}
+  \STATE $b \gets$ 任意软性策略
+  \STATE 根据 $b$ 生成一幕序列 $S_0, A_0, R_1, \cdots, S_{T-1}, A_{T-1}, R_T$
+  \STATE $G \gets 0$
+  \STATE $W \gets 1$
+  \FOR{$t \in T-1, T-2, \cdots, 0$}
+    \STATE $G \gets \gamma G + R_{t+1}$
+    \STATE $C \left(S_t, A_t\right) \gets C \left(S_t, A_t\right) + W$
+    \STATE $Q \left(S_{t}, A_{t}\right) \leftarrow Q\left(S_{t}, A_{t}\right)+\frac{W}{C\left(S_{t}, A_{t}\right)}\left[G-Q\left(S_{t}, A_{t}\right)\right]$
+    \STATE $\pi\left(S_{t}\right) \leftarrow \arg \max _{a} Q\left(S_{t}, a\right)$
+    \STATE \COMMENT{出现平分情况选取方法应保持一致}
+    \IF{$A_t \neq \pi \left(S_t\right)$}
+      \BREAK
+    \ENDIF
+    \STATE $W \leftarrow W \frac{1}{b\left(A_{t} \mid S_{t}\right)}$
+  \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<p>本文示例代码实现请参见<a href="https://github.com/leovan/leovan.me/blob/master/scripts/cn/2020-07-01-model-free-policy-prediction-and-control-monte-carlo-learning/blackjack.py">这里</a>。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Sutton, R. S., &amp; Barto, A. G. (2018). <em>Reinforcement learning: An introduction</em>. MIT press.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>CS234: Reinforcement Learning <a href="http://web.stanford.edu/class/cs234/index.html">http://web.stanford.edu/class/cs234/index.html</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p>UCL Course on RL <a href="https://www.davidsilver.uk/teaching">https://www.davidsilver.uk/teaching</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>利用动态规划求解马尔可夫决策过程 (Planning by Dynamic Programming)</title><link>https://zeqiang.fun/cn/2020/06/planning-by-dynamic-programming/</link><pubDate>Sat, 13 Jun 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2020/06/planning-by-dynamic-programming/</guid><description><![CDATA[
+        <blockquote>
+<p>本文为<a href="/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">《强化学习系列》</a>文章<br>
+本文内容主要参考自：<br>
+1.《强化学习》<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup><br>
+2. CS234: Reinforcement Learning <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup><br>
+3. UCL Course on RL <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup></p>
+</blockquote>
+<h2 id="动态规划">动态规划</h2>
+<p><a href="/cn/2018/11/computational-complexity-and-dynamic-programming/"><strong>动态规划</strong></a>（Dynamic Programming，DP）是一种用于解决具有如下两个特性问题的通用算法：</p>
+<ol>
+<li>优化问题可以分解为子问题。</li>
+<li>子问题出现多次并可以被缓存和复用。</li>
+</ol>
+<p>马尔可夫决策过程正符合这两个特性：</p>
+<ol>
+<li>贝尔曼方程给定了迭代过程的分解。</li>
+<li>价值函数保存并复用了解决方案。</li>
+</ol>
+<p>在强化学习中，DP 的核心思想是使用价值函数来结构化地组织对最优策略的搜索。一旦得到了满足贝尔曼最优方程的价值函数 <code>$v_*$</code> 或 <code>$q_*$</code>，得到最优策略就容易了。对于任意 <code>$s \in \mathcal{S}$</code>（状态集合），<code>$a \in \mathcal{A} \left(s\right)$</code>（动作集合）和 <code>$s' \in \mathcal{S}^{+}$</code>（在分幕式任务下 <code>$\mathcal{S}$</code> 加上一个终止状态），有：</p>
+<p><code>$$ \begin{aligned} v_{*}(s) &amp;=\max _{a} \mathbb{E}\left[R_{t+1}+\gamma v_{*}\left(S_{t+1}\right) | S_{t}=s, A_{t}=a\right] \\ &amp;=\max _{a} \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma v_{*}\left(s^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p><code>$$ \begin{aligned} q_{*}(s, a) &amp;=\mathbb{E}\left[R_{t+1}+\gamma \max _{a^{\prime}} q_{*}\left(S_{t+1}, a^{\prime}\right) | S_{t}=s, A_{t}=a\right] \\ &amp;\left.=\sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma \max _{a^{\prime}}\right] q_{*}\left(s^{\prime}, a^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p>将贝尔曼方程转化成为近似逼近理想价值函数的递归更新公式，我们就得到了 DP 算法。</p>
+<h2 id="策略评估">策略评估</h2>
+<p>对于一个策略 <code>$\pi$</code>，如何计算其状态价值函数 <code>$v_{\pi}$</code> 被称为<strong>策略评估</strong>。对于任意 <code>$s \in \mathcal{S}$</code>，有：</p>
+<p><code>$$ \begin{aligned} v_{\pi}(s) &amp; \doteq \mathbb{E}_{\pi}\left[G_{t} | S_{t}=s\right] \\ &amp;=\mathbb{E}_{\pi}\left[R_{t+1}+\gamma G_{t+1} | S_{t}=s\right] \\ &amp;=\mathbb{E}_{\pi}\left[R_{t+1}+\gamma v_{\pi}\left(S_{t+1}\right) | S_{t}=s\right] \\ &amp;=\sum_{a} \pi(a | s) \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma v_{\pi}\left(s^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p>其中 <code>$\pi \left(a | s\right)$</code> 表示在环境 <code>$s$</code> 中智能体在策略 <code>$\pi$</code> 下采取动作 <code>$a$</code> 的概率。只要 <code>$\gamma &lt; 1$</code> 或者任何状态在 <code>$\pi$</code> 下都能保证最后终止，则 <code>$v_{\pi}$</code> 唯一存在。</p>
+<p>考虑一个近似的价值函数序列 <code>$v_0, v_1, \cdots$</code>，从 <code>$\mathcal{S}^{+}$</code> 映射到 <code>$\mathbb{R}$</code>，初始的近似值 <code>$v_0$</code> 可以任意选取（除了终止状态必须为 0 外）。下一轮迭代的近似可以使用 <code>$v_{\pi}$</code> 的贝尔曼方程进行更新，对于任意 <code>$s \in \mathcal{S}$</code> 有：</p>
+<p><code>$$ \begin{aligned} v_{k+1}(s) &amp; \doteq \mathbb{E}_{\pi}\left[R_{t+1}+\gamma v_{k}\left(S_{t+1}\right) | S_{t}=s\right] \\ &amp;=\sum_{a} \pi(a | s) \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma v_{k}\left(s^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p>显然，<code>$v_k = v_{\pi}$</code> 是这个更新规则的一个不动点。在保证 <code>$v_{\pi}$</code> 存在的条件下，序列 <code>$\left\{v_k\right\}$</code> 在 <code>$k \to \infty$</code> 时将会收敛到 <code>$v_{\pi}$</code>，这个算法称作 <strong>迭代策略评估</strong>。</p>
+<h2 id="策略改进">策略改进</h2>
+<p>对于任意一个确定的策略 <code>$\pi$</code>，我们已经确定了它的价值函数 <code>$v_{\pi}$</code>。对于某个状态 <code>$s$</code>，我们想知道是否应该选择一个不同于给定的策略的动作 <code>$a \neq \pi \left(s\right)$</code>。如果从状态 <code>$s$</code> 继续使用现有策略，则最后的结果就是 <code>$v \left(s\right)$</code>，但我们并不知道换成一个新策略后是得到更好的结果还是更坏的结果。一种解决方法是在状态 <code>$s$</code> 选择动作 <code>$a$</code> 后，继续遵循现有的策略 <code>$\pi$</code>，则这种方法的价值为：</p>
+<p><code>$$ \begin{aligned} q_{\pi}(s, a) &amp; \doteq \mathbb{E}\left[R_{t+1}+\gamma v_{\pi}\left(S_{t+1}\right) | S_{t}=s, A_{t}=a\right] \\ &amp;=\sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma v_{\pi}\left(s^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p>一个关键的准则就是这个值是大于还是小于 <code>$v_{\pi} \left(s\right)$</code>。如果这个值更大，则说明在状态 <code>$s$</code> 选择动作 <code>$a$</code>，然后继续使用策略 <code>$\pi$</code> 会比使用始终使用策略 <code>$\pi$</code> 更优。</p>
+<p>上述情况是<strong>策略改进定理</strong>的一个特例，一般来说，如果 <code>$\pi$</code> 和 <code>$\pi'$</code> 是任意两个确定的策略，对于任意 <code>$s \in \mathcal{S}$</code>：</p>
+<p><code>$$ q_{\pi}\left(s, \pi^{\prime}(s)\right) \geq v_{\pi}(s) $$</code></p>
+<p>则称策略 <code>$\pi'$</code> 相比于 <code>$\pi$</code> 一样好或更好。也就是说，对于任意状态 <code>$s \in \mathcal{S}$</code>，这样肯定能得到一样或更好的期望回报：</p>
+<p><code>$$ v_{\pi^{\prime}}(s) \geq v_{\pi}(s) $$</code></p>
+<p>延伸到所有状态和所有可能的动作，即在每个状态下根据 <code>$q_{\pi} \left(s, a\right)$</code> 选择一个最优的，换言之，考虑一个新的<strong>贪心</strong>策略 <code>$\pi'$</code>，满足：</p>
+<p><code>$$ \begin{aligned} \pi^{\prime}(s) &amp; \doteq \underset{a}{\arg \max } q_{\pi}(s, a) \\ &amp;=\underset{a}{\arg \max } \mathbb{E}\left[R_{t+1}+\gamma v_{\pi}\left(S_{t+1}\right) | S_{t}=s, A_{t}=a\right] \\ &amp;=\underset{a}{\arg \max } \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma v_{\pi}\left(s^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p>这样构造出的贪心策略满足策略改进定理的条件，所以它和原策略相比一样好或更好。这种根据原策略的价值函数执行贪心算法，来构造一个更好策略的过程称之为<strong>策略改进</strong>。如果新的贪心策略 <code>$\pi'$</code> 和原策略 <code>$\pi$</code> 一样好而不是更好，则有 <code>$v_{\pi} = v_{\pi'}$</code>，对任意 <code>$s \in \mathcal{S}$</code>：</p>
+<p><code>$$ \begin{aligned} v_{\pi^{\prime}}(s) &amp;=\max _{a} \mathbb{E}\left[R_{t+1}+\gamma v_{\pi^{\prime}}\left(S_{t+1}\right) | S_{t}=s, A_{t}=a\right] \\ &amp;=\max _{a} \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma v_{\pi^{\prime}}\left(s^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p>这同贝尔曼方程完全相同，因此 <code>$v_{\pi}$</code> 一定与 <code>$v_*$</code> 相同，<code>$\pi$</code> 与 <code>$\pi'$</code> 均必须为最优策略。因此，在除了原策略即为最优策略的情况下，策略改进一定会给出一个更优的结果。</p>
+<h2 id="策略迭代">策略迭代</h2>
+<p>一个策略 <code>$\pi$</code> 根据 <code>$v_{\pi}$</code> 产生了一个更好的策略 <code>$\pi'$</code>，进而我们可以通过计算 <code>$v_{\pi'}$</code> 来得到一个更优的策略 <code>$\pi''$</code>。这样一个链式的方法可以得到一个不断改进的策略和价值函数序列：</p>
+<p><code>$$ \pi_{0} \stackrel{E}{\longrightarrow} v_{\pi_{0}} \stackrel{I}{\longrightarrow} \pi_{1} \stackrel{E}{\longrightarrow} v_{\pi_{1}} \stackrel{I}{\longrightarrow} \pi_{2} \stackrel{E}{\longrightarrow} \cdots \stackrel{I}{\longrightarrow} \pi_{*} \stackrel{E}{\longrightarrow} v_{*} $$</code></p>
+<p>其中 <code>$\stackrel{E}{\longrightarrow}$</code> 表示策略评估，<code>$\stackrel{I}{\longrightarrow}$</code> 表示策略改进。每一个策略都能保证同前一个一样或者更优，由于一个有限 MDP 必然只有有限种策略，所以在有限次的迭代后，这种方法一定收敛到一个最优的策略与最优价值函数。这种寻找最优策略的方法叫做<strong>策略迭代</strong>。整个策略迭代算法如下：</p>
+
+
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.css">
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{迭代策略算法}
+\begin{algorithmic}
+\FUNCTION{PolicyIteration}{}
+\STATE \COMMENT{初始化}
+\FOR{$s \in \mathcal{S}$}
+  \STATE 初始化 $V \left(s\right) \in \mathbb{R}$
+  \STATE 初始化 $\pi \left(s\right) \in \mathcal{A} \left(s\right)$
+\ENDFOR
+\WHILE{true}
+  \STATE \COMMENT{策略评估}
+  \REPEAT
+    \STATE $\Delta \gets 0$
+    \FOR{$s \in \mathcal{S}$}
+      \STATE $v \gets V \left(s\right)$
+      \STATE $V \left(s\right) \gets \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, \pi \left(s\right)\right)\left[r+\gamma V\left(s^{\prime}\right)\right]$
+      \STATE $\Delta \gets \max\left(\Delta, \left|v - V \left(s\right)\right|\right)$
+    \ENDFOR
+  \UNTIL{$\Delta < \theta$}
+  \STATE \COMMENT{策略改进}
+  \STATE policy-stable $\gets$ true
+  \FOR{$s \in \mathcal{S}$}
+    \STATE $\pi' \left(s\right) \gets \pi \left(s\right)$
+    \STATE $\pi \left(s\right) \gets \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma V\left(s^{\prime}\right)\right]$
+    \IF{$\pi' \left(s\right) \neq \pi \left(s\right)$}
+      \STATE policy-stable $\gets$ flase
+    \ENDIF
+  \ENDFOR
+  \IF{policy-stable $=$ true}
+    \BREAK
+  \ENDIF
+\ENDWHILE
+\RETURN $V, \pi$
+\ENDFUNCTION
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<p>以<strong>杰克租车（Jack&rsquo;s Car）问题</strong>为例：杰克在两地运营租车公司，每租出一辆车获得 10 元收益，为了保证每个地点有车可用，杰克需要夜间在两地之间移动车辆，每辆车的移动代价为 2 元。假设每个地点租车和还车的数量符合泊松分布 <code>$\dfrac{\lambda^n}{n!} e^{- \lambda}$</code>，其中 <code>$\lambda$</code> 为期望值，租车的 <code>$\lambda$</code> 在两地分别为 3 和 4，还车的 <code>$\lambda$</code> 在两地分别为 3 和 2。假设任何一个地点不超过 20 辆车，每天最多移动 5 辆车，折扣率 <code>$\gamma = 0.9$</code>，将问题描述为一个持续的有限 MPD，时刻按天计算，状态为每天结束时每个地点的车辆数，动作则为夜间在两个地点之间移动的车辆数。策略从不移动任何车辆开始，整个策略迭代过程如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-06-13-planning-by-dynamic-programming/car-rental-policy-history.png" class="lazyload"/>
+  
+</figure>
+<p>上例代码实现请参见<a href="https://github.com/leovan/leovan.me/blob/master/scripts/cn/2020-06-13-planning-by-dynamic-programming/car_rental.py">这里</a>。</p>
+<h2 id="价值迭代">价值迭代</h2>
+<p>策略迭代算法的一个缺点是每一次迭代都涉及了策略评估，这是一个需要多次遍历状态集合的迭代过程。如果策略评估是迭代进行的，那么收敛到 <code>$v_{\pi}$</code> 理论上在极限处才成立，实际中不必等到其完全收敛，可以提前截断策略评估过程。有多种方式可以截断策略迭代中的策略评估步骤，并且不影响其收敛，一种重要的特殊情况是在一次遍历后即刻停止策略评估，该算法称为<strong>价值迭代</strong>。可以将此表示为结合了策略改进与阶段策略评估的简单更新公式，对任意 <code>$s \in \mathcal{S}$</code>：</p>
+<p><code>$$ \begin{aligned} v_{k+1}(s) &amp; \doteq \max _{a} \mathbb{E}\left[R_{t+1}+\gamma v_{k}\left(S_{t+1}\right) | S_{t}=s, A_{t}=a\right] \\ &amp;=\max _{a} \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma v_{k}\left(s^{\prime}\right)\right] \end{aligned} $$</code></p>
+<p>可以证明，对任意 <code>$v_0$</code>，在 <code>$v_*$</code> 存在的条件下，序列 <code>$\left\{v_k\right\}$</code> 都可以收敛到 <code>$v_*$</code>。整个价值迭代算法如下：</p>
+
+
+<div><pre class="pseudocode">
+\begin{algorithm}
+\caption{价值迭代算法}
+\begin{algorithmic}
+\FUNCTION{ValueIteration}{}
+\STATE \COMMENT{初始化}
+\FOR{$s \in \mathcal{S}^{+}$}
+  \STATE 初始化 $V \left(s\right)$，其中 $V \left(\text{终止状态}\right) = 0$
+\ENDFOR
+\STATE \COMMENT{价值迭代}
+\REPEAT
+  \STATE $\Delta \gets 0$
+  \FOR{$s \in \mathcal{S}$}
+    \STATE $v \gets V \left(s\right)$
+    \STATE $V \left(s\right) \gets\sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma V\left(s^{\prime}\right)\right]$
+    \STATE $\Delta \gets \max\left(\Delta, \left|v - V \left(s\right)\right|\right)$
+  \ENDFOR
+\UNTIL{$\Delta < \theta$}
+\STATE 输出一个确定的策略 $\pi \approx \pi_*$ 使得 $\pi(s)=\arg \max _{a} \sum_{s^{\prime}, r} p\left(s^{\prime}, r | s, a\right)\left[r+\gamma V\left(s^{\prime}\right)\right]$
+\RETURN $V, \pi$
+\ENDFUNCTION
+\end{algorithmic}
+\end{algorithm}
+</pre></div>
+
+<p>以**赌徒问题（Gambler’s Problem）**为例：一个赌徒下注猜一系列抛硬币实验的结果，如果正面朝上则获得这一次下注的钱，如果背面朝上则失去这一次下注的钱，游戏在达到目标收益 100 元或全部输光时结束。每抛一次硬币，赌徒必须从他的赌资中选取一个整数来下注，这个问题可以表示为一个非折扣的分幕式有限 MDP。状态为赌徒的赌资 <code>$s \in \left\{1, 2, \cdots, 99\right\}$</code>，动作为赌徒下注的金额 <code>$a \in \left\{0, 1, \cdots, \min \left(s, 100 - s\right)\right\}$</code>，收益在一般情况下为 0，只有在赌徒达到获利 100 元的终止状态时为 1。</p>
+<p>令 <code>$p_h$</code> 为抛硬币正面朝上的概率，如果 <code>$p_h$</code> 已知，那么整个问题可以由价值迭代或其他类似算法解决。下图为当 <code>$p_h = 0.4$</code> 时，价值迭代连续遍历得到的价值函数和最后的策略。</p>
+<figure>
+  <img data-src="/images/cn/2020-06-13-planning-by-dynamic-programming/gamblers-problem-value-iteration.png" class="lazyload"/>
+  
+</figure>
+<figure>
+  <img data-src="/images/cn/2020-06-13-planning-by-dynamic-programming/gamblers-problem-optimal-policy.png" class="lazyload"/>
+  
+</figure>
+<p>上例代码实现请参见<a href="https://github.com/leovan/leovan.me/blob/master/scripts/cn/2020-06-13-planning-by-dynamic-programming/gamblers_problem.py">这里</a>。</p>
+<h2 id="异步动态规划">异步动态规划</h2>
+<p>之前讨论的 DP 方法的一个主要缺点是它们涉及对 MDP 的整个状态集的操作，如果状态集很大，即使单次遍历也会十分昂贵。<strong>异步动态规划</strong>算法是一类就地迭代的 DP 算法，其不以系统遍历状态集的形式来组织算法。这些算法使用任意可用的状态值，以任意顺序来更新状态值，在某些状态的值更新一次之前，另一些状态的值可能已经更新了好几次。然而为了正确收敛，异步算法必须要不断地更新所有状态的值：在某个计算节点后，它不能忽略任何一个状态。</p>
+<h2 id="广义策略迭代">广义策略迭代</h2>
+<p>策略迭代包含两个同时进行的相互作用的流程，一个使得价值函数与当前策略一致（策略评估），另一个根据当前价值函数贪心地更新策略（策略改进）。在策略迭代中，这两个流程交替进行，每个流程都在另一个开始前完成。然而这也不是必须的，在异步方法中，评估和改进流程则以更细的粒度交替进行。我们利用**广义策略迭代（GPI）**一词来指代策略评估和策略改进相互作用的一般思路，与这两个流程的力度和其他细节无关。</p>
+<p>几乎所有的强化学习方法都可以被描述为 GPI，几乎所有方法都包含明确定义的策略和价值函数。策略总是基于特定的价值函数进行改进，价值函数也始终会向对应特定策略的真实价值函数收敛。</p>
+<figure>
+  <img data-src="/images/cn/2020-06-13-planning-by-dynamic-programming/generalized-policy-iteration.png" class="lazyload"/>
+  
+</figure>
+<p>GPI 的评估和改进流程可以视为两个约束或目标之间的相互作用的流程。每个流程都把价值函数或策略推向其中的一条线，该线代表了对于两个目标中的某一个目标的解决方案，如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-06-13-planning-by-dynamic-programming/policy-improvement.png" class="lazyload"/>
+  
+</figure>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Sutton, R. S., &amp; Barto, A. G. (2018). <em>Reinforcement learning: An introduction</em>. MIT press.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>CS234: Reinforcement Learning <a href="http://web.stanford.edu/class/cs234/index.html">http://web.stanford.edu/class/cs234/index.html</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p>UCL Course on RL <a href="https://www.davidsilver.uk/teaching">https://www.davidsilver.uk/teaching</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>马尔可夫决策过程 (Markov Decision Process)</title><link>https://zeqiang.fun/cn/2020/05/markov-decision-process/</link><pubDate>Sat, 23 May 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2020/05/markov-decision-process/</guid><description><![CDATA[
+        <blockquote>
+<p>本文为<a href="/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">《强化学习系列》</a>文章<br>
+本文内容主要参考自：<br>
+1.《强化学习》<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup><br>
+2. CS234: Reinforcement Learning <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup><br>
+3. UCL Course on RL <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup></p>
+</blockquote>
+<h2 id="马尔可夫模型">马尔可夫模型</h2>
+<p>马尔可夫模型是一种用于序列数据建模的随机模型，其假设未来的状态仅取决于当前的状态，即：</p>
+<p><code>$$ \mathbb{P} \left[S_{t+1} | S_t\right] = \mathbb{P} \left[S_{t+1} | S_1, \cdots, S_t\right] $$</code></p>
+<p>也就是认为当前状态捕获了历史中所有相关的信息。根据系统状态是否完全可被观测以及系统是自动的还是受控的，可以将马尔可夫模型分为 4 种，如下表所示：</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>状态状态完全可被观测</th>
+          <th>系统状态不是完全可被观测</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>状态是自动的</strong></td>
+          <td>马尔可夫链（MC）</td>
+          <td>隐马尔可夫模型（HMM）</td>
+      </tr>
+      <tr>
+          <td><strong>系统是受控的</strong></td>
+          <td>马尔可夫决策过程（MDP）</td>
+          <td>部分可观测马尔可夫决策过程（POMDP）</td>
+      </tr>
+  </tbody>
+</table>
+<p>马尔可夫链（Markov Chain，MC）为从一个状态到另一个状态转换的随机过程，当马尔可夫链的状态只能部分被观测到时，即为<a href="/cn/2020/05/hmm-crf-and-sequence-labeling/">隐马尔可夫模型（Hidden Markov Model，HMM）</a>，也就是说观测值与系统状态有关，但通常不足以精确地确定状态。马尔可夫决策过程（Markov Decision Process，MDP）也是马尔可夫链，但其状态转移取决于当前状态和采取的动作，通常一个马尔可夫决策过程用于计算依据期望回报最大化某些效用的行动策略。部分可观测马尔可夫决策过程（Partially Observable Markov Decision Process，POMDP）即为系统状态仅部分可见情况下的马尔可夫决策过程。</p>
+<h2 id="马尔可夫过程">马尔可夫过程</h2>
+<p>对于一个马尔可夫状态 <code>$s$</code> 和一个后继状态 <code>$s'$</code>，状态转移概率定义为：</p>
+<p><code>$$ \mathcal{P}_{ss'} = \mathbb{P} \left[S_t = s' | S_{t-1} = s\right] $$</code></p>
+<p><strong>状态概率矩阵</strong> <code>$\mathcal{P}$</code> 定义了从所有状态 <code>$s$</code> 到后继状态 <code>$s'$</code> 的转移概率：</p>
+<p><code>$$ \mathcal{P} = \left[\begin{array}{ccc} \mathcal{P}_{11} &amp; \cdots &amp; \mathcal{P}_{1 n} \\ \vdots &amp; &amp; \\ \mathcal{P}_{n 1} &amp; \cdots &amp; \mathcal{P}_{n n} \end{array}\right] $$</code></p>
+<p>其中每一行的加和为 1。</p>
+<p>**马尔可夫过程（马尔可夫链）**是一个无记忆的随机过程，一个马尔可夫过程可以定义为 <code>$\langle \mathcal{S}, \mathcal{P} \rangle$</code>，其中 <code>$\mathcal{S}$</code> 是一个有限状态集合，<code>$\mathcal{P}_{ss'} = \mathbb{P} \left[S_t = s' | S_{t-1} = s\right]$</code>，<code>$\mathcal{P}$</code> 为状态转移概率矩阵。以一个学生的日常生活为例，Class <code>$i$</code> 表示第 <code>$i$</code> 门课程，Facebook 表示在 Facebook 上进行社交，Pub 表示去酒吧，Pass 表示通过考试，Sleep 表示睡觉，这个马尔可夫过程如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/student-markov-chain.png" class="lazyload"/>
+  
+</figure>
+<p>从而可以产生多种不同的序列，例如：</p>
+<pre><code>C1 -&gt; C2 -&gt; C3 -&gt; Pass -&gt; Sleep
+C1 -&gt; FB -&gt; FB -&gt; C1 -&gt; C2 -&gt; Sleep
+C1 -&gt; C2 -&gt; C3 -&gt; Pub -&gt; C2 -&gt; C3 -&gt; Pass -&gt; Sleep
+</code></pre>
+<p>状态转移概率矩阵如下所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/student-markov-chain-transition-matrix.png" class="lazyload"/>
+  
+</figure>
+<p>据此我们可以定义<strong>马尔可夫奖励过程（Markov Reward Process，MRP）<strong>为 <code>$\langle \mathcal{S, P, R}, \gamma \rangle$</code>，其中 <code>$\mathcal{S}$</code> 和 <code>$\mathcal{P}$</code> 同马尔可夫过程定义中的参数相同，<code>$\mathcal{R}$</code> 为收益函数，<code>$\mathcal{R}_s = \mathbb{E} \left[R_t | S_{t-1} = s\right]$</code>，<code>$\gamma \in \left[0, 1\right]$</code> 为</strong>折扣率</strong>。如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/student-mrp.png" class="lazyload"/>
+  
+</figure>
+<p><strong>期望回报</strong> <code>$G_t$</code> 定义为从时刻 <code>$t$</code> 之后的所有衰减的收益之和，即：</p>
+<p><code>$$ G_t = R_{t+1} + \gamma R_{t+2} + \cdots = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} $$</code></p>
+<p>当 <code>$\gamma$</code> 接近 <code>$0$</code> 时，智能体更倾向于近期收益，当 <code>$\gamma$</code> 接近 <code>$1$</code> 时，智能体更侧重考虑长远收益。邻接时刻的收益可以按如下递归方式表示：</p>
+<p><code>$$ G_t = R_{t+1} + \gamma G_{t+1} $$</code></p>
+<p>对于存在“最终时刻”的应用中，智能体和环境的交互能被自然地分成一个系列子序列，每个子序列称之为“<strong>幕（episodes）</strong>”，例如一盘游戏、一次走迷宫的过程，每幕都以一种特殊状态结束，称之为<strong>终结状态</strong>。这些幕可以被认为在同样的终结状态下结束，只是对不同的结果有不同的收益，具有这种<strong>分幕</strong>重复特性的任务称之为<strong>分幕式任务</strong>。</p>
+<p>MRP 的状态价值函数 <code>$v \left(s\right)$</code> 给出了状态 <code>$s$</code> 的长期价值，定义为：</p>
+<p><code>$$ \begin{aligned} v(s) &amp;=\mathbb{E}\left[G_{t} | S_{t}=s\right] \\ &amp;=\mathbb{E}\left[R_{t+1}+\gamma R_{t+2}+\gamma^{2} R_{t+3}+\ldots | S_{t}=s\right] \\ &amp;=\mathbb{E}\left[R_{t+1}+\gamma\left(R_{t+2}+\gamma R_{t+3}+\ldots\right) | S_{t}=s\right] \\ &amp;=\mathbb{E}\left[R_{t+1}+\gamma G_{t+1} | S_{t}=s\right] \\ &amp;=\mathbb{E}\left[R_{t+1}+\gamma v\left(S_{t+1}\right) | S_{t}=s\right] \end{aligned} $$</code></p>
+<p>价值函数可以分解为两部分：即时收益 <code>$R_{t+1}$</code> 和后继状态的折扣价值 <code>$\gamma v \left(S_{t+1}\right)$</code>。上式我们称之为<strong>贝尔曼方程（Bellman Equation）</strong>，其衡量了状态价值和后继状态价值之间的关系。</p>
+<h2 id="马尔可夫决策过程">马尔可夫决策过程</h2>
+<p>一个**马尔可夫决策过程（Markov Decision Process，MDP）**定义为包含决策的马尔可夫奖励过程 <code>$\langle\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma\rangle$</code>，在这个环境中所有的状态均具有马尔可夫性。其中，<code>$\mathcal{S}$</code> 为有限的状态集合，<code>$\mathcal{A}$</code> 为有限的动作集合，<code>$\mathcal{P}$</code> 为状态转移概率矩阵，<code>$\mathcal{P}_{s s^{\prime}}^{a}=\mathbb{P}\left[S_{t+1}=s^{\prime} | S_{t}=s, A_{t}=a\right]$</code>，<code>$\mathcal{R}$</code> 为奖励函数，<code>$\mathcal{R}_{s}^{a}=\mathbb{E}\left[R_{t+1} | S_{t}=s, A_{t}=a\right]$</code>，<code>$\gamma \in \left[0, 1\right]$</code> 为折扣率。上例中的马尔可夫决策过程如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/student-mdp.png" class="lazyload"/>
+  
+</figure>
+<p>**策略（Policy）**定义为给定状态下动作的概率分布：</p>
+<p><code>$$ \pi \left(a | s\right) = \mathbb{P} \left[A_t = a | S_t = s\right] $$</code></p>
+<p>一个策略完全确定了一个智能体的行为，同时 MDP 策略仅依赖于当前状态。给定一个 MDP <code>$\mathcal{M}=\langle\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma\rangle$</code> 和一个策略 <code>$\pi$</code>，状态序列 <code>$S_1, S_2, \cdots$</code> 为一个马尔可夫过程 <code>$\langle \mathcal{S}, \mathcal{P}^{\pi} \rangle$</code>，状态和奖励序列 <code>$S_1, R_2, S_2, \cdots$</code> 为一个马尔可夫奖励过程 <code>$\left\langle\mathcal{S}, \mathcal{P}^{\pi}, \mathcal{R}^{\pi}, \gamma\right\rangle$</code>，其中</p>
+<p><code>$$ \begin{aligned} \mathcal{P}_{s s^{\prime}}^{\pi} &amp;=\sum_{a \in \mathcal{A}} \pi(a | s) \mathcal{P}_{s s^{\prime}}^{a} \\ \mathcal{R}_{s}^{\pi} &amp;=\sum_{a \in \mathcal{A}} \pi(a | s) \mathcal{R}_{s}^{a} \end{aligned} $$</code></p>
+<p>在策略 <code>$\pi$</code> 下，状态 <code>$s$</code> 的价值函数记为 <code>$v_{\pi} \left(s\right)$</code>，即从状态 <code>$s$</code> 开始，智能体按照策略进行决策所获得的回报的概率期望值，对于 MDP 其定义为：</p>
+<p><code>$$ \begin{aligned} v_{\pi} \left(s\right) &amp;= \mathbb{E}_{\pi} \left[G_t | S_t = s\right] \\ &amp;= \mathbb{E}_{\pi} \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} | S_t = s\right] \end{aligned} $$</code></p>
+<p>在策略 <code>$\pi$</code> 下，在状态 <code>$s$</code> 时采取动作 <code>$a$</code> 的价值记为 <code>$q_\pi \left(s, a\right)$</code>，即根据策略 <code>$\pi$</code>，从状态 <code>$s$</code> 开始，执行动作 <code>$a$</code> 之后，所有可能的决策序列的期望回报：</p>
+<p><code>$$ \begin{aligned} q_\pi \left(s, a\right) &amp;= \mathbb{E}_{\pi} \left[G_t | S_t = s, A_t = a\right] \\ &amp;= \mathbb{E}_{\pi} \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} | S_t = s, A_t = a\right] \end{aligned} $$</code></p>
+<p>状态价值函数 <code>$v_{\pi}$</code> 和动作价值函数 <code>$q_{\pi}$</code> 都能从经验中估计得到，两者都可以分解为当前和后继两个部分：</p>
+<p><code>$$ \begin{aligned} v_{\pi}(s) &amp;= \mathbb{E}_{\pi}\left[R_{t+1}+\gamma v_{\pi}\left(S_{t+1}\right) | S_{t}=s\right] \\ q_{\pi}(s, a) &amp;= \mathbb{E}_{\pi}\left[R_{t+1}+\gamma q_{\pi}\left(S_{t+1}, A_{t+1}\right) | S_{t}=s, A_{t}=a\right] \end{aligned} $$</code></p>
+<p>从一个状态 <code>$s$</code> 出发，采取一个行动 <code>$a$</code>，状态价值函数为：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-expection-eq-state-value-1.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ v_{\pi}(s)=\sum_{a \in \mathcal{A}} \pi(a | s) q_{\pi}(s, a) $$</code></p>
+<p>从一个动作 <code>$s$</code> 出发，再采取一个行动 <code>$a$</code> 后，动作价值函数为：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-expection-eq-action-value-1.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ q_{\pi}(s, a)=\mathcal{R}_{s}^{a}+\gamma \sum_{s^{\prime} \in \mathcal{S}} \mathcal{P}_{s s^{\prime}}^{a} v_{\pi}\left(s^{\prime}\right) $$</code></p>
+<p>利用后继状态价值函数表示当前状态价值函数为：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-expection-eq-state-value-2.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ v_{\pi}(s)=\sum_{a \in \mathcal{A}} \pi(a | s)\left(\mathcal{R}_{s}^{a}+\gamma \sum_{s^{\prime} \in \mathcal{S}} \mathcal{P}_{s s^{\prime}}^{a} v_{\pi}\left(s^{\prime}\right)\right) $$</code></p>
+<p>利用后继动作价值函数表示当前动作价值函数为：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-expection-eq-action-value-2.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ q_{\pi}(s, a)=\mathcal{R}_{s}^{a}+\gamma \sum_{s^{\prime} \in \mathcal{S}} \mathcal{P}_{s s^{\prime}}^{a} \sum_{a^{\prime} \in \mathcal{A}} \pi\left(a^{\prime} | s^{\prime}\right) q_{\pi}\left(s^{\prime}, a^{\prime}\right) $$</code></p>
+<p><strong>最优状态价值函数</strong> <code>$v_* \left(s\right)$</code> 定义为所有策略上最大值的状态价值函数：</p>
+<p><code>$$ v_* \left(s\right) = \mathop{\max}_{\pi} v_{\pi} \left(s\right) $$</code></p>
+<p><strong>最优动作价值函数</strong> <code>$q_* \left(s, a\right)$</code> 定义为所有策略上最大值的动作价值函数：</p>
+<p><code>$$ q_* \left(s, a\right) = \mathop{\max}_{\pi} q_{\pi} \left(s, a\right) $$</code></p>
+<p>定义不同策略之间的大小关系为：</p>
+<p><code>$$ \pi \geq \pi^{\prime} \text { if } v_{\pi}(s) \geq v_{\pi^{\prime}}(s), \forall s $$</code></p>
+<p>对于任意一个马尔可夫决策过程有：</p>
+<ul>
+<li>存在一个比其他策略更优或相等的策略，<code>$\pi_* \geq \pi, \forall \pi$</code></li>
+<li>所有的最优策略均能够获得最优的状态价值函数，<code>$v_{\pi_*} \left(s\right) = v_* \left(s\right)$</code></li>
+<li>所有的最优策略均能够获得最优的动作价值函数，<code>$q_{\pi_*} \left(s, a\right) = q_* \left(s, a\right)$</code></li>
+</ul>
+<p>一个最优策略可以通过最大化 <code>$q_* \left(s, a\right)$</code> 获得：</p>
+<p><code>$$ \pi_{*}(a | s)=\left\{\begin{array}{ll} 1 &amp; \text { if } a=\underset{a \in \mathcal{A}}{\operatorname{argmax}} q_{*}(s, a) \\ 0 &amp; \text { otherwise } \end{array}\right. $$</code></p>
+<p>对于任意一个 MDP 均会有一个确定的最优策略，如果已知 <code>$q_* \left(s, a\right)$</code> 即可知晓最优策略。</p>
+<p>最优状态价值函数循环依赖于贝尔曼最优方程：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-optimality-eq-state-value-1.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ v_{*}(s)=\max _{a} q_{*}(s, a) $$</code></p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-optimality-eq-action-value-1.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ q_{*}(s, a)=\mathcal{R}_{s}^{a}+\gamma \sum_{s^{\prime} \in \mathcal{S}} \mathcal{P}_{s s^{\prime}}^{a} v_{*}\left(s^{\prime}\right) $$</code></p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-optimality-eq-state-value-2.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ v_{*}(s)=\max _{a} \mathcal{R}_{s}^{a}+\gamma \sum_{s^{\prime} \in \mathcal{S}} \mathcal{P}_{s s^{\prime}}^{a} v_{*}\left(s^{\prime}\right) $$</code></p>
+<figure>
+  <img data-src="/images/cn/2020-05-23-markov-decision-process/bellman-optimality-eq-action-value-2.png" class="lazyload"/>
+  
+</figure>
+<p><code>$$ q_{*}(s, a)=\mathcal{R}_{s}^{a}+\gamma \sum_{s^{\prime} \in \mathcal{S}} \mathcal{P}_{s s^{\prime}}^{a} \max _{a^{\prime}} q_{*}\left(s^{\prime}, a^{\prime}\right) $$</code></p>
+<p>显式求解贝尔曼最优方程给出了找到一个最优策略的方法，但这种解法至少依赖于三条实际情况很难满足的假设：</p>
+<ol>
+<li>准确地知道环境的动态变化特性</li>
+<li>有足够的计算资源来求解</li>
+<li>马尔可夫性质</li>
+</ol>
+<p>尤其是假设 2 很难满足，现实问题中状态的数量一般很大，即使利用最快的计算机也需要花费难以接受的时间才能求解完成。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Sutton, R. S., &amp; Barto, A. G. (2018). <em>Reinforcement learning: An introduction</em>. MIT press.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>CS234: Reinforcement Learning <a href="http://web.stanford.edu/class/cs234/index.html">http://web.stanford.edu/class/cs234/index.html</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p>UCL Course on RL <a href="https://www.davidsilver.uk/teaching">https://www.davidsilver.uk/teaching</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>多臂赌博机 (Multi-armed Bandit)</title><link>https://zeqiang.fun/cn/2020/05/multi-armed-bandit/</link><pubDate>Sat, 16 May 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2020/05/multi-armed-bandit/</guid><description><![CDATA[
+        <blockquote>
+<p>本文为<a href="/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">《强化学习系列》</a>文章<br>
+本文内容主要参考自《强化学习》<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+</blockquote>
+<h2 id="多臂赌博机问题">多臂赌博机问题</h2>
+<p>一个赌徒，要去摇老虎机，走进赌场一看，一排老虎机，外表一模一样，但是每个老虎机吐钱的概率可不一样，他不知道每个老虎机吐钱的概率分布是什么，那么每次该选择哪个老虎机可以做到最大化收益呢？这就是<strong>多臂赌博机问题 (Multi-armed bandit problem, K- or N-armed bandit problem, MAB)</strong> <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/compulsive-gambling.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：http://hagencartoons.com/cartoons_166_170.html</p></figcaption>
+</figure>
+<p><code>$k$</code> 臂赌博机问题中，<code>$k$</code> 个动作的每一个在被选择时都有一个期望或者平均收益，称之为这个动作的**“价值”**。令 <code>$t$</code> 时刻选择的动作为 <code>$A_t$</code>，对应的收益为 <code>$R_t$</code>，任一动作 <code>$a$</code> 对应的价值为 <code>$q_* \left(a\right)$</code>，即给定动作 <code>$a$</code> 时收益的期望：</p>
+<p><code>$$ q_* \left(a\right) = \mathbb{E} \left[R_t | A_t = a\right] $$</code></p>
+<p>我们将对动作 <code>$a$</code> 在时刻 <code>$t$</code> 的价值的估计记做 <code>$Q_t \left(a\right)$</code>，我们希望它接近 <code>$q_* \left(a\right)$</code>。</p>
+<p>如果持续对动作的价值进行估计，那么在任一时刻都会至少有一个动作的估计价值是最高的，将这些对应最高估计价值的动作成为<strong>贪心</strong>的动作。当从这些动作中选择时，称此为<strong>开发</strong>当前所知道的关于动作的价值的知识。如果不是如此，而是选择非贪心的动作，称此为<strong>试探</strong>，因为这可以让你改善对非贪心动作的价值的估计。“开发”对于最大化当前这一时刻的期望收益是正确的做法，但是“试探”从长远来看可能会带来总体收益的最大化。到底选择“试探”还是“开发”一种复杂的方式依赖于我们得到的函数估计、不确定性和剩余时刻的精确数值。</p>
+<h2 id="动作价值估计方法">动作价值估计方法</h2>
+<p>我们以一种自然的方式，就是通过计算实际收益的平均值来估计动作的价值：</p>
+<p><code>$$ \begin{aligned} Q_t \left(a\right) &amp;= \dfrac{t \text{ 时刻前执行动作 } a \text{ 得到的收益总和 }}{t \text{ 时刻前执行动作 } a \text{ 的次数}} \\ &amp;= \dfrac{\sum_{i=1}^{t-1}{R_i \cdot \mathbb{1}_{A_i = a}}}{\sum_{i=1}^{t-1}{\mathbb{1}_{A_i = a}}} \end{aligned} $$</code></p>
+<p>其中，<code>$\mathbb{1}_{\text{predicate}}$</code> 表示随机变量，当 predicate 为真时其值为 1，反之为 0。当分母为 0 时，<code>$Q_t \left(a\right) = 0$</code>，当分母趋向无穷大时，根据大数定律，<code>$Q_t \left(a\right)$</code> 会收敛到 <code>$q_* \left(a\right)$</code>。这种估计动作价值的方法称为<strong>采样平均方法</strong>，因为每一次估计都是对相关收益样本的平均。</p>
+<p>当然，这只是估计动作价值的一种方法，而且不一定是最好的方法。例如，我们也可以利用累积遗憾（Regret）来评估动作的价值：</p>
+<p><code>$$ \rho = T \mu^* - \sum_{t=1}^{T} \hat{r}_t $$</code></p>
+<p>其中，<code>$\mu^* = \mathop{\max}_{k} \left\{\mu_k\right\}$</code> 为最大的回报，<code>$\hat{r}_t$</code> 为 <code>$t$</code> 时刻的回报。</p>
+<h2 id="多臂赌博机算法">多臂赌博机算法</h2>
+<p>以 10 臂赌博机为例，动作的收益分布如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/action-reward-distribution.png" class="lazyload"/>
+  
+</figure>
+<p>动作的真实价值 <code>$q_* \left(a\right), a = 1, \cdots, 10$</code> 为从一个均值为 0 方差为 1 的标准正态分布中选择。当对于该问题的学习方法在 <code>$t$</code> 时刻选择 <code>$A_t$</code> 时，实际的收益 <code>$R_t$</code> 则由一个均值为 <code>$q_* \left(A_t\right)$</code> 方差为 1 的正态分布决定。</p>
+<h3 id="epsilon-greedy"><code>$\epsilon$</code>-Greedy</h3>
+<p><code>$\epsilon$</code>-Greedy 采用的动作选择逻辑如下：</p>
+<ul>
+<li>确定一个 <code>$\epsilon \in \left(0, 1\right)$</code>。</li>
+<li>每次以 <code>$\epsilon$</code> 的概率随机选择一个臂，以 <code>$1 - \epsilon$</code> 选择平均收益最大的那个臂。</li>
+</ul>
+<p>下图分别展示了 <code>$\epsilon = 0$</code>（贪婪），<code>$\epsilon = 0.01$</code> 和 <code>$\epsilon = 0.1$</code> 三种情况下的平均收益和最优动作占比随训练步数的变化情况。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/epsilon-greedy-step-average-reward.png" class="lazyload"/>
+  
+</figure>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/epsilon-greedy-step-best-action-ratio.png" class="lazyload"/>
+  
+</figure>
+<p><code>$\epsilon$</code>-Greedy 相比于 <code>$\epsilon = 0$</code>（贪婪）算法的优势如下：</p>
+<ul>
+<li>对于更大方差的收益，找到最优的动作需要更多次的试探。</li>
+<li>对于非平稳的任务，即动作的真实价值会随着时间而改变，这种情况下即使有确定性的情况下，也需要进行试探。</li>
+</ul>
+<p>令 <code>$R_i$</code> 表示一个动作被选择 <code>$i$</code> 次后获得的收益，<code>$Q_n$</code> 表示被选择 <code>$n - 1$</code> 次后它的估计的动作价值，其可以表示为增量计算的形式：</p>
+<p><code>$$ \begin{aligned} Q_{n+1} &amp;= \dfrac{1}{n} \sum_{i=1}^{n}{R_i} \\ &amp;= \dfrac{1}{n} \left(R_n + \sum_{i=1}^{n-1}{R_i}\right) \\ &amp;= \dfrac{1}{n} \left(R_n + \left(n - 1\right) \dfrac{1}{n-1} \sum_{i=1}^{n-1}{R_i}\right) \\ &amp;= \dfrac{1}{n} \left(R_n + \left(n - 1\right) Q_n\right) \\ &amp;= \dfrac{1}{n} \left(R_n + n Q_n - Q_n\right) \\ &amp;= Q_n + \dfrac{1}{n} \left[R_n - Q_n\right] \end{aligned} $$</code></p>
+<p>上述我们讨论的都是平稳的问题，即收益的概率分布不随着时间变化的赌博机问题。对于非平稳的问题，给近期的收益赋予比过去更高的权值是一个合理的处理方式。则收益均值 <code>$Q_n$</code> 的增量更新规则为：</p>
+<p><code>$$ \begin{aligned} Q_{n+1} &amp;= Q_n + \alpha \left[R_n - Q_n\right] \\ &amp;= \left(1 - \alpha\right)^n Q_1 + \sum_{i=1}^{n} \alpha \left(1 - \alpha\right)^{n-i} R_i \end{aligned} $$</code></p>
+<p>赋给收益 <code>$R_i$</code> 的权值 <code>$\alpha \left(1 - \alpha\right)^{n-i}$</code> 依赖于它被观测到的具体时刻和当前时刻的差，权值以指数形式递减，因此这个方法也称之为<strong>指数近因加权平均</strong>。</p>
+<p>上述讨论中所有方法都在一定程度上依赖于初始动作值 <code>$Q_1 \left(a\right)$</code> 的选择。从统计学角度，初始估计值是有偏的，对于平均采样来说，当所有动作都至少被选择一次时，偏差会消失；对于步长为常数的情况，偏差会随时间而减小。</p>
+<p>下图展示了不同初始动作估计值下最优动作占比随训练步数的变化情况：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/epsilon-greedy-different-parameters-best-action-ratio.png" class="lazyload"/>
+  
+</figure>
+<p>设置较大初始动作估计值会鼓励进行试探，这种方法称之为<strong>乐观初始价值</strong>，该方法在平稳问题中非常有效。</p>
+<h3 id="ucb">UCB</h3>
+<p><code>$\epsilon$</code>-Greedy 在进行尝试时是盲目地选择，因为它不大会选择接近贪心或者不确定性特别大的动作。在非贪心动作中，最好是根据它们的潜力来选择可能事实上是最优的动作，这要考虑它们的估计有多接近最大值，以及这些估计的不确定性。</p>
+<p>一种基于<strong>置信度上界</strong>（Upper Confidence Bound，UCB）思想的选择动作依据如下：</p>
+<p><code>$$ A_t = \mathop{\arg\max}_{a} \left[Q_t \left(a\right) + c \sqrt{\dfrac{\ln t}{N_t \left(a\right)}}\right] $$</code></p>
+<p>其中，<code>$N_t \left(a\right)$</code> 表示在时刻 <code>$t$</code> 之前动作 <code>$a$</code> 被选择的次数，<code>$c &gt; 0$</code> 用于控制试探的程度。平方根项是对 <code>$a$</code> 动作值估计的不确定性或方差的度量，最大值的大小是动作 <code>$a$</code> 的可能真实值的上限，参数 <code>$c$</code> 决定了置信水平。</p>
+<p>下图展示了 UCB 算法和 <code>$\epsilon$</code>-Greedy 算法平均收益随着训练步数的变化：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/epsilon-greedy-ucb-step-average-reward.png" class="lazyload"/>
+  
+</figure>
+<h3 id="梯度赌博机算法">梯度赌博机算法</h3>
+<p>针对每个动作 <code>$a$</code>，考虑学习一个数值化的偏好函数 <code>$H_t \left(a\right)$</code>，偏好函数越大，动作就约频繁地被选择，但偏好函数的概念并不是从“收益”的意义上提出的。基于随机梯度上升的思想，在每个步骤中，在选择动作 <code>$A_t$</code> 并获得收益 <code>$R_t$</code> 之后，偏好函数会按如下方式更新：</p>
+<p><code>$$ \begin{aligned} H_{t+1} \left(A_t\right) &amp;eq H_t \left(A_t\right) + \alpha \left(R_t - \bar{R}_t\right) \left(1 - \pi_t \left(A_t\right)\right) \\ H_{t+1} \left(a\right) &amp;eq H_t \left(a\right) - \alpha \left(R_t - \bar{R}_t\right) \pi_t \left(a\right) \end{aligned} $$</code></p>
+<p>其中，<code>$\alpha &gt; 0$</code> 表示步长，<code>$\bar{R}_t \in \mathbb{R}$</code> 表示时刻 <code>$t$</code> 内所有收益的平均值。<code>$\bar{R}_t$</code> 项作为比较收益的一个基准项，如果收益高于它，那么在未来选择动作 <code>$A_t$</code> 的概率就会增加，反之概率就会降低，未选择的动作被选择的概率会上升。</p>
+<p>下图展示了在 10 臂测试平台问题的变体上采用梯度赌博机算法的结果，在这个问题中，它们真实的期望收益是按照平均值为 4 而不是 0 的正态分布来选择的。所有收益的这种变化对梯度赌博机算法没有任何影响，因为收益基准项让它可以马上适应新的收益水平，如果没有基准项，那么性能将显著降低。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/gradient-different-parameters-best-action-ratios.png" class="lazyload"/>
+  
+</figure>
+<h2 id="算法性能比较">算法性能比较</h2>
+<p><code>$\epsilon$</code>-Greedy 方法在一段时间内进行随机的动作选择；UCB 方法虽然采用确定的动作选择，但可以通过每个时刻对具有较少样本的动作进行优先选择来实现试探；梯度赌博机算法则不估计动作价值，而是利用偏好函数，使用 softmax 分布来以一种分级的、概率式的方式选择更优的动作；简单地将收益的初值进行乐观的设置，可以让贪心方法也能进行显示试探。</p>
+<p>下图展示了上述算法在不同参数下的平均收益，每条算法性能曲线都看作一个自己参数的函数。<code>$x$</code> 轴上参数值的变化是 2 的倍数，并以对数坐标轴进行表示。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-16-multi-armed-bandit/different-methods-performance.png" class="lazyload"/>
+  
+</figure>
+<p>在评估方法时，不仅要关注它在最佳参数设置上的表现，还要注意它对参数值的敏感性。总的来说，在本文的问题上，UCB 表现最好。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Sutton, R. S., &amp; Barto, A. G. (2018). <em>Reinforcement learning: An introduction</em>. MIT press.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p><a href="https://cosx.org/2017/05/bandit-and-recommender-systems">https://cosx.org/2017/05/bandit-and-recommender-systems</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item><item><title>强化学习简介 (Introduction of Reinforcement Learning)</title><link>https://zeqiang.fun/cn/2020/05/introduction-of-reinforcement-learning/</link><pubDate>Sat, 09 May 2020 00:00:00 +0000</pubDate><guid>https://zeqiang.fun/cn/2020/05/introduction-of-reinforcement-learning/</guid><description><![CDATA[
+        <blockquote>
+<p>本文为<a href="/categories/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">《强化学习系列》</a>文章</p>
+</blockquote>
+<h2 id="强化学习简介">强化学习简介</h2>
+<p>**强化学习（Reinforcement Learning，RL）**是机器学习中的一个领域，是学习“做什么（即如何把当前的情景映射成动作）才能使得数值化的收益信号最大化”。学习者不会被告知应该采取什么动作，而是必须自己通过尝试去发现哪些动作会产生最丰厚的收益。</p>
+<p>强化学习同机器学习领域中的<strong>有监督学习</strong>和<strong>无监督学习</strong>不同，有监督学习是从外部监督者提供的带标注训练集中进行学习（任务驱动型），无监督学习是一个典型的寻找未标注数据中隐含结构的过程（数据驱动型）。强化学习是与两者并列的第三种机器学习范式，强化学习带来了一个独有的挑战——**“试探”<strong>与</strong>“开发”**之间的折中权衡，智能体必须开发已有的经验来获取收益，同时也要进行试探，使得未来可以获得更好的动作选择空间（即从错误中学习）。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/machine-learning-types.png" class="lazyload"/>
+  
+</figure>
+<p>在强化学习中，有两个可以进行交互的对象：<strong>智能体（Agnet）<strong>和</strong>环境（Environment）</strong>：</p>
+<ul>
+<li>智能体：可以感知环境的<strong>状态（State）</strong>，并根据反馈的<strong>奖励（Reward）<strong>学习选择一个合适的</strong>动作（Action）</strong>，来最大化长期总收益。</li>
+<li>环境：环境会接收智能体执行的一系列动作，对这一系列动作进行评价并转换为一种可量化的信号反馈给智能体。</li>
+</ul>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/reinforcement-learning.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：https://en.wikipedia.org/wiki/Reinforcement_learning</p></figcaption>
+</figure>
+<p>除了智能体和环境之外，强化学习系统有四个核心要素：<strong>策略（Policy）</strong>、<strong>回报函数（收益信号，Reward Function）</strong>、<strong>价值函数（Value Function）<strong>和</strong>环境模型（Environment Model）</strong>，其中环境模型是可选的。</p>
+<ul>
+<li>策略：定义了智能体在特定时间的行为方式。策略是环境状态到动作的映射。</li>
+<li>回报函数：定义了强化学习问题中的目标。在每一步中，环境向智能体发送一个称为收益的标量数值。</li>
+<li>价值函数：表示了从长远的角度看什么是好的。一个状态的价值是一个智能体从这个状态开始，对将来累积的总收益的期望。</li>
+<li>环境模型：是一种对环境的反应模式的模拟，它允许对外部环境的行为进行推断。</li>
+</ul>
+<p>强化学习是一种对目标导向的学习与决策问题进行理解和自动化处理的计算方法。它强调智能体通过与环境的直接互动来学习，而不需要可效仿的监督信号或对周围环境的完全建模，因而与其他的计算方法相比具有不同的范式。</p>
+<p>强化学习使用马尔可夫决策过程的形式化框架，使用<strong>状态</strong>，<strong>动作</strong>和<strong>收益</strong>定义学习型智能体与环境的互动过程。这个框架力图简单地表示人工智能问题的若干重要特征，这些特征包含了对<strong>因果关系</strong>的认知，对<strong>不确定性</strong>的认知，以及对<strong>显式目标存在性</strong>的认知。</p>
+<p>价值与价值函数是强化学习方法的重要特征，价值函数对于策略空间的有效搜索来说十分重要。相比于进化方法以对完整策略的反复评估为引导对策略空间进行直接搜索，使用价值函数是强化学习方法与进化方法的不同之处。</p>
+<h2 id="示例和应用">示例和应用</h2>
+<p>以经典的 Flappy Bird 游戏为例，智能体就是游戏中我们操作的小鸟，整个游戏中的天空和遮挡管道即为环境，动作为玩家单击屏幕使小鸟飞起的行为，如下图所示：</p>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/flappy-bird-rl.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：https://easyai.tech/ai-definition/reinforcement-learning</p></figcaption>
+</figure>
+<p>目前，强化学习在包括<strong>游戏</strong>，<strong>广告和推荐</strong>，<strong>对话系统</strong>，<strong>机器人</strong>等多个领域均展开了广泛的应用。</p>
+<h3 id="游戏">游戏</h3>
+<p><strong>AlphaGo</strong> <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> 是于 2014 年开始由英国伦敦 Google DeepMind 开发的人工智能围棋软件。AlphaGo 使用蒙特卡洛树搜索（Monte Carlo tree search），借助估值网络（value network）与走棋网络（policy network）这两种深度神经网络，通过估值网络来评估大量选点，并通过走棋网络选择落点。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/alphago.png" class="lazyload"/>
+  
+</figure>
+<p><strong>AlphaStar</strong> <sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup> <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup> 是由 DeepMind 开发的玩 <a href="https://zh.wikipedia.org/wiki/%E6%98%9F%E6%B5%B7%E7%88%AD%E9%9C%B8II%EF%BC%9A%E8%87%AA%E7%94%B1%E4%B9%8B%E7%BF%BC">星际争霸 II</a> 游戏的人工智能程序。AlphaStar 是由一个深度神经网路生成的，它接收来自原始游戏界面的输入数据，并输出一系列指令，构成游戏中的一个动作。</p>
+<p>更具体地说，神经网路体系结构将 Transformer 框架运用于模型单元（类似于关系深度强化学习），结合一个深度 LSTM 核心、一个带有 pointer network 的自回归策略前端和一个集中的值基线。这种先进的模型将有助于解决机器学习研究中涉及长期序列建模和大输出空间（如翻译、语言建模和视觉表示）的许多其他挑战。</p>
+<p>AlphaStar 还使用了一种新的多智能体学习算法。该神经网路最初是通过在 Blizzard 发布的匿名人类游戏中进行监督学习来训练的。这使得 AlphaStar 能够通过模仿学习星际争霸上玩家所使用的基本微观和宏观策略。这个初级智能体在 95% 的游戏中击败了内置的「精英」AI 关卡（相当于人类玩家的黄金级别）。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/alphastar.png" class="lazyload"/>
+  
+</figure>
+<p><strong>OpenAI Five</strong> <sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup> 是一个由 OpenAI 开发的用于多人视频游戏 <a href="https://zh.wikipedia.org/zh-hans/Dota_2">Dota 2</a> 的人工智能程序。OpenAI Five 通过与自己进行超过 10,000 年时长的游戏进行优化学习，最终获得了专家级别的表现。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/openai-five.png" class="lazyload"/>
+  
+</figure>
+<p><strong>Pluribus</strong> <sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup> 是由 Facebook 开发的第一个在六人无限注德州扑克中击败人类专家的 AI 智能程序，其首次在复杂游戏中击败两个人或两个团队。</p>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/facebook-pluribus.jpg" class="lazyload"/>
+  
+</figure>
+<h3 id="广告和推荐">广告和推荐</h3>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/recommendation.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：A Reinforcement Learning Framework for Explainable Recommendation</p></figcaption>
+</figure>
+<h3 id="对话系统">对话系统</h3>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/dialogue-system.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：End-to-End Task-Completion Neural Dialogue Systems</p></figcaption>
+</figure>
+<h3 id="机器人">机器人</h3>
+<figure>
+  <img data-src="/images/cn/2020-05-09-introduction-of-reinforcement-learning/robot.png" class="lazyload"/>
+  <figcaption><p class="figcaption">图片来源：Learning Synergies between Pushing and Grasping with Self-supervised Deep Reinforcement Learning</p></figcaption>
+</figure>
+<h2 id="开放资源">开放资源</h2>
+<h3 id="开源实验平台">开源实验平台</h3>
+<ul>
+<li><a href="https://github.com/openai/gym">openai/gym</a></li>
+<li><a href="http://mujoco.org/">MuJoCo</a></li>
+<li><a href="https://github.com/openai/mujoco-py">openai/mujoco-py</a></li>
+<li><a href="https://github.com/deepmind/lab">deepmind/lab</a></li>
+</ul>
+<h3 id="开源框架">开源框架</h3>
+<ul>
+<li><a href="https://github.com/deepmind/trfl/">deepmind/trfl/</a> <i class="icon icon-tensorflow"></i></li>
+<li><a href="https://github.com/deepmind/open_spiel">deepmind/open_spiel</a> <i class="icon icon-tensorflow"></i></li>
+<li><a href="https://github.com/google/dopamine">google/dopamine</a> <i class="icon icon-tensorflow"></i></li>
+<li><a href="https://github.com/tensorflow/agents">tensorflow/agents</a> <i class="icon icon-tensorflow"></i></li>
+<li><a href="https://github.com/keras-rl/keras-rl">keras-rl/keras-rl</a> <i class="icon icon-keras"></i></li>
+<li><a href="https://github.com/tensorforce/tensorforce">tensorforce/tensorforce</a> <i class="icon icon-tensorflow"></i></li>
+<li><a href="https://github.com/facebookresearch/ReAgent">facebookresearch/ReAgent</a> <i class="icon icon-pytorch"></i></li>
+<li><a href="https://github.com/thu-ml/tianshou">thu-ml/tianshou</a> <i class="icon icon-pytorch"></i></li>
+<li><a href="https://github.com/astooke/rlpyt">astooke/rlpyt</a> <i class="icon icon-pytorch"></i></li>
+<li><a href="https://github.com/NervanaSystems/coach">NervanaSystems/coach</a> <i class="icon icon-tensorflow"></i></li>
+<li><a href="https://github.com/PaddlePaddle/PARL">PaddlePaddle/PARL</a> <i class="icon icon-paddlepaddle"></i></li>
+</ul>
+<h3 id="开源模型">开源模型</h3>
+<ul>
+<li><a href="https://github.com/dennybritz/reinforcement-learning">dennybritz/reinforcement-learning</a> <i class="icon icon-tensorflow"></i></li>
+<li><a href="https://github.com/openai/baselines">openai/baselines</a> <i class="icon icon-tensorflow"></i></li>
+</ul>
+<h3 id="其他资源">其他资源</h3>
+<ul>
+<li><a href="https://github.com/ShangtongZhang/reinforcement-learning-an-introduction">ShangtongZhang/reinforcement-learning-an-introduction</a></li>
+<li><a href="https://github.com/aikorea/awesome-rl">aikorea/awesome-rl</a></li>
+<li><a href="https://github.com/openai/spinningup">openai/spinningup</a></li>
+<li><a href="https://github.com/udacity/deep-reinforcement-learning">udacity/deep-reinforcement-learning</a></li>
+</ul>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://deepmind.com/research/case-studies/alphago-the-story-so-far">https://deepmind.com/research/case-studies/alphago-the-story-so-far</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p><a href="https://deepmind.com/blog/article/alphastar-mastering-real-time-strategy-game-starcraft-ii">https://deepmind.com/blog/article/alphastar-mastering-real-time-strategy-game-starcraft-ii</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p><a href="https://deepmind.com/blog/article/AlphaStar-Grandmaster-level-in-StarCraft-II-using-multi-agent-reinforcement-learning">https://deepmind.com/blog/article/AlphaStar-Grandmaster-level-in-StarCraft-II-using-multi-agent-reinforcement-learning</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4">
+<p><a href="https://openai.com/projects/five/">https://openai.com/projects/five/</a>&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5">
+<p><a href="https://ai.facebook.com/blog/pluribus-first-ai-to-beat-pros-in-6-player-poker/">https://ai.facebook.com/blog/pluribus-first-ai-to-beat-pros-in-6-player-poker/</a>&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+        ]]></description></item></channel></rss>
